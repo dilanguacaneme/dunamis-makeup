@@ -1,4 +1,4 @@
-package com.politecnico.caso_de_estudio.Exeption;
+package com.dunamis.makeup.Exeption;
 
 public class InventarioVacioException extends RuntimeException{
     public InventarioVacioException() {

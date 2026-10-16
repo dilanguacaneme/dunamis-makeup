@@ -1,9 +1,9 @@
-package com.politecnico.caso_de_estudio.Controller;
+package com.dunamis.makeup.Controller;
 
-import com.politecnico.caso_de_estudio.Entity.Producto;
-import com.politecnico.caso_de_estudio.Exeption.InventarioVacioException;
-import com.politecnico.caso_de_estudio.Exeption.ProductoNoEncontradoException;
-import com.politecnico.caso_de_estudio.Service.ProductoService;
+import com.dunamis.makeup.Entity.Producto;
+import com.dunamis.makeup.Exeption.InventarioVacioException;
+import com.dunamis.makeup.Exeption.ProductoNoEncontradoException;
+import com.dunamis.makeup.Service.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

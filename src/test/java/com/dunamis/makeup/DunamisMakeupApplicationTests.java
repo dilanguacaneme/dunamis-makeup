@@ -1,10 +1,10 @@
-package com.politecnico.caso_de_estudio;
+package com.dunamis.makeup;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class CasoDeEstudioApplicationTests {
+class DunamisMakeupApplicationTests {
 
 	@Test
 	void contextLoads() {

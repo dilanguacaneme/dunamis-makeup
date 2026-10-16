@@ -1,4 +1,4 @@
-package com.politecnico.caso_de_estudio.Entity;
+package com.dunamis.makeup.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

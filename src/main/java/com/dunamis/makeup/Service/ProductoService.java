@@ -1,9 +1,9 @@
-package com.politecnico.caso_de_estudio.Service;
+package com.dunamis.makeup.Service;
 
-import com.politecnico.caso_de_estudio.Entity.Producto;
-import com.politecnico.caso_de_estudio.Exeption.InventarioVacioException;
-import com.politecnico.caso_de_estudio.Exeption.ProductoNoEncontradoException;
-import com.politecnico.caso_de_estudio.Repository.ProductoRepository;
+import com.dunamis.makeup.Entity.Producto;
+import com.dunamis.makeup.Exeption.InventarioVacioException;
+import com.dunamis.makeup.Exeption.ProductoNoEncontradoException;
+import com.dunamis.makeup.Repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.politecnico.caso_de_estudio;
+package com.dunamis.makeup;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

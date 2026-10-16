@@ -1,6 +1,6 @@
-package com.politecnico.caso_de_estudio.Repository;
+package com.dunamis.makeup.Repository;
 
-import com.politecnico.caso_de_estudio.Entity.Producto;
+import com.dunamis.makeup.Entity.Producto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
