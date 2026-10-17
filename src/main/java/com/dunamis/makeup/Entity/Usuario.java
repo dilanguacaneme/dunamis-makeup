@@ -33,9 +33,15 @@ public class Usuario {
     @Column(nullable = false)
     private boolean activo = true;
 
+    // Nullable during schema migration; UsuariosIniciales assigns ADMIN to old rows.
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(length = 20)
+    private RolUsuario rol = RolUsuario.ADMIN;
+
     public Usuario(String nombreUsuario, String nombreCompleto, String passwordHash) {
         this.nombreUsuario = nombreUsuario;
         this.nombreCompleto = nombreCompleto;
         this.passwordHash = passwordHash;
+        this.rol = RolUsuario.ADMIN;
     }
 }

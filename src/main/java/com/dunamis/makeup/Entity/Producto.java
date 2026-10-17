@@ -3,6 +3,8 @@ package com.dunamis.makeup.Entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,9 +26,11 @@ public class Producto {
     private String nombre;
 
     @NotNull(message = "El precio del producto no puede estar vacio")
+    @DecimalMin(value = "0.0", message = "El precio no puede ser negativo")
     private Double precio;
 
     @NotNull(message = "La cantidad no puede estar vacia")
+    @Min(value = 0, message = "Las existencias no pueden ser negativas")
     private Integer cantidad;
 
     private Integer cantidadInicial;
@@ -37,6 +41,11 @@ public class Producto {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CategoriaProducto categoria;
+
+    // Nullable for existing catalog rows; new products must select a brand in the service.
+    @ManyToOne
+    @JoinColumn(name = "marca_id")
+    private Marca marca;
 
 
 }

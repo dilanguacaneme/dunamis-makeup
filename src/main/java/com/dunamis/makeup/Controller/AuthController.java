@@ -28,7 +28,8 @@ public class AuthController {
     public UsuarioResponse currentUser(Authentication authentication) {
         Usuario usuario = usuarioRepository.findByNombreUsuarioIgnoreCase(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-        return new UsuarioResponse(usuario.getNombreUsuario(), usuario.getNombreCompleto(), "ADMIN");
+        String role = usuario.getRol() == null ? "ADMIN" : usuario.getRol().name();
+        return new UsuarioResponse(usuario.getNombreUsuario(), usuario.getNombreCompleto(), role);
     }
 
     public record CsrfResponse(boolean ready) {

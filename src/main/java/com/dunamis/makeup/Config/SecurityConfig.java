@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -38,6 +39,16 @@ public class SecurityConfig {
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/csrf", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/me", "/api/auth/logout").hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers(HttpMethod.GET, "/producto", "/producto/**", "/marcas", "/marcas/**", "/factura", "/factura/**")
+                        .hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers(HttpMethod.POST, "/factura/crear").hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers(HttpMethod.POST, "/producto", "/producto/**", "/marcas", "/marcas/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/producto", "/producto/**", "/marcas", "/marcas/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/producto", "/producto/**", "/marcas", "/marcas/**")
+                        .hasRole("ADMIN")
                         .anyRequest().hasRole("ADMIN"))
                 .formLogin(form -> form
                         .loginProcessingUrl("/api/auth/login")
