@@ -14,6 +14,7 @@ interface ProductToolbarProps {
   onOpenCreateModal: () => void;
   onOpenSaleModal: () => void;
   criticalCount: number;
+  isAdmin?: boolean;
 }
 
 export const ProductToolbar: React.FC<ProductToolbarProps> = ({
@@ -28,6 +29,7 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
   onOpenCreateModal,
   onOpenSaleModal,
   criticalCount,
+  isAdmin = true,
 }) => {
   const categories: { key: FilterCategory; label: string }[] = [
     { key: 'TODAS', label: 'Todas las zonas' },
@@ -80,7 +82,7 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
             className="form-input"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Buscar por nombre o número de referencia..."
+            placeholder="Buscar por nombre, marca o N° de referencia..."
             style={{
               paddingLeft: '2.35rem',
               paddingRight: searchQuery ? '2.2rem' : '0.85rem',
@@ -160,26 +162,29 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
             </button>
           </div>
 
-          {/* Quick Sale button */}
+          {/* Quick Sale button (available to both ADMIN and VENDEDOR) */}
           <button
             type="button"
             className="btn-secondary"
             onClick={onOpenSaleModal}
-            title="Registrar una factura o venta rápida"
+            title="Registrar una venta o emitir factura"
           >
-            <ShoppingBag size={15} color="var(--color-bronze-hover)" />
-            <span>Venta rápida</span>
+            <ShoppingBag size={15} color="var(--color-rosewood)" />
+            <span>Facturar venta</span>
           </button>
 
-          {/* New Product button */}
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={onOpenCreateModal}
-          >
-            <Plus size={16} />
-            <span>Registrar producto</span>
-          </button>
+          {/* New Product button (ADMIN only) */}
+          {isAdmin && (
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={onOpenCreateModal}
+              title="Registrar nueva referencia cosmética"
+            >
+              <Plus size={16} />
+              <span>Registrar producto</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -225,10 +230,10 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
           })}
         </div>
 
-        {/* Stock level filter */}
+        {/* Stock level filter: AGOTADOS vs DISPONIBLES */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <span style={{ fontSize: '0.775rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
-            Nivel:
+            Estado:
           </span>
           <select
             value={selectedStockFilter}
@@ -241,9 +246,11 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
               backgroundColor: '#FFFFFF',
             }}
           >
-            <option value="TODOS">Todos los niveles</option>
-            <option value="CRITICO">Bajo stock (≤10%{criticalCount > 0 ? ` · ${criticalCount}` : ''})</option>
-            <option value="SALUDABLE">Stock saludable (&gt;10%)</option>
+            <option value="TODOS">Todos los estados</option>
+            <option value="AGOTADOS">
+              Agotados (0 uds.{criticalCount > 0 ? ` · ${criticalCount}` : ''})
+            </option>
+            <option value="DISPONIBLES">Disponibles (&gt;0 uds.)</option>
           </select>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, ShieldCheck, Lock, AlertCircle, RefreshCw } from 'lucide-react';
+import { Sparkles, Lock, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface LoginScreenProps {
   onLogin: (username: string, password: string) => Promise<void>;
@@ -14,7 +14,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   isBackendOnline,
   onRefreshHealth,
 }) => {
-  const [username, setUsername] = useState('maryuri');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,7 +26,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
     const cleanUsername = username.trim();
     if (!cleanUsername || !password) {
-      setError('Por favor ingresa el nombre de usuario y la contraseña.');
+      setError('Por favor ingresa tu nombre de usuario y contraseña.');
       return;
     }
 
@@ -63,7 +63,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </div>
           <h1 className="login-brand-title">Dunamis Makeup</h1>
           <p className="login-brand-subtitle">
-            Atelier Privado · Gestión y Control de Inventario
+            Atelier · Gestión y Control de Inventario
           </p>
         </div>
 
@@ -119,53 +119,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           >
             <Sparkles size={16} color="var(--color-rosewood)" style={{ flexShrink: 0 }} />
             <span>
-              Servidor Spring Boot no detectado. Puedes ingresar de inmediato con <strong>Explorar con datos ficticios</strong> para utilizar el catálogo de demostración sin contraseña.
+              Servidor Spring Boot no detectado. Puedes ingresar de inmediato con <strong>Explorar con datos ficticios</strong> para utilizar el catálogo de demostración sin credenciales.
             </span>
           </div>
         )}
-
-        {/* Admin Account Quick Selector */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <span
-            style={{
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              color: 'var(--color-text-muted)',
-              display: 'block',
-              marginBottom: '0.45rem',
-            }}
-          >
-            Seleccionar administradora registrada:
-          </span>
-          <div className="login-admin-chip-group">
-            <button
-              type="button"
-              className={`login-admin-chip ${
-                username === 'maryuri' ? 'active' : ''
-              }`}
-              onClick={() => {
-                setUsername('maryuri');
-                setError(null);
-              }}
-            >
-              <ShieldCheck size={14} />
-              <span>maryuri</span>
-            </button>
-            <button
-              type="button"
-              className={`login-admin-chip ${
-                username === 'caterin' ? 'active' : ''
-              }`}
-              onClick={() => {
-                setUsername('caterin');
-                setError(null);
-              }}
-            >
-              <ShieldCheck size={14} />
-              <span>caterin</span>
-            </button>
-          </div>
-        </div>
 
         {/* Login Form */}
         <form onSubmit={handleSubmit}>
@@ -191,7 +148,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </div>
           )}
 
-          {/* Username Input */}
+          {/* Neutral Username Input */}
           <div className="form-group">
             <label className="form-label" htmlFor="login-screen-username">
               Nombre de usuario
@@ -202,7 +159,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               className="form-input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Ej: maryuri o caterin"
+              placeholder="Ingresa tu usuario asignado"
               autoComplete="username"
               required
             />
@@ -219,12 +176,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               className="form-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Ingresa la clave de administradora"
+              placeholder="Ingresa tu contraseña"
               autoComplete="current-password"
               required
             />
             <span className="form-hint">
-              Autenticación protegida por Spring Security (/api/auth/login).
+              Autenticación oficial Spring Security (/api/auth/login).
             </span>
           </div>
 
@@ -293,11 +250,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               lineHeight: 1.4,
             }}
           >
-            Entrar a demostración sin contraseña · Funciona con el backend sin conexión
+            Demostración local aislada · Funciona sin conexión con el servidor
           </p>
         </div>
 
-        {/* Footer Note */}
+        {/* Neutral Footer Note */}
         <div
           style={{
             marginTop: '1.5rem',
@@ -308,7 +265,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             color: 'var(--color-text-subtle)',
           }}
         >
-          Acceso exclusivo para administradoras · Dunamis Makeup
+          Dunamis Makeup · Sistema de Gestión y Ventas
         </div>
       </div>
       <style>{`

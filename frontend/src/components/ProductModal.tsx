@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { X, Sparkles } from 'lucide-react';
-import type { Producto, ProductoInput, CategoriaProducto } from '../types';
+import { X, Sparkles, Tag } from 'lucide-react';
+import type { Producto, ProductoInput, CategoriaProducto, Marca } from '../types';
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (input: ProductoInput, editingId?: number) => Promise<void>;
   editingProduct: Producto | null;
+  brands: Marca[];
+  onOpenBrandManagement?: () => void;
+  isAdmin?: boolean;
 }
 
 export const ProductModal: React.FC<ProductModalProps> = ({
@@ -14,6 +17,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   onClose,
   onSubmit,
   editingProduct,
+  brands,
+  onOpenBrandManagement,
+  isAdmin,
 }) => {
   if (!isOpen) return null;
 
@@ -24,6 +30,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         editingProduct={editingProduct}
         onClose={onClose}
         onSubmit={onSubmit}
+        brands={brands}
+        onOpenBrandManagement={onOpenBrandManagement}
+        isAdmin={isAdmin}
       />
     </div>
   );
@@ -33,17 +42,28 @@ interface ProductModalContentProps {
   editingProduct: Producto | null;
   onClose: () => void;
   onSubmit: (input: ProductoInput, editingId?: number) => Promise<void>;
+  brands: Marca[];
+  onOpenBrandManagement?: () => void;
+  isAdmin?: boolean;
 }
 
 const ProductModalContent: React.FC<ProductModalContentProps> = ({
   editingProduct,
   onClose,
   onSubmit,
+  brands,
+  onOpenBrandManagement,
+  isAdmin,
 }) => {
   const [nombre, setNombre] = useState(editingProduct ? editingProduct.nombre : '');
   const [precio, setPrecio] = useState<number | ''>(editingProduct ? editingProduct.precio : '');
   const [cantidad, setCantidad] = useState<number | ''>(editingProduct ? editingProduct.cantidad : '');
-  const [categoria, setCategoria] = useState<CategoriaProducto>(editingProduct ? editingProduct.categoria : 'ROSTRO');
+  const [categoria, setCategoria] = useState<CategoriaProducto>(
+    editingProduct ? editingProduct.categoria : 'ROSTRO'
+  );
+  const [marcaId, setMarcaId] = useState<number | ''>(
+    editingProduct?.marca?.id ? editingProduct.marca.id : brands.length > 0 ? brands[0].id : ''
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -56,13 +76,18 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
       return;
     }
 
-    if (precio === '' || Number(precio) <= 0) {
-      setError('El precio unitario debe ser un valor positivo en pesos colombianos (COP).');
+    if (!marcaId) {
+      setError('Debes seleccionar una marca para el producto.');
+      return;
+    }
+
+    if (precio === '' || Number(precio) < 0) {
+      setError('El precio unitario no puede ser negativo.');
       return;
     }
 
     if (cantidad === '' || Number(cantidad) < 0) {
-      setError('La cantidad en existencias no puede ser un número negativo.');
+      setError('Las existencias no pueden ser un número negativo.');
       return;
     }
 
@@ -74,6 +99,9 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
           precio: Math.round(Number(precio)),
           cantidad: Math.round(Number(cantidad)),
           categoria,
+          marca: {
+            id: Number(marcaId),
+          },
         },
         editingProduct ? editingProduct.id : undefined
       );
@@ -86,9 +114,7 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
   };
 
   const calculatedTotal =
-    typeof precio === 'number' && typeof cantidad === 'number'
-      ? precio * cantidad
-      : 0;
+    typeof precio === 'number' && typeof cantidad === 'number' ? precio * cantidad : 0;
 
   const formatCOP = (val: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -183,26 +209,69 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
           />
         </div>
 
-        {/* Categoría */}
-        <div className="form-group">
-          <label className="form-label" htmlFor="product-cat">
-            Zona cosmética / Categoría
-          </label>
-          <select
-            id="product-cat"
-            className="form-select"
-            value={categoria}
-            onChange={(e) => setCategoria(e.target.value as CategoriaProducto)}
-            required
-          >
-            <option value="ROSTRO">Rostro</option>
-            <option value="CEJAS">Cejas</option>
-            <option value="LABIOS">Labios</option>
-            <option value="OJOS">Ojos</option>
-          </select>
-          <span className="form-hint">
-            Categorías oficiales del catálogo Dunamis Makeup.
-          </span>
+        {/* Row: Brand & Category */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          {/* Brand select */}
+          <div className="form-group">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <label className="form-label" htmlFor="product-brand">
+                Marca cosmética
+              </label>
+              {isAdmin && onOpenBrandManagement && (
+                <button
+                  type="button"
+                  onClick={onOpenBrandManagement}
+                  className="btn-ghost"
+                  style={{ fontSize: '0.75rem', padding: '0.1rem 0.35rem', color: 'var(--color-rosewood)' }}
+                  title="Gestionar marcas registradas"
+                >
+                  <Tag size={12} />
+                  <span>Gestionar</span>
+                </button>
+              )}
+            </div>
+            <select
+              id="product-brand"
+              className="form-select"
+              value={marcaId}
+              onChange={(e) => setMarcaId(Number(e.target.value))}
+              required
+            >
+              <option value="" disabled>
+                Seleccionar marca...
+              </option>
+              {brands.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.nombre}
+                </option>
+              ))}
+            </select>
+            <span className="form-hint">
+              Marcas activas (GET /marcas).
+            </span>
+          </div>
+
+          {/* Categoría */}
+          <div className="form-group">
+            <label className="form-label" htmlFor="product-cat">
+              Zona cosmética / Categoría
+            </label>
+            <select
+              id="product-cat"
+              className="form-select"
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value as CategoriaProducto)}
+              required
+            >
+              <option value="ROSTRO">Rostro</option>
+              <option value="CEJAS">Cejas</option>
+              <option value="LABIOS">Labios</option>
+              <option value="OJOS">Ojos</option>
+            </select>
+            <span className="form-hint">
+              Categorías oficiales Dunamis.
+            </span>
+          </div>
         </div>
 
         {/* Grid row: Precio y Cantidad */}
@@ -214,7 +283,7 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
             <input
               id="product-price"
               type="number"
-              min="1"
+              min="0"
               step="1"
               className="form-input"
               value={precio}
@@ -229,7 +298,7 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
 
           <div className="form-group">
             <label className="form-label" htmlFor="product-qty">
-              Cantidad disponible (uds.)
+              Existencias disponibles (uds.)
             </label>
             <input
               id="product-qty"
@@ -243,7 +312,7 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
               required
             />
             <span className="form-hint">
-              Unidades actuales en almacén.
+              Unidades actuales en almacén (no negativo).
             </span>
           </div>
         </div>

@@ -1,13 +1,25 @@
 export type CategoriaProducto = 'ROSTRO' | 'CEJAS' | 'LABIOS' | 'OJOS';
 
+export interface Marca {
+  id: number;
+  nombre: string;
+  activa?: boolean;
+}
+
+export interface MarcaInput {
+  nombre: string;
+  activa?: boolean;
+}
+
 export interface Producto {
   id: number;
   nombre: string;
   precio: number;
   cantidad: number;
-  cantidadInicial: number;
-  totalProducto: number;
+  cantidadInicial?: number;
+  totalProducto?: number;
   categoria: CategoriaProducto;
+  marca?: Marca | null;
 }
 
 export interface ProductoInput {
@@ -15,6 +27,9 @@ export interface ProductoInput {
   precio: number;
   cantidad: number;
   categoria: CategoriaProducto;
+  marca?: {
+    id: number;
+  };
 }
 
 export interface FacturaDetalleInput {
@@ -25,6 +40,8 @@ export interface FacturaDetalleInput {
 }
 
 export interface FacturaInput {
+  cliente: string;
+  telefonoCliente?: string;
   detalles: FacturaDetalleInput[];
 }
 
@@ -32,28 +49,33 @@ export interface DetalleFactura {
   id?: number;
   producto: Producto;
   cantidad: number;
-  precioUnitario: number;
   subtotal: number;
 }
 
 export interface Factura {
   id: number;
+  cliente: string;
+  telefonoCliente?: string | null;
+  vendedorNombre?: string | null;
+  vendedorUsuario?: string | null;
   fecha?: string;
-  totalFactura: number;
-  detalles: DetalleFactura[];
+  total: number;
+  detalles?: DetalleFactura[];
 }
 
 export interface Usuario {
   username: string;
   fullName: string;
-  role: string;
+  role: 'ADMIN' | 'VENDEDOR';
 }
 
 export type FilterCategory = 'TODAS' | CategoriaProducto;
 
-export type FilterStock = 'TODOS' | 'CRITICO' | 'SALUDABLE';
+export type FilterStock = 'TODOS' | 'AGOTADOS' | 'DISPONIBLES';
 
 export type ViewMode = 'table' | 'grid';
+
+export type ActiveTab = 'inventory' | 'invoices' | 'brands';
 
 export interface ToastMessage {
   id: string;

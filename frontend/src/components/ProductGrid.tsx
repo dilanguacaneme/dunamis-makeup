@@ -8,6 +8,7 @@ interface ProductGridProps {
   onDelete: (product: Producto) => void;
   onQuickAdjustStock: (id: number, newCantidad: number) => void;
   updatingStockId: number | null;
+  isAdmin?: boolean;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -16,6 +17,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   onDelete,
   onQuickAdjustStock,
   updatingStockId,
+  isAdmin = true,
 }) => {
   const formatCOP = (val: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -47,10 +49,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
       }}
     >
       {products.map((product) => {
-        const initial = product.cantidadInicial || product.cantidad || 1;
-        const percentage = Math.min(100, Math.max(0, Math.round((product.cantidad / initial) * 100)));
-        const isCritical = product.cantidad <= initial * 0.1;
-        const isWarning = !isCritical && product.cantidad <= initial * 0.25;
+        const isAgotado = product.cantidad <= 0;
         const isUpdating = updatingStockId === product.id;
 
         return (
@@ -59,7 +58,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: 'var(--radius-lg)',
-              border: isCritical ? '1px solid var(--color-crimson-border)' : '1px solid var(--color-border)',
+              border: isAgotado ? '1px solid var(--color-crimson-border)' : '1px solid var(--color-border)',
               boxShadow: 'var(--shadow-card)',
               padding: '1.25rem',
               display: 'flex',
@@ -70,9 +69,25 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
               transition: 'border-color var(--transition-fast)',
             }}
           >
-            {/* Top row: Category + Ref */}
+            {/* Top row: Category + Brand + Ref */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              {getCategoryBadge(product.categoria)}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                {getCategoryBadge(product.categoria)}
+                {product.marca && (
+                  <span
+                    style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      color: 'var(--color-rosewood-deep)',
+                      backgroundColor: 'var(--color-rose-soft)',
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    {product.marca.nombre}
+                  </span>
+                )}
+              </div>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-subtle)' }}>
                 Ref #{product.id}
               </span>
@@ -105,13 +120,13 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
               </div>
             </div>
 
-            {/* Stock Level Bar */}
+            {/* Stock Level Card (Units only, no ratios, marks zero as Agotado) */}
             <div
               style={{
-                backgroundColor: '#FAF7F4',
+                backgroundColor: isAgotado ? 'var(--color-crimson-light)' : '#FAF7F4',
                 borderRadius: 'var(--radius-md)',
                 padding: '0.75rem',
-                border: '1px solid var(--color-border-subtle)',
+                border: `1px solid ${isAgotado ? 'var(--color-crimson-border)' : 'var(--color-border-subtle)'}`,
               }}
             >
               <div
@@ -119,110 +134,95 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: '0.4rem',
                 }}
               >
-                <span className="tabular-numbers" style={{ fontSize: '0.8rem', fontWeight: 600 }}>
-                  {product.cantidad} / {product.cantidadInicial} uds.
-                </span>
-
-                {isCritical ? (
-                  <span className="badge-stock badge-stock-critical">
-                    <AlertCircle size={11} />
-                    <span>Crítico ({percentage}%)</span>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block' }}>
+                    Existencias:
                   </span>
-                ) : isWarning ? (
-                  <span className="badge-stock badge-stock-warning">
-                    <span>Bajo ({percentage}%)</span>
+                  <span
+                    className="tabular-numbers"
+                    style={{
+                      fontSize: '0.95rem',
+                      fontWeight: 700,
+                      color: isAgotado ? 'var(--color-crimson)' : 'var(--color-text-main)',
+                    }}
+                  >
+                    {product.cantidad} unidades
+                  </span>
+                </div>
+
+                {isAgotado ? (
+                  <span className="badge-stock badge-stock-critical" title="Producto agotado (GET /producto/acabarse)">
+                    <AlertCircle size={11} />
+                    <span>Agotado</span>
                   </span>
                 ) : (
                   <span className="badge-stock badge-stock-healthy">
                     <CheckCircle size={11} />
-                    <span>Óptimo ({percentage}%)</span>
+                    <span>Disponible</span>
                   </span>
                 )}
               </div>
+            </div>
 
-              {/* Progress bar */}
+            {/* Bottom Row: Admin Stepper and actions */}
+            {isAdmin && (
               <div
                 style={{
-                  width: '100%',
-                  height: '6px',
-                  backgroundColor: 'var(--color-cashmere)',
-                  borderRadius: 'var(--radius-full)',
-                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderTop: '1px solid var(--color-border-subtle)',
+                  paddingTop: '0.75rem',
                 }}
               >
-                <div
-                  style={{
-                    height: '100%',
-                    width: `${percentage}%`,
-                    backgroundColor: isCritical
-                      ? 'var(--color-crimson)'
-                      : isWarning
-                      ? 'var(--color-bronze)'
-                      : 'var(--color-sage)',
-                    transition: 'width 250ms ease-out',
-                  }}
-                />
-              </div>
-            </div>
+                <div className="stock-stepper">
+                  <button
+                    type="button"
+                    className="stock-stepper-btn"
+                    disabled={product.cantidad <= 0 || isUpdating}
+                    onClick={() => onQuickAdjustStock(product.id, Math.max(0, product.cantidad - 1))}
+                    title="Restar 1 unidad (no permite valores negativos)"
+                  >
+                    <Minus size={12} />
+                  </button>
+                  <span className="stock-stepper-value tabular-numbers">
+                    {product.cantidad}
+                  </span>
+                  <button
+                    type="button"
+                    className="stock-stepper-btn"
+                    disabled={isUpdating}
+                    onClick={() => onQuickAdjustStock(product.id, product.cantidad + 1)}
+                    title="Sumar 1 unidad"
+                  >
+                    <Plus size={12} />
+                  </button>
+                </div>
 
-            {/* Bottom Row: Stepper and actions */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                borderTop: '1px solid var(--color-border-subtle)',
-                paddingTop: '0.75rem',
-              }}
-            >
-              <div className="stock-stepper">
-                <button
-                  type="button"
-                  className="stock-stepper-btn"
-                  disabled={product.cantidad <= 0 || isUpdating}
-                  onClick={() => onQuickAdjustStock(product.id, Math.max(0, product.cantidad - 1))}
-                  title="Restar 1 unidad"
-                >
-                  <Minus size={12} />
-                </button>
-                <span className="stock-stepper-value tabular-numbers">
-                  {product.cantidad}
-                </span>
-                <button
-                  type="button"
-                  className="stock-stepper-btn"
-                  disabled={isUpdating}
-                  onClick={() => onQuickAdjustStock(product.id, product.cantidad + 1)}
-                  title="Sumar 1 unidad"
-                >
-                  <Plus size={12} />
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => onEdit(product)}
+                    title="Modificar producto"
+                    style={{ padding: '0.35rem' }}
+                  >
+                    <Edit2 size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => onDelete(product)}
+                    title="Eliminar producto"
+                    style={{ padding: '0.35rem', color: 'var(--color-crimson)' }}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
               </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => onEdit(product)}
-                  title="Modificar producto"
-                  style={{ padding: '0.35rem' }}
-                >
-                  <Edit2 size={15} />
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => onDelete(product)}
-                  title="Eliminar producto"
-                  style={{ padding: '0.35rem', color: 'var(--color-crimson)' }}
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         );
       })}

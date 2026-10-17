@@ -26,7 +26,6 @@ export const AtelierStatusBar: React.FC<AtelierStatusBarProps> = ({
     }).format(val);
   };
 
-  // Group counts by category
   const categories: CategoriaProducto[] = ['ROSTRO', 'CEJAS', 'LABIOS', 'OJOS'];
   const categoryLabels: Record<CategoriaProducto, string> = {
     ROSTRO: 'Rostro',
@@ -44,7 +43,7 @@ export const AtelierStatusBar: React.FC<AtelierStatusBarProps> = ({
   );
 
   const totalSKUs = products.length;
-  const criticalCount = lowStockProducts.length;
+  const agotadosCount = lowStockProducts.length;
 
   return (
     <section
@@ -148,7 +147,7 @@ export const AtelierStatusBar: React.FC<AtelierStatusBarProps> = ({
         </div>
       </div>
 
-      {/* 3. Reorder Alert Pulse */}
+      {/* 3. Agotados Alert Pulse (from GET /producto/acabarse) */}
       <div
         style={{
           borderLeft: '1px solid var(--color-border-subtle)',
@@ -159,7 +158,7 @@ export const AtelierStatusBar: React.FC<AtelierStatusBarProps> = ({
           gap: '0.5rem',
         }}
       >
-        {criticalCount > 0 ? (
+        {agotadosCount > 0 ? (
           <div
             style={{
               backgroundColor: 'var(--color-crimson-light)',
@@ -176,10 +175,10 @@ export const AtelierStatusBar: React.FC<AtelierStatusBarProps> = ({
               <AlertTriangle size={20} color="var(--color-crimson)" style={{ flexShrink: 0 }} />
               <div>
                 <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-crimson)', lineHeight: 1.2 }}>
-                  {criticalCount} {criticalCount === 1 ? 'producto crítico' : 'productos críticos'}
+                  {agotadosCount} {agotadosCount === 1 ? 'producto agotado' : 'productos agotados'}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#7E2021' }}>
-                  Existencias en o por debajo del 10%
+                  Existencias en 0 unidades (GET /producto/acabarse)
                 </div>
               </div>
             </div>
@@ -197,7 +196,7 @@ export const AtelierStatusBar: React.FC<AtelierStatusBarProps> = ({
                 transition: 'background-color var(--transition-fast)',
               }}
             >
-              Revisar alerta
+              Revisar agotados
             </button>
           </div>
         ) : (
@@ -215,10 +214,10 @@ export const AtelierStatusBar: React.FC<AtelierStatusBarProps> = ({
             <CheckCircle2 size={20} color="var(--color-sage)" style={{ flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-sage)' }}>
-                Niveles de stock óptimos
+                Catálogo con existencias
               </div>
               <div style={{ fontSize: '0.75rem', color: '#2B5040' }}>
-                Todas las referencias superan el umbral de reposición
+                Todas las referencias cuentan con unidades disponibles
               </div>
             </div>
           </div>

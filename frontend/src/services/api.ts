@@ -1,4 +1,12 @@
-import type { Producto, ProductoInput, FacturaInput, Factura, Usuario } from '../types';
+import type {
+  Producto,
+  ProductoInput,
+  FacturaInput,
+  Factura,
+  Usuario,
+  Marca,
+  MarcaInput,
+} from '../types';
 import { demoStore, DEMO_ADMIN_USER } from './demoData';
 
 const BASE_URL = ''; // Relative path leverages Vite dev server proxy or same-origin deployment
@@ -59,10 +67,14 @@ export const inventoryApi = {
       }
 
       const data = await res.json();
+      if (data.role !== 'ADMIN' && data.role !== 'VENDEDOR') {
+        return null;
+      }
+
       return {
         username: data.username,
         fullName: data.fullName || data.username,
-        role: data.role || 'ADMIN',
+        role: data.role,
       };
     } catch {
       return null;
@@ -100,7 +112,7 @@ export const inventoryApi = {
       });
 
       if (!res.ok) {
-        let errorMsg = 'Usuario o contraseña incorrectos. Verifique sus credenciales de administradora.';
+        let errorMsg = 'Usuario o contraseña incorrectos. Verifique sus credenciales de acceso.';
         try {
           const errJson = await res.json();
           if (errJson.message) errorMsg = errJson.message;
@@ -110,11 +122,14 @@ export const inventoryApi = {
         throw new ApiError(errorMsg, res.status);
       }
 
-      // Refresh CSRF after login as instructed in README
+      // Refresh CSRF after login
       await this.ensureCsrf();
 
       const user = await this.getCurrentUser(false);
-      return user || { username, fullName: username, role: 'ADMIN' };
+      if (!user) {
+        throw new ApiError('No fue posible validar el usuario y su rol después del inicio de sesión.', 401);
+      }
+      return user;
     } catch (err: any) {
       if (err instanceof ApiError) {
         throw err;
@@ -130,6 +145,7 @@ export const inventoryApi = {
   async logout(isDemo: boolean): Promise<void> {
     if (isDemo) return;
 
+    await this.ensureCsrf();
     const token = getXsrfToken();
     const headers: Record<string, string> = {
       Accept: 'application/json',
@@ -185,7 +201,6 @@ export const inventoryApi = {
     });
 
     if (res.status === 404) {
-      // Inventario vacio
       return 0;
     }
 
@@ -197,7 +212,7 @@ export const inventoryApi = {
     return typeof data === 'number' ? data : 0;
   },
 
-  // Products: Low stock products (acabarse)
+  // Products: Low stock products (acabarse) - returns items where cantidad = 0
   async getLowStockProducts(isDemo: boolean): Promise<Producto[]> {
     if (isDemo) {
       return demoStore.getLowStockProducts();
@@ -210,7 +225,7 @@ export const inventoryApi = {
     });
 
     if (!res.ok) {
-      throw new ApiError(`Error al consultar productos por agotarse (${res.status})`, res.status);
+      throw new ApiError(`Error al consultar productos agotados (${res.status})`, res.status);
     }
 
     return await res.json();
@@ -222,6 +237,7 @@ export const inventoryApi = {
       return demoStore.createProduct(input);
     }
 
+    await this.ensureCsrf();
     const token = getXsrfToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -231,21 +247,33 @@ export const inventoryApi = {
       headers['X-XSRF-TOKEN'] = token;
     }
 
+    const bodyPayload: any = {
+      nombre: input.nombre.trim(),
+      precio: Number(input.precio),
+      cantidad: Math.max(0, Number(input.cantidad)),
+      categoria: input.categoria,
+    };
+
+    if (input.marca?.id) {
+      bodyPayload.marca = { id: input.marca.id };
+    }
+
     const res = await fetch(`${BASE_URL}/producto/crear`, {
       method: 'POST',
       credentials: 'include',
       headers,
-      body: JSON.stringify({
-        nombre: input.nombre.trim(),
-        precio: Number(input.precio),
-        cantidad: Number(input.cantidad),
-        categoria: input.categoria,
-      }),
+      body: JSON.stringify(bodyPayload),
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new ApiError(`Error al crear producto: ${errorText || res.statusText}`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al crear producto (${res.status})`, res.status);
     }
 
     return await res.json();
@@ -257,6 +285,7 @@ export const inventoryApi = {
       return demoStore.updateProduct(id, input);
     }
 
+    await this.ensureCsrf();
     const token = getXsrfToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -266,16 +295,29 @@ export const inventoryApi = {
       headers['X-XSRF-TOKEN'] = token;
     }
 
+    const bodyPayload: any = {};
+    if (input.nombre !== undefined) bodyPayload.nombre = input.nombre.trim();
+    if (input.precio !== undefined) bodyPayload.precio = Number(input.precio);
+    if (input.cantidad !== undefined) bodyPayload.cantidad = Math.max(0, Number(input.cantidad));
+    if (input.categoria !== undefined) bodyPayload.categoria = input.categoria;
+    if (input.marca?.id) bodyPayload.marca = { id: input.marca.id };
+
     const res = await fetch(`${BASE_URL}/producto/actualizar/${id}`, {
       method: 'PATCH',
       credentials: 'include',
       headers,
-      body: JSON.stringify(input),
+      body: JSON.stringify(bodyPayload),
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new ApiError(`Error al actualizar producto: ${errorText || res.statusText}`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al actualizar producto (${res.status})`, res.status);
     }
 
     return await res.json();
@@ -287,6 +329,7 @@ export const inventoryApi = {
       return demoStore.deleteProduct(id);
     }
 
+    await this.ensureCsrf();
     const token = getXsrfToken();
     const headers: Record<string, string> = {
       Accept: 'application/json',
@@ -302,19 +345,153 @@ export const inventoryApi = {
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new ApiError(`Error al eliminar producto: ${errorText || res.statusText}`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al eliminar producto (${res.status})`, res.status);
     }
 
     return await res.json();
   },
 
-  // Invoice / Sale: Create
-  async createInvoice(input: FacturaInput, isDemo: boolean): Promise<Factura> {
+  // --- BRANDS API ---
+  async getBrands(isDemo: boolean): Promise<Marca[]> {
     if (isDemo) {
-      return demoStore.createInvoice(input);
+      return demoStore.getBrands();
     }
 
+    const res = await fetch(`${BASE_URL}/marcas`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!res.ok) {
+      throw new ApiError(`Error al consultar marcas (${res.status})`, res.status);
+    }
+
+    return await res.json();
+  },
+
+  async createBrand(input: MarcaInput, isDemo: boolean): Promise<Marca> {
+    if (isDemo) {
+      return demoStore.createBrand(input);
+    }
+
+    await this.ensureCsrf();
+    const token = getXsrfToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['X-XSRF-TOKEN'] = token;
+    }
+
+    const res = await fetch(`${BASE_URL}/marcas`, {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify({ nombre: input.nombre.trim() }),
+    });
+
+    if (!res.ok) {
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al crear marca (${res.status})`, res.status);
+    }
+
+    return await res.json();
+  },
+
+  async updateBrand(id: number, input: Partial<MarcaInput>, isDemo: boolean): Promise<Marca> {
+    if (isDemo) {
+      return demoStore.updateBrand(id, input);
+    }
+
+    await this.ensureCsrf();
+    const token = getXsrfToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['X-XSRF-TOKEN'] = token;
+    }
+
+    const res = await fetch(`${BASE_URL}/marcas/${id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify(input),
+    });
+
+    if (!res.ok) {
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al actualizar marca (${res.status})`, res.status);
+    }
+
+    return await res.json();
+  },
+
+  // --- INVOICES API ---
+  async getInvoices(isDemo: boolean, userRole?: string, username?: string): Promise<Factura[]> {
+    if (isDemo) {
+      return demoStore.getInvoices(userRole, username);
+    }
+
+    const res = await fetch(`${BASE_URL}/factura/obtener-facturas`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!res.ok) {
+      throw new ApiError(`Error al consultar facturas (${res.status})`, res.status);
+    }
+
+    return await res.json();
+  },
+
+  async getInvoiceById(id: number, isDemo: boolean, userRole?: string, username?: string): Promise<Factura> {
+    if (isDemo) {
+      return demoStore.getInvoiceById(id, userRole, username);
+    }
+
+    const res = await fetch(`${BASE_URL}/factura/obtener-factura-por-id/${id}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!res.ok) {
+      throw new ApiError(`Error al consultar factura #${id} (${res.status})`, res.status);
+    }
+
+    return await res.json();
+  },
+
+  async createInvoice(input: FacturaInput, isDemo: boolean, currentUser?: Usuario | null): Promise<Factura> {
+    if (isDemo) {
+      return demoStore.createInvoice(input, currentUser);
+    }
+
+    await this.ensureCsrf();
     const token = getXsrfToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -332,8 +509,14 @@ export const inventoryApi = {
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new ApiError(`Error al registrar factura: ${errorText || res.statusText}`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al registrar factura (${res.status})`, res.status);
     }
 
     return await res.json();

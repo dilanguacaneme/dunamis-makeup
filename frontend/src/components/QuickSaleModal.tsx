@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShoppingBag, Check } from 'lucide-react';
+import { X, ShoppingBag, Plus, Trash2, Check, AlertCircle } from 'lucide-react';
 import type { Producto, FacturaInput } from '../types';
 
 interface QuickSaleModalProps {
@@ -34,22 +34,28 @@ interface QuickSaleModalContentProps {
   onSaleSuccess: (saleInput: FacturaInput) => Promise<void>;
 }
 
+interface SaleLineItem {
+  productId: number;
+  cantidad: number;
+}
+
 const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
   products,
   onClose,
   onSaleSuccess,
 }) => {
   const availableProducts = products.filter((p) => p.cantidad > 0);
-  const [selectedProductId, setSelectedProductId] = useState<number | ''>(
-    availableProducts.length > 0 ? availableProducts[0].id : ''
-  );
-  const [cantidad, setCantidad] = useState<number>(1);
+
+  const [cliente, setCliente] = useState('');
+  const [telefonoCliente, setTelefonoCliente] = useState('');
+  const [items, setItems] = useState<SaleLineItem[]>([
+    {
+      productId: availableProducts.length > 0 ? availableProducts[0].id : 0,
+      cantidad: 1,
+    },
+  ]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const currentProduct = products.find((p) => p.id === Number(selectedProductId));
-  const maxStock = currentProduct ? currentProduct.cantidad : 0;
-  const subtotal = currentProduct ? currentProduct.precio * cantidad : 0;
 
   const formatCOP = (val: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -59,35 +65,82 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
     }).format(val);
   };
 
+  const handleAddItem = () => {
+    const unusedProduct = availableProducts.find(
+      (p) => !items.some((item) => item.productId === p.id)
+    );
+    const productIdToAdd = unusedProduct ? unusedProduct.id : availableProducts[0]?.id || 0;
+    setItems((prev) => [...prev, { productId: productIdToAdd, cantidad: 1 }]);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    if (items.length <= 1) return;
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateItemProduct = (index: number, newProductId: number) => {
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, productId: newProductId, cantidad: 1 } : item))
+    );
+  };
+
+  const handleUpdateItemQty = (index: number, qty: number) => {
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, cantidad: Math.max(1, qty) } : item))
+    );
+  };
+
+  // Calculate totals
+  const totalFactura = items.reduce((acc, item) => {
+    const prod = products.find((p) => p.id === item.productId);
+    return acc + (prod ? prod.precio * item.cantidad : 0);
+  }, 0);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!selectedProductId || !currentProduct) {
-      setError('Debes seleccionar un producto cosmético para la venta.');
+    const cleanCliente = cliente.trim();
+    if (!cleanCliente) {
+      setError('El nombre del cliente es obligatorio para emitir la factura.');
       return;
     }
 
-    if (cantidad <= 0) {
-      setError('La cantidad a vender debe ser de al menos 1 unidad.');
+    if (items.length === 0) {
+      setError('La factura debe tener al menos un producto cosmético.');
       return;
     }
 
-    if (cantidad > maxStock) {
-      setError(`Stock insuficiente. Solo quedan ${maxStock} unidades disponibles.`);
-      return;
+    // Verify all items are valid and have sufficient stock
+    for (const item of items) {
+      const prod = products.find((p) => p.id === item.productId);
+      if (!prod) {
+        setError('Uno de los productos seleccionados no es válido.');
+        return;
+      }
+      if (item.cantidad <= 0) {
+        setError(`La cantidad para "${prod.nombre}" debe ser mayor a cero.`);
+        return;
+      }
+      if (item.cantidad > prod.cantidad) {
+        setError(
+          `Stock insuficiente para "${prod.nombre}". Existencias actuales: ${prod.cantidad} uds.`
+        );
+        return;
+      }
     }
 
     try {
       setIsSubmitting(true);
       const facturaPayload: FacturaInput = {
-        detalles: [
-          {
-            producto: { id: currentProduct.id },
-            cantidad,
-          },
-        ],
+        cliente: cleanCliente,
+        telefonoCliente: telefonoCliente.trim() || undefined,
+        detalles: items.map((item) => ({
+          producto: { id: item.productId },
+          cantidad: item.cantidad,
+        })),
       };
+
       await onSaleSuccess(facturaPayload);
       onClose();
     } catch (err: any) {
@@ -104,6 +157,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="sale-modal-title"
+      style={{ maxWidth: '620px' }}
     >
       {/* Header */}
       <div
@@ -119,8 +173,8 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <div
             style={{
-              width: '2rem',
-              height: '2rem',
+              width: '2.1rem',
+              height: '2.1rem',
               borderRadius: 'var(--radius-md)',
               backgroundColor: 'var(--color-rose-soft)',
               color: 'var(--color-rosewood)',
@@ -129,7 +183,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
               justifyContent: 'center',
             }}
           >
-            <ShoppingBag size={16} />
+            <ShoppingBag size={18} />
           </div>
           <div>
             <h2
@@ -141,10 +195,10 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
                 color: 'var(--color-rosewood-deep)',
               }}
             >
-              Registrar Venta / Factura
+              Registrar Venta / Emitir Factura
             </h2>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-              Conexión con endpoint backend: /factura/crear
+              Genera factura con cliente y descuenta stock automáticamente (POST /factura/crear)
             </span>
           </div>
         </div>
@@ -153,7 +207,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
         </button>
       </div>
 
-      {/* Body */}
+      {/* Form Body */}
       <form onSubmit={handleSubmit} style={{ padding: '1.5rem' }}>
         {error && (
           <div
@@ -165,80 +219,173 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
               padding: '0.75rem 1rem',
               borderRadius: 'var(--radius-md)',
               marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
             }}
+            role="alert"
           >
-            {error}
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <div>{error}</div>
           </div>
         )}
 
-        {/* Product Select */}
-        <div className="form-group">
-          <label className="form-label" htmlFor="sale-product">
-            Producto a vender
-          </label>
-          <select
-            id="sale-product"
-            className="form-select"
-            value={selectedProductId}
-            onChange={(e) => {
-              setSelectedProductId(Number(e.target.value));
-              setCantidad(1);
-            }}
-            required
-          >
-            {availableProducts.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nombre} — {formatCOP(p.precio)} ({p.cantidad} uds. disponibles)
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Cantidad y Stock Restante */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-          <div className="form-group">
-            <label className="form-label" htmlFor="sale-qty">
-              Cantidad a facturar
+        {/* Customer Information (Requirement 1: customer name required, optional phone) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" htmlFor="sale-customer-name">
+              Nombre del cliente <span style={{ color: 'var(--color-crimson)' }}>*</span>
             </label>
             <input
-              id="sale-qty"
-              type="number"
-              min="1"
-              max={maxStock}
+              id="sale-customer-name"
+              type="text"
               className="form-input"
-              value={cantidad}
-              onChange={(e) => setCantidad(Number(e.target.value))}
+              value={cliente}
+              onChange={(e) => setCliente(e.target.value)}
+              placeholder="Ej: Carolina Gómez"
               required
             />
+            <span className="form-hint">Campo obligatorio (max 255 caracteres).</span>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              Stock actual en tienda
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" htmlFor="sale-customer-phone">
+              Teléfono de contacto <span style={{ color: 'var(--color-text-subtle)', fontWeight: 400 }}>(Opcional)</span>
             </label>
-            <div
-              style={{
-                padding: '0.6rem 0.85rem',
-                backgroundColor: '#FAF7F4',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--color-border)',
-                fontSize: '0.9rem',
-                color: 'var(--color-text-main)',
-                fontWeight: 600,
-              }}
-            >
-              {maxStock} unidades
-            </div>
+            <input
+              id="sale-customer-phone"
+              type="text"
+              className="form-input"
+              value={telefonoCliente}
+              onChange={(e) => setTelefonoCliente(e.target.value)}
+              placeholder="Ej: 312 456 7890"
+            />
+            <span className="form-hint">Número de contacto para la factura.</span>
           </div>
         </div>
 
-        {/* Total calculation indicator */}
+        {/* Product items table */}
+        <div style={{ marginBottom: '1.25rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '0.65rem',
+            }}
+          >
+            <label className="form-label" style={{ marginBottom: 0 }}>
+              Referencias cosméticas a facturar
+            </label>
+            {availableProducts.length > items.length && (
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={handleAddItem}
+                style={{ fontSize: '0.78rem', padding: '0.2rem 0.5rem', color: 'var(--color-rosewood)' }}
+              >
+                <Plus size={13} />
+                <span>+ Agregar otra referencia</span>
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {items.map((item, idx) => {
+              const currentProd = products.find((p) => p.id === item.productId);
+              const maxUnits = currentProd ? currentProd.cantidad : 0;
+              const lineSubtotal = currentProd ? currentProd.precio * item.cantidad : 0;
+
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.85rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.65rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <div style={{ flex: 1 }}>
+                      <select
+                        className="form-select"
+                        value={item.productId}
+                        onChange={(e) => handleUpdateItemProduct(idx, Number(e.target.value))}
+                        required
+                        style={{ fontSize: '0.875rem' }}
+                      >
+                        {availableProducts.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.nombre} {p.marca ? `(${p.marca.nombre})` : ''} — {formatCOP(p.precio)} ({p.cantidad} uds.)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {items.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() => handleRemoveItem(idx)}
+                        style={{ padding: '0.35rem', color: 'var(--color-crimson)' }}
+                        title="Quitar de la factura"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '0.825rem',
+                      color: 'var(--color-text-muted)',
+                      backgroundColor: 'var(--color-rose-subtle)',
+                      padding: '0.45rem 0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>Cantidad:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max={maxUnits}
+                        value={item.cantidad}
+                        onChange={(e) => handleUpdateItemQty(idx, Number(e.target.value))}
+                        className="form-input"
+                        style={{ width: '4.5rem', padding: '0.2rem 0.45rem', fontSize: '0.825rem' }}
+                        required
+                      />
+                      <span>(Disponible: {maxUnits} uds.)</span>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <span>Subtotal: </span>
+                      <strong className="tabular-numbers" style={{ color: 'var(--color-rosewood-deep)' }}>
+                        {formatCOP(lineSubtotal)}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Total calculation banner */}
         <div
           style={{
-            backgroundColor: 'var(--color-rose-subtle)',
+            backgroundColor: 'var(--color-rose-soft)',
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-md)',
-            padding: '0.9rem 1.15rem',
+            padding: '1rem 1.25rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -247,17 +394,17 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
         >
           <div>
             <span style={{ fontSize: '0.8rem', color: 'var(--color-rosewood)', fontWeight: 600, display: 'block' }}>
-              Total a facturar
+              Total general de la factura
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-              {cantidad} uds. × {currentProduct ? formatCOP(currentProduct.precio) : '$0'}
+              {items.length} {items.length === 1 ? 'referencia cosmética' : 'referencias cosméticas'}
             </span>
           </div>
           <span
             className="tabular-numbers"
-            style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-rosewood-deep)' }}
+            style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-rosewood-deep)' }}
           >
-            {formatCOP(subtotal)}
+            {formatCOP(totalFactura)}
           </span>
         </div>
 
@@ -266,9 +413,13 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
           <button type="button" className="btn-secondary" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </button>
-          <button type="submit" className="btn-accent" disabled={isSubmitting || maxStock === 0}>
+          <button
+            type="submit"
+            className="btn-accent"
+            disabled={isSubmitting || availableProducts.length === 0}
+          >
             <Check size={16} />
-            <span>{isSubmitting ? 'Registrando...' : 'Emitir factura'}</span>
+            <span>{isSubmitting ? 'Emitiendo factura...' : 'Emitir factura'}</span>
           </button>
         </div>
       </form>

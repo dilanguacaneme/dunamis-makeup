@@ -4,9 +4,13 @@ import type {
   Producto,
   ProductoInput,
   FacturaInput,
+  Factura,
+  Marca,
+  MarcaInput,
   FilterCategory,
   FilterStock,
   ViewMode,
+  ActiveTab,
   Usuario,
   ToastMessage,
   CategoriaProducto,
@@ -20,9 +24,12 @@ import { LowStockDrawer } from './components/LowStockDrawer';
 import { ProductModal } from './components/ProductModal';
 import { QuickSaleModal } from './components/QuickSaleModal';
 import { LoginScreen } from './components/LoginScreen';
+import { InvoiceHistoryView } from './components/InvoiceHistoryView';
+import { InvoiceDetailModal } from './components/InvoiceDetailModal';
+import { BrandManagementModal } from './components/BrandManagementModal';
 import { TableSkeleton, EmptyState, ErrorBanner, DeleteConfirmModal, DemoNoticeBanner } from './components/StateViews';
 import { ToastContainer } from './components/ToastContainer';
-import { DEMO_ADMIN_USER, demoStore } from './services/demoData';
+import { DEMO_ADMIN_USER, DEMO_SELLER_USER, demoStore } from './services/demoData';
 import { Sparkles } from 'lucide-react';
 import './styles/theme.css';
 
@@ -35,10 +42,15 @@ export const App: React.FC = () => {
     return localStorage.getItem('dunamis_mode') === 'demo';
   });
 
+  // Navigation tab
+  const [activeTab, setActiveTab] = useState<ActiveTab>('inventory');
+
   // Inventory Data State
   const [products, setProducts] = useState<Producto[]>([]);
   const [totalInventory, setTotalInventory] = useState<number>(0);
   const [lowStockProducts, setLowStockProducts] = useState<Producto[]>([]);
+  const [brands, setBrands] = useState<Marca[]>([]);
+  const [invoices, setInvoices] = useState<Factura[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +66,9 @@ export const App: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Producto | null>(null);
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const [isLowStockDrawerOpen, setIsLowStockDrawerOpen] = useState(false);
+  const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<Producto | null>(null);
+  const [viewingInvoiceId, setViewingInvoiceId] = useState<number | null>(null);
 
   // Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -71,6 +85,8 @@ export const App: React.FC = () => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  const isAdmin = user?.role === 'ADMIN';
+
   // Health check helper
   const refreshBackendHealth = useCallback(async () => {
     try {
@@ -85,7 +101,6 @@ export const App: React.FC = () => {
   const loadData = useCallback(async (currentDemoState: boolean, currentUser?: Usuario | null) => {
     const activeUser = currentUser !== undefined ? currentUser : user;
     if (!activeUser) {
-      // Never fetch inventory data if unauthenticated
       return;
     }
 
@@ -106,24 +121,29 @@ export const App: React.FC = () => {
         }
       }
 
-      // Fetch inventory datasets in parallel
-      const [prods, total, lowStock] = await Promise.all([
+      // Fetch datasets in parallel
+      const [prods, total, lowStock, brandsList, invoicesList] = await Promise.all([
         inventoryApi.getProducts(currentDemoState),
         inventoryApi.getTotalInventory(currentDemoState),
         inventoryApi.getLowStockProducts(currentDemoState),
+        inventoryApi.getBrands(currentDemoState),
+        inventoryApi.getInvoices(currentDemoState, activeUser.role, activeUser.username),
       ]);
 
       setProducts(prods);
       setTotalInventory(total);
       setLowStockProducts(lowStock);
+      setBrands(brandsList);
+      setInvoices(invoicesList);
+
       if (!currentDemoState) {
         setBackendOnline(true);
       }
     } catch (err: any) {
-      console.error('Error fetching inventory:', err);
+      console.error('Error fetching data:', err);
       if (err instanceof ApiError && err.status === 401) {
         setUser(null);
-        setError('Tu sesión de administradora ha expirado. Por favor inicia sesión nuevamente.');
+        setError('Tu sesión en el Atelier ha expirado. Por favor inicia sesión nuevamente.');
       } else {
         setError(err.message || 'Error al comunicarse con el servidor.');
       }
@@ -156,7 +176,6 @@ export const App: React.FC = () => {
             setIsDemo(true);
             await loadData(true, DEMO_ADMIN_USER);
           } else {
-            // Unauthenticated: ensure user is null, show login screen
             setUser(null);
           }
         }
@@ -184,7 +203,7 @@ export const App: React.FC = () => {
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Demo Mode Switch (Available only for authenticated admins)
+  // Demo Mode Switch
   const handleToggleDemo = () => {
     if (!user) return;
     const newDemoMode = !isDemo;
@@ -194,10 +213,23 @@ export const App: React.FC = () => {
       'info',
       newDemoMode ? 'Modo Demostración Activo' : 'Conectando con Backend',
       newDemoMode
-        ? 'Utilizando catálogo local de pruebas con referencias cosméticas precargadas.'
+        ? 'Utilizando catálogo local de pruebas con marcas y facturas precargadas.'
         : 'Intentando comunicarse con el backend Spring Boot en http://localhost:8080.'
     );
     void loadData(newDemoMode, user);
+  };
+
+  // Demo Role Toggle helper (allows testing ADMIN vs VENDEDOR visibility locally)
+  const handleToggleDemoRole = () => {
+    if (!isDemo || !user) return;
+    const nextUser = user.role === 'ADMIN' ? DEMO_SELLER_USER : DEMO_ADMIN_USER;
+    setUser(nextUser);
+    addToast(
+      'info',
+      'Rol de Demostración Cambiado',
+      `Ahora estás navegando como ${nextUser.role === 'ADMIN' ? 'Administradora' : 'Vendedora'} (${nextUser.fullName}).`
+    );
+    void loadData(true, nextUser);
   };
 
   // Auth Handlers
@@ -209,12 +241,12 @@ export const App: React.FC = () => {
     addToast(
       'success',
       'Sesión Iniciada',
-      `Bienvenida al Atelier, ${loggedUser.fullName || loggedUser.username}.`
+      `Bienvenida al Atelier, ${loggedUser.fullName || loggedUser.username}. (${loggedUser.role === 'ADMIN' ? 'Administradora' : 'Vendedora'})`
     );
     await loadData(isDemo, loggedUser);
   };
 
-  // Demo Entry Handler (Without requiring password or backend)
+  // Demo Entry Handler
   const handleEnterDemo = () => {
     setIsDemo(true);
     localStorage.setItem('dunamis_mode', 'demo');
@@ -235,7 +267,7 @@ export const App: React.FC = () => {
     addToast(
       'info',
       'Catálogo Demostración Restablecido',
-      'Se recargaron las 12 referencias cosméticas iniciales de prueba.'
+      'Se recargaron los productos, marcas sembradas y facturas iniciales de prueba.'
     );
   };
 
@@ -250,8 +282,34 @@ export const App: React.FC = () => {
       setProducts([]);
       setTotalInventory(0);
       setLowStockProducts([]);
+      setBrands([]);
+      setInvoices([]);
       addToast('info', 'Sesión Finalizada', 'Has cerrado sesión correctamente.');
     }
+  };
+
+  // Brand Operations (Admin-only surface)
+  const handleCreateBrand = async (input: MarcaInput) => {
+    await inventoryApi.createBrand(input, isDemo);
+    addToast('success', 'Marca Creada', `Se registró la marca "${input.nombre}".`);
+    await loadData(isDemo, user);
+  };
+
+  const handleUpdateBrand = async (id: number, input: Partial<MarcaInput>) => {
+    await inventoryApi.updateBrand(id, input, isDemo);
+    addToast(
+      'success',
+      'Marca Actualizada',
+      input.activa === false
+        ? 'Se ha desactivado la marca del catálogo.'
+        : `Se actualizaron los datos de la marca #${id}.`
+    );
+    await loadData(isDemo, user);
+  };
+
+  const handleRefreshBrands = async () => {
+    const list = await inventoryApi.getBrands(isDemo);
+    setBrands(list);
   };
 
   // Product CRUD Handlers
@@ -277,6 +335,7 @@ export const App: React.FC = () => {
   };
 
   const handleQuickAdjustStock = async (id: number, newCantidad: number) => {
+    if (newCantidad < 0) return; // Strict prevent negative stock
     try {
       setUpdatingStockId(id);
       await inventoryApi.updateProduct(id, { cantidad: newCantidad }, isDemo);
@@ -300,6 +359,7 @@ export const App: React.FC = () => {
   };
 
   const handleRestock = async (product: Producto, additionalQty: number) => {
+    if (additionalQty <= 0) return;
     try {
       const newStock = product.cantidad + additionalQty;
       await inventoryApi.updateProduct(product.id, { cantidad: newStock }, isDemo);
@@ -314,12 +374,13 @@ export const App: React.FC = () => {
     }
   };
 
+  // Invoice / Sale Handlers
   const handleQuickSale = async (facturaInput: FacturaInput) => {
-    const res = await inventoryApi.createInvoice(facturaInput, isDemo);
+    const res = await inventoryApi.createInvoice(facturaInput, isDemo, user);
     addToast(
       'success',
       'Factura Emitida',
-      `Venta registrada con éxito (#${res.id}). El stock ha sido descontado automáticamente.`
+      `Factura #${res.id} generada para "${res.cliente}". Existencias descontadas automáticamente.`
     );
     await loadData(isDemo, user);
   };
@@ -327,12 +388,13 @@ export const App: React.FC = () => {
   // Filtered products calculation
   const filteredProducts = useMemo(() => {
     return products.filter((prod) => {
-      // 1. Search query (name or id)
+      // 1. Search query (name, id, or brand name)
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
         const matchesName = prod.nombre.toLowerCase().includes(query);
         const matchesId = prod.id.toString().includes(query);
-        if (!matchesName && !matchesId) return false;
+        const matchesBrand = prod.marca?.nombre?.toLowerCase().includes(query) ?? false;
+        if (!matchesName && !matchesId && !matchesBrand) return false;
       }
 
       // 2. Category filter
@@ -340,12 +402,12 @@ export const App: React.FC = () => {
         return false;
       }
 
-      // 3. Stock status filter
-      if (selectedStockFilter !== 'TODOS') {
-        const initial = prod.cantidadInicial || prod.cantidad || 1;
-        const isCritical = prod.cantidad <= initial * 0.1;
-        if (selectedStockFilter === 'CRITICO' && !isCritical) return false;
-        if (selectedStockFilter === 'SALUDABLE' && isCritical) return false;
+      // 3. Stock status filter (AGOTADOS = 0 uds, DISPONIBLES > 0 uds)
+      if (selectedStockFilter === 'AGOTADOS' && prod.cantidad > 0) {
+        return false;
+      }
+      if (selectedStockFilter === 'DISPONIBLES' && prod.cantidad <= 0) {
+        return false;
       }
 
       return true;
@@ -407,7 +469,7 @@ export const App: React.FC = () => {
     );
   }
 
-  // Authenticated: Show the main inventory dashboard
+  // Authenticated: Show the main inventory dashboard or invoice history
   return (
     <div className="app-layout">
       {/* Header */}
@@ -416,13 +478,17 @@ export const App: React.FC = () => {
         isDemo={isDemo}
         backendOnline={backendOnline}
         isLoading={isLoading}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onToggleDemo={handleToggleDemo}
         onLogout={handleLogout}
         onRefresh={() => loadData(isDemo, user)}
+        onOpenBrandModal={isAdmin ? () => setIsBrandModalOpen(true) : undefined}
+        onToggleDemoRole={isDemo ? handleToggleDemoRole : undefined}
       />
 
       <main className="main-content">
-        {/* Visible Spanish notice for demo mode */}
+        {/* Visible notice for demo mode */}
         {isDemo && (
           <DemoNoticeBanner onResetDefaults={handleResetDemoData} />
         )}
@@ -440,85 +506,113 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* Atelier Status Bar / Pulse */}
-        <AtelierStatusBar
-          totalInventory={totalInventory}
-          products={products}
-          lowStockProducts={lowStockProducts}
-          onOpenLowStockDrawer={() => setIsLowStockDrawerOpen(true)}
-          onSelectCategory={(cat: CategoriaProducto) => {
-            setSelectedCategory(cat);
-          }}
-        />
+        {/* TAB 1: Inventory Management */}
+        {activeTab === 'inventory' && (
+          <>
+            {/* Atelier Status Bar / Pulse */}
+            <AtelierStatusBar
+              totalInventory={totalInventory}
+              products={products}
+              lowStockProducts={lowStockProducts}
+              onOpenLowStockDrawer={() => setIsLowStockDrawerOpen(true)}
+              onSelectCategory={(cat: CategoriaProducto) => {
+                setSelectedCategory(cat);
+              }}
+            />
 
-        {/* Toolbar */}
-        <ProductToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-          selectedStockFilter={selectedStockFilter}
-          onSelectStockFilter={setSelectedStockFilter}
-          viewMode={viewMode}
-          onToggleViewMode={setViewMode}
-          onOpenCreateModal={handleOpenCreateModal}
-          onOpenSaleModal={() => setIsSaleModalOpen(true)}
-          criticalCount={lowStockProducts.length}
-        />
+            {/* Toolbar */}
+            <ProductToolbar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              selectedStockFilter={selectedStockFilter}
+              onSelectStockFilter={setSelectedStockFilter}
+              viewMode={viewMode}
+              onToggleViewMode={setViewMode}
+              onOpenCreateModal={handleOpenCreateModal}
+              onOpenSaleModal={() => setIsSaleModalOpen(true)}
+              criticalCount={lowStockProducts.length}
+              isAdmin={isAdmin}
+            />
 
-        {/* Content presentation */}
-        {isLoading ? (
-          <TableSkeleton />
-        ) : filteredProducts.length === 0 ? (
-          <EmptyState
-            title={
-              products.length === 0
-                ? 'El inventario está actualmente vacío'
-                : 'No se encontraron referencias'
-            }
-            description={
-              products.length === 0
-                ? 'Aún no se han registrado productos cosméticos en este catálogo. Comienza añadiendo el primero.'
-                : 'No hay productos que coincidan con los filtros seleccionados o el término de búsqueda.'
-            }
-            actionText={
-              products.length === 0 ? '+ Registrar primer producto' : 'Restablecer filtros'
-            }
-            onAction={
-              products.length === 0
-                ? handleOpenCreateModal
-                : () => {
-                    setSearchQuery('');
-                    setSelectedCategory('TODAS');
-                    setSelectedStockFilter('TODOS');
-                  }
-            }
-          />
-        ) : viewMode === 'table' ? (
-          <ProductTable
-            products={filteredProducts}
-            onEdit={handleOpenEditModal}
-            onDelete={(prod) => setDeletingProduct(prod)}
-            onQuickAdjustStock={handleQuickAdjustStock}
-            updatingStockId={updatingStockId}
-          />
-        ) : (
-          <ProductGrid
-            products={filteredProducts}
-            onEdit={handleOpenEditModal}
-            onDelete={(prod) => setDeletingProduct(prod)}
-            onQuickAdjustStock={handleQuickAdjustStock}
-            updatingStockId={updatingStockId}
+            {/* Content presentation */}
+            {isLoading ? (
+              <TableSkeleton />
+            ) : filteredProducts.length === 0 ? (
+              <EmptyState
+                title={
+                  products.length === 0
+                    ? 'El inventario está actualmente vacío'
+                    : 'No se encontraron referencias'
+                }
+                description={
+                  products.length === 0
+                    ? isAdmin
+                      ? 'Aún no se han registrado productos cosméticos en este catálogo. Comienza añadiendo el primero.'
+                      : 'El inventario está vacío actualmente. Consulta con la administración del Atelier.'
+                    : 'No hay productos que coincidan con los filtros seleccionados o el término de búsqueda.'
+                }
+                actionText={
+                  products.length === 0
+                    ? isAdmin
+                      ? '+ Registrar primer producto'
+                      : undefined
+                    : 'Restablecer filtros'
+                }
+                onAction={
+                  products.length === 0
+                    ? isAdmin
+                      ? handleOpenCreateModal
+                      : undefined
+                    : () => {
+                        setSearchQuery('');
+                        setSelectedCategory('TODAS');
+                        setSelectedStockFilter('TODOS');
+                      }
+                }
+              />
+            ) : viewMode === 'table' ? (
+              <ProductTable
+                products={filteredProducts}
+                onEdit={handleOpenEditModal}
+                onDelete={(prod) => setDeletingProduct(prod)}
+                onQuickAdjustStock={handleQuickAdjustStock}
+                updatingStockId={updatingStockId}
+                isAdmin={isAdmin}
+              />
+            ) : (
+              <ProductGrid
+                products={filteredProducts}
+                onEdit={handleOpenEditModal}
+                onDelete={(prod) => setDeletingProduct(prod)}
+                onQuickAdjustStock={handleQuickAdjustStock}
+                updatingStockId={updatingStockId}
+                isAdmin={isAdmin}
+              />
+            )}
+          </>
+        )}
+
+        {/* TAB 2: Invoice History & Sales View */}
+        {activeTab === 'invoices' && (
+          <InvoiceHistoryView
+            invoices={invoices}
+            isLoading={isLoading}
+            user={user}
+            onOpenSaleModal={() => setIsSaleModalOpen(true)}
+            onViewInvoiceDetails={(invoiceId) => setViewingInvoiceId(invoiceId)}
           />
         )}
       </main>
 
-      {/* Slide-over Drawer for Low Stock */}
+      {/* Slide-over Drawer for Agotados */}
       <LowStockDrawer
         isOpen={isLowStockDrawerOpen}
         onClose={() => setIsLowStockDrawerOpen(false)}
         lowStockProducts={lowStockProducts}
         onRestockProduct={handleRestock}
+        isAdmin={isAdmin}
       />
 
       {/* Product Create / Edit Modal */}
@@ -527,15 +621,38 @@ export const App: React.FC = () => {
         onClose={() => setIsProductModalOpen(false)}
         onSubmit={handleSaveProduct}
         editingProduct={editingProduct}
+        brands={brands}
+        onOpenBrandManagement={isAdmin ? () => setIsBrandModalOpen(true) : undefined}
+        isAdmin={isAdmin}
       />
 
-      {/* Quick Sale / Invoice Modal */}
+      {/* Quick Sale / Create Invoice Modal */}
       <QuickSaleModal
         isOpen={isSaleModalOpen}
         onClose={() => setIsSaleModalOpen(false)}
         products={products}
         onSaleSuccess={handleQuickSale}
       />
+
+      {/* Invoice Detail & Print Modal */}
+      <InvoiceDetailModal
+        invoiceId={viewingInvoiceId}
+        onClose={() => setViewingInvoiceId(null)}
+        isDemo={isDemo}
+        currentUser={user}
+      />
+
+      {/* Admin-only Brand Management Modal */}
+      {isAdmin && (
+        <BrandManagementModal
+          isOpen={isBrandModalOpen}
+          onClose={() => setIsBrandModalOpen(false)}
+          brands={brands}
+          onCreateBrand={handleCreateBrand}
+          onUpdateBrand={handleUpdateBrand}
+          onRefreshBrands={handleRefreshBrands}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

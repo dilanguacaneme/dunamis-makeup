@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, AlertTriangle, PackagePlus, CheckCircle2 } from 'lucide-react';
 import type { Producto, CategoriaProducto } from '../types';
 
@@ -7,6 +7,7 @@ interface LowStockDrawerProps {
   onClose: () => void;
   lowStockProducts: Producto[];
   onRestockProduct: (product: Producto, additionalQty: number) => void;
+  isAdmin?: boolean;
 }
 
 export const LowStockDrawer: React.FC<LowStockDrawerProps> = ({
@@ -14,7 +15,10 @@ export const LowStockDrawer: React.FC<LowStockDrawerProps> = ({
   onClose,
   lowStockProducts,
   onRestockProduct,
+  isAdmin = true,
 }) => {
+  const [customQtyMap, setCustomQtyMap] = useState<Record<number, number>>({});
+
   if (!isOpen) return null;
 
   const getCategoryBadge = (cat: CategoriaProducto) => {
@@ -30,12 +34,20 @@ export const LowStockDrawer: React.FC<LowStockDrawerProps> = ({
     }
   };
 
+  const handleCustomRestock = (product: Producto) => {
+    const qty = customQtyMap[product.id] || 10;
+    if (qty > 0) {
+      onRestockProduct(product, qty);
+      setCustomQtyMap((prev) => ({ ...prev, [product.id]: 10 }));
+    }
+  };
+
   return (
     <div className="drawer-backdrop" onClick={onClose}>
       <aside
         className="drawer-panel"
         onClick={(e) => e.stopPropagation()}
-        aria-label="Panel de productos por acabarse"
+        aria-label="Panel de productos agotados"
       >
         {/* Drawer Header */}
         <div
@@ -73,10 +85,10 @@ export const LowStockDrawer: React.FC<LowStockDrawerProps> = ({
                   lineHeight: 1.2,
                 }}
               >
-                Reposición Urgente
+                Productos Agotados
               </h2>
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                Productos con existencias ≤ 10% del stock inicial
+                Referencias con 0 unidades en inventario (GET /producto/acabarse)
               </span>
             </div>
           </div>
@@ -116,17 +128,15 @@ export const LowStockDrawer: React.FC<LowStockDrawerProps> = ({
             >
               <CheckCircle2 size={36} color="var(--color-sage)" />
               <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--color-plum)' }}>
-                Sin alertas activas
+                Sin productos agotados
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', maxWidth: '320px' }}>
-                Todas las referencias se encuentran con existencias suficientes por encima del umbral de seguridad.
+                Todas las referencias cuentan con unidades disponibles en almacén.
               </p>
             </div>
           ) : (
             lowStockProducts.map((p) => {
-              const initial = p.cantidadInicial || 1;
-              const percentage = Math.round((p.cantidad / initial) * 100);
-              const neededToInitial = Math.max(0, initial - p.cantidad);
+              const customQty = customQtyMap[p.id] ?? 10;
 
               return (
                 <div
@@ -144,73 +154,120 @@ export const LowStockDrawer: React.FC<LowStockDrawerProps> = ({
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
                     <div>
-                      <div style={{ marginBottom: '0.25rem' }}>{getCategoryBadge(p.categoria)}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                        {getCategoryBadge(p.categoria)}
+                        {p.marca && (
+                          <span
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              color: 'var(--color-rosewood-deep)',
+                              backgroundColor: 'var(--color-rose-soft)',
+                              padding: '0.1rem 0.45rem',
+                              borderRadius: 'var(--radius-sm)',
+                            }}
+                          >
+                            {p.marca.nombre}
+                          </span>
+                        )}
+                      </div>
                       <h4 style={{ fontSize: '0.925rem', fontWeight: 600, color: 'var(--color-plum)' }}>
                         {p.nombre}
                       </h4>
                     </div>
+
                     <span
-                      className="tabular-numbers"
                       style={{
                         fontSize: '0.75rem',
                         fontWeight: 700,
                         backgroundColor: 'var(--color-crimson-light)',
                         color: 'var(--color-crimson)',
-                        padding: '0.2rem 0.5rem',
+                        padding: '0.2rem 0.55rem',
                         borderRadius: 'var(--radius-sm)',
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {percentage}% rest.
+                      Agotado
                     </span>
                   </div>
 
-                  {/* Stock metrics */}
+                  {/* Stock metric: units only, no ratios */}
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      fontSize: '0.8rem',
+                      fontSize: '0.825rem',
                       color: 'var(--color-text-muted)',
-                      backgroundColor: 'var(--color-rose-subtle)',
+                      backgroundColor: 'var(--color-crimson-light)',
                       padding: '0.5rem 0.75rem',
                       borderRadius: 'var(--radius-sm)',
                     }}
                   >
-                    <span>
-                      Disponible: <strong className="tabular-numbers" style={{ color: 'var(--color-crimson)' }}>{p.cantidad} uds.</strong>
-                    </span>
-                    <span>
-                      Inicial: <span className="tabular-numbers">{p.cantidadInicial} uds.</span>
-                    </span>
+                    <span>Existencias actuales:</span>
+                    <strong className="tabular-numbers" style={{ color: 'var(--color-crimson)', fontSize: '0.9rem' }}>
+                      {p.cantidad} unidades
+                    </strong>
                   </div>
 
-                  {/* Quick Reorder Action Buttons */}
-                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => onRestockProduct(p, 5)}
-                      style={{ fontSize: '0.78rem', padding: '0.35rem 0.7rem' }}
-                      title="Sumar 5 unidades al inventario"
-                    >
-                      <PackagePlus size={14} />
-                      <span>+5 uds.</span>
-                    </button>
-                    {neededToInitial > 0 && (
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        onClick={() => onRestockProduct(p, neededToInitial)}
-                        style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }}
-                        title={`Restablecer al stock inicial de ${p.cantidadInicial} unidades`}
-                      >
-                        <PackagePlus size={14} />
-                        <span>Completar dotación (+{neededToInitial})</span>
-                      </button>
-                    )}
-                  </div>
+                  {/* Restock Actions */}
+                  {isAdmin ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => onRestockProduct(p, 5)}
+                          style={{ fontSize: '0.78rem', padding: '0.35rem 0.7rem' }}
+                          title="Añadir 5 unidades de stock"
+                        >
+                          <PackagePlus size={13} />
+                          <span>+5 uds.</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => onRestockProduct(p, 10)}
+                          style={{ fontSize: '0.78rem', padding: '0.35rem 0.7rem' }}
+                          title="Añadir 10 unidades de stock"
+                        >
+                          <PackagePlus size={13} />
+                          <span>+10 uds.</span>
+                        </button>
+                      </div>
+
+                      {/* Custom restock input */}
+                      <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        <input
+                          type="number"
+                          min="1"
+                          value={customQty}
+                          onChange={(e) =>
+                            setCustomQtyMap((prev) => ({
+                              ...prev,
+                              [p.id]: Math.max(1, Number(e.target.value)),
+                            }))
+                          }
+                          className="form-input"
+                          style={{ width: '4.5rem', padding: '0.25rem 0.45rem', fontSize: '0.8rem' }}
+                          title="Cantidad personalizada a reabastecer"
+                        />
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={() => handleCustomRestock(p)}
+                          style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }}
+                        >
+                          <PackagePlus size={13} />
+                          <span>Reabastecer</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)', textAlign: 'right' }}>
+                      Reabastecimiento gestionado por administración
+                    </div>
+                  )}
                 </div>
               );
             })
