@@ -14,7 +14,7 @@ public interface ProductoRepository extends JpaRepository <Producto, Long> {
    @Query("SELECT SUM(p.totalProducto) FROM Producto p")
     Optional<Double> totalInventario();
 
-    // Trae solo los productos cuya cantidad actual sea <= al 10% de su cantidad inicial
-    @Query("SELECT p FROM Producto p WHERE p.cantidad <= (p.cantidadInicial * 0.10)")
+    // En esta primera version la alerta se activa cuando el producto esta agotado.
+    @Query("SELECT p FROM Producto p WHERE p.cantidad = 0")
     List<Producto> obtenerProductosPocoStock();
 }

@@ -59,4 +59,52 @@ navegador deben usar `credentials: "include"`.
    o cerrar sesión para obtener el token vigente.
 
 Los endpoints de productos y facturas requieren una sesión autenticada con rol
-administrador.
+Los permisos se describen en la seccion de roles y permisos.
+
+## Inventario, marcas y ventas
+
+El backend incluye un catalogo de marcas. Al iniciar se agregan Trendy,
+Purpure, Milagros y Magna si aun no existen. `GET /marcas` devuelve las marcas
+activas; `POST /marcas` permite al administrador agregar mas, y `PATCH
+/marcas/{id}` permite cambiar el nombre o desactivar una marca. Los productos
+existentes pueden conservarse sin marca durante la actualizacion; los productos
+nuevos deben incluir `marca: { "id": ... }`.
+
+Las existencias aceptan enteros desde cero. Una venta no puede usar cantidades
+negativas ni superar el stock actual. `GET /producto/acabarse` devuelve
+productos agotados (cantidad cero). El inventario puede reabastecerse por encima
+de la cantidad con la que se creo originalmente.
+
+Una factura requiere el nombre del cliente, puede incluir su telefono y debe
+tener al menos un detalle. El cuerpo de `POST /factura/crear` conserva la forma
+de producto por id, por ejemplo:
+
+```json
+{
+  "cliente": "Nombre del cliente",
+  "telefonoCliente": "3001234567",
+  "detalles": [
+    { "producto": { "id": 1 }, "cantidad": 2 }
+  ]
+}
+```
+
+El backend calcula los subtotales y el total, registra quien hizo la venta y
+descuenta las existencias dentro de una transaccion. El historial se consulta
+con `GET /factura/obtener-facturas` y el detalle con
+`GET /factura/obtener-factura-por-id/{id}`.
+
+## Roles y permisos
+
+El enum `RolUsuario` define `ADMIN` y `VENDEDOR`. Las cuentas actuales se crean
+como `ADMIN`; al iniciar, los registros anteriores sin rol se completan como
+administradores. No hay registro publico ni pantalla para crear vendedores por
+ahora. Un usuario `VENDEDOR` puede consultar productos y marcas, crear facturas
+y consultar solo sus propias facturas. `ADMIN` puede gestionar productos y
+marcas, y consultar todas las facturas.
+
+Hibernate agrega las nuevas tablas y columnas al iniciar porque
+`spring.jpa.hibernate.ddl-auto=update`. La marca de productos antiguos y los
+datos de vendedor de facturas existentes quedan vacios; no se borran productos
+ni facturas. Conserva una copia de seguridad de la base de datos antes de
+iniciar esta version.

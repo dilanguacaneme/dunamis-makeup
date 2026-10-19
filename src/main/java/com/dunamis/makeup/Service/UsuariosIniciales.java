@@ -1,6 +1,7 @@
 package com.dunamis.makeup.Service;
 
 import com.dunamis.makeup.Entity.Usuario;
+import com.dunamis.makeup.Entity.RolUsuario;
 import com.dunamis.makeup.Repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -31,6 +32,14 @@ public class UsuariosIniciales implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        // Complete the new role column for users created before role support existed.
+        usuarioRepository.findAll().stream()
+                .filter(usuario -> usuario.getRol() == null)
+                .forEach(usuario -> {
+                    usuario.setRol(RolUsuario.ADMIN);
+                    usuarioRepository.save(usuario);
+                });
+
         List<CuentaAdmin> cuentas = List.of(
                 new CuentaAdmin("maryuri", "Maryuri Andrea Salazar", passwordMaryuri),
                 new CuentaAdmin("caterin", "Caterin Rojas Hererra", passwordCaterin)
