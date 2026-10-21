@@ -143,17 +143,24 @@ Nivel 6 (Simulación Desacoplada):
   - `pdfGenerator.ts`: Generación y descarga directa de ticket/factura en formato PDF (`jspdf`).
   - Navegación global con `Sidebar.tsx`, `DesktopTopBar.tsx` y `MobileHeader.tsx`.
 
-### Inconsistencias y Mejoras Pendientes
-1. **Falta de método de pago y abonos:** La factura actual en `main` no registra la modalidad de pago (efectivo, transferencia, Nequi, Daviplata, tarjeta) ni abonos parciales. Esta capacidad fue prototipada en la rama `feature/backend-payment-tracking` y debe integrarse bajo spec.
-2. **Fecha sin componente horario:** `Factura.fecha` es `LocalDate.now()`. No incluye hora/minuto (`LocalDateTime`), dificultando ordenar cronológicamente las ventas de un mismo día o generar cierres de caja.
+### Inconsistencias y Mejoras Pendientes (Incluye Requerimientos de Pagos y Abonos)
+1. **Seguimiento Integral de Pagos y Abonos Parciales:**
+   - La factura debe soportar el estado financiero de la venta mediante el enum `EstadoPagoFactura`: `PENDIENTE`, `PARCIAL`, `PAGADA`.
+   - Soporte para pagos diferidos y abonos mediante la entidad `AbonoFactura` (relacionada N:1 con `Factura`): monto abonado, fecha/hora, medio de pago (`EFECTIVO`, `TRANSFERENCIA`, `NEQUI`, `DAVIPLATA`, `TARJETA`) y notas opcionales.
+   - Campos de control en `Factura`: `estadoPago`, `totalAbonado`, `saldoPendiente` y lista de `abonos`.
+   - Regla de negocio: La suma de abonos no puede exceder el total de la factura; cuando el saldo pendiente llegue a 0, la factura transiciona automáticamente a estado `PAGADA`.
+   - Endpoint: `POST /factura/{id}/abonos` para registrar abonos parciales y `GET /factura/{id}/abonos` para auditar el historial de pagos.
+2. **Fecha sin componente horario:** `Factura.fecha` es `LocalDate.now()`. Debe migrarse a `LocalDateTime` para incluir hora/minuto, facilitando la auditoría de ventas y cierres diarios.
 3. **Sin soporte de anulación de factura:** No existe forma de cancelar una venta ni revertir de forma atómica el stock al inventario.
 
 ### Checklist
 - [ ] Migrar el campo `fecha` de `LocalDate` a `LocalDateTime`.
-- [ ] Integrar seguimiento de pagos y abonos en backend (sincronizando la lógica de `feature/backend-payment-tracking`).
+- [ ] Implementar el modelo de pagos: enum `EstadoPagoFactura` y entidad `AbonoFactura`.
+- [ ] Agregar a `Factura` los campos calculados: `estadoPago`, `totalAbonado` y `saldoPendiente`.
+- [ ] Crear endpoint `POST /factura/{id}/abonos` para recepción de abonos con validación de no sobrepago.
 - [ ] Implementar flujo de anulación de facturas con restitución atómica de inventario.
-- [ ] Crear tests transaccionales que garanticen rollback completo si algún producto del pedido carece de existencias suficientes.
-- [ ] Probar descarga de factura en PDF (`pdfGenerator.ts`) y visualización en `MonthlySalesView.tsx`.
+- [ ] Crear tests transaccionales que garanticen rollback completo si algún producto carece de stock o si falla un abono.
+- [ ] Probar descarga de factura en PDF (`pdfGenerator.ts`) reflejando estado de pago y saldo pendiente.
 - [ ] Probar segregación de facturas por rol en UI y API.
 
 ---
