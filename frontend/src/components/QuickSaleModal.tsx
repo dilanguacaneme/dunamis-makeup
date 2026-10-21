@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
-import { X, ShoppingBag, Plus, Trash2, Check, AlertCircle } from 'lucide-react';
-import type { Producto, FacturaInput } from '../types';
+import {
+  X,
+  ShoppingBag,
+  Plus,
+  Trash2,
+  Check,
+  AlertCircle,
+  CreditCard,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+} from 'lucide-react';
+import type { Producto, FacturaInput, EstadoPagoFactura } from '../types';
 
 interface QuickSaleModalProps {
   isOpen: boolean;
   onClose: () => void;
   products: Producto[];
   onSaleSuccess: (saleInput: FacturaInput) => Promise<void>;
+  isDemo: boolean;
 }
 
 export const QuickSaleModal: React.FC<QuickSaleModalProps> = ({
@@ -14,6 +26,7 @@ export const QuickSaleModal: React.FC<QuickSaleModalProps> = ({
   onClose,
   products,
   onSaleSuccess,
+  isDemo,
 }) => {
   if (!isOpen) return null;
 
@@ -23,6 +36,7 @@ export const QuickSaleModal: React.FC<QuickSaleModalProps> = ({
         products={products}
         onClose={onClose}
         onSaleSuccess={onSaleSuccess}
+        isDemo={isDemo}
       />
     </div>
   );
@@ -32,6 +46,7 @@ interface QuickSaleModalContentProps {
   products: Producto[];
   onClose: () => void;
   onSaleSuccess: (saleInput: FacturaInput) => Promise<void>;
+  isDemo: boolean;
 }
 
 interface SaleLineItem {
@@ -43,6 +58,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
   products,
   onClose,
   onSaleSuccess,
+  isDemo,
 }) => {
   const availableProducts = products.filter((p) => p.cantidad > 0);
 
@@ -54,6 +70,11 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
       cantidad: 1,
     },
   ]);
+
+  // Payment state
+  const [estadoPago, setEstadoPago] = useState<EstadoPagoFactura>('PAGADA');
+  const [abonoParcialMonto, setAbonoParcialMonto] = useState<number | ''>('');
+
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,6 +117,18 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
     return acc + (prod ? prod.precio * item.cantidad : 0);
   }, 0);
 
+  // Computed payment values
+  const valorAbonadoCalculado =
+    estadoPago === 'PAGADA'
+      ? totalFactura
+      : estadoPago === 'PENDIENTE'
+      ? 0
+      : typeof abonoParcialMonto === 'number'
+      ? abonoParcialMonto
+      : Math.round(totalFactura / 2);
+
+  const saldoPendienteCalculado = Math.max(0, totalFactura - valorAbonadoCalculado);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -130,6 +163,18 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
       }
     }
 
+    // Validate partial payment amount if chosen (Demo mode only)
+    if (isDemo && estadoPago === 'ABONO_PARCIAL') {
+      if (valorAbonadoCalculado <= 0) {
+        setError('El valor abonado debe ser mayor a cero. Para ventas sin anticipo elige "Pendiente".');
+        return;
+      }
+      if (valorAbonadoCalculado >= totalFactura) {
+        setError('El valor abonado cubre el total. En este caso selecciona "Pagada".');
+        return;
+      }
+    }
+
     try {
       setIsSubmitting(true);
       const facturaPayload: FacturaInput = {
@@ -139,6 +184,12 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
           producto: { id: item.productId },
           cantidad: item.cantidad,
         })),
+        ...(isDemo
+          ? {
+              estadoPago,
+              valorAbonado: valorAbonadoCalculado,
+            }
+          : {}),
       };
 
       await onSaleSuccess(facturaPayload);
@@ -157,7 +208,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="sale-modal-title"
-      style={{ maxWidth: '620px' }}
+      style={{ maxWidth: '640px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
     >
       {/* Header */}
       <div
@@ -168,13 +219,14 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           backgroundColor: 'var(--color-rose-subtle)',
+          flexShrink: 0,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <div
             style={{
-              width: '2.1rem',
-              height: '2.1rem',
+              width: '2.2rem',
+              height: '2.2rem',
               borderRadius: 'var(--radius-md)',
               backgroundColor: 'var(--color-rose-soft)',
               color: 'var(--color-rosewood)',
@@ -198,7 +250,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
               Registrar Venta / Emitir Factura
             </h2>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-              Genera factura con cliente y descuenta stock automáticamente (POST /factura/crear)
+              Genera factura, descuenta existencias y establece estado de pago
             </span>
           </div>
         </div>
@@ -207,8 +259,8 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
         </button>
       </div>
 
-      {/* Form Body */}
-      <form onSubmit={handleSubmit} style={{ padding: '1.5rem' }}>
+      {/* Form Body with scroll */}
+      <form onSubmit={handleSubmit} style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
         {error && (
           <div
             style={{
@@ -230,8 +282,8 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
           </div>
         )}
 
-        {/* Customer Information (Requirement 1: customer name required, optional phone) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+        {/* Customer Information */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label" htmlFor="sale-customer-name">
               Nombre del cliente <span style={{ color: 'var(--color-crimson)' }}>*</span>
@@ -245,7 +297,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
               placeholder="Ej: Carolina Gómez"
               required
             />
-            <span className="form-hint">Campo obligatorio (max 255 caracteres).</span>
+            <span className="form-hint">Nombre de quien realiza la compra.</span>
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
@@ -260,12 +312,12 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
               onChange={(e) => setTelefonoCliente(e.target.value)}
               placeholder="Ej: 312 456 7890"
             />
-            <span className="form-hint">Número de contacto para la factura.</span>
+            <span className="form-hint">Para envío de comprobante y seguimiento.</span>
           </div>
         </div>
 
         {/* Product items table */}
-        <div style={{ marginBottom: '1.25rem' }}>
+        <div style={{ marginBottom: '1.5rem' }}>
           <div
             style={{
               display: 'flex',
@@ -285,7 +337,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
                 style={{ fontSize: '0.78rem', padding: '0.2rem 0.5rem', color: 'var(--color-rosewood)' }}
               >
                 <Plus size={13} />
-                <span>+ Agregar otra referencia</span>
+                <span>+ Añadir otra referencia</span>
               </button>
             )}
           </div>
@@ -379,6 +431,191 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
           </div>
         </div>
 
+        {/* Payment Status Selector (Only in Demo Mode; in Connected Mode, show backend notice) */}
+        {!isDemo ? (
+          <div
+            style={{
+              backgroundColor: 'var(--color-accent-gold-light)',
+              border: '1px solid var(--color-accent-gold-border)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1rem',
+              marginBottom: '1.5rem',
+              fontSize: '0.825rem',
+              color: 'var(--color-rosewood-deep)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.65rem',
+            }}
+          >
+            <AlertCircle size={18} color="var(--color-accent-gold)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <strong style={{ display: 'block', marginBottom: '0.2rem' }}>
+                Registro de Pagos en Modo Conectado
+              </strong>
+              <span>
+                El servidor Spring Boot actual registra la venta y descuenta el stock, pero aún no dispone de columnas para almacenar estados de pago ni abonos. Esta factura se guardará como <strong>"Sin registro de pago"</strong> hasta que el backend incorpore persistencia de cobros. Para probar estados y abonos interactivos, utiliza el Modo Demostración.
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1.1rem',
+              marginBottom: '1.5rem',
+              boxShadow: 'var(--shadow-subtle)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.75rem' }}>
+              <CreditCard size={16} color="var(--color-rosewood)" />
+              <label className="form-label" style={{ marginBottom: 0 }}>
+                Estado y modalidad de pago de la venta
+              </label>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                gap: '0.65rem',
+                marginBottom: '0.85rem',
+              }}
+            >
+              {/* 1. Pagada */}
+              <button
+                type="button"
+                onClick={() => setEstadoPago('PAGADA')}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.25rem',
+                  padding: '0.75rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid',
+                  borderColor: estadoPago === 'PAGADA' ? 'var(--color-sage)' : 'var(--color-border)',
+                  backgroundColor: estadoPago === 'PAGADA' ? 'var(--color-sage-light)' : '#FFFFFF',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.85rem', color: 'var(--color-sage)' }}>
+                  <CheckCircle2 size={15} />
+                  <span>Pagada</span>
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                  Liquidada en su totalidad
+                </span>
+              </button>
+
+              {/* 2. Abono Parcial */}
+              <button
+                type="button"
+                onClick={() => {
+                  setEstadoPago('ABONO_PARCIAL');
+                  if (abonoParcialMonto === '' && totalFactura > 0) {
+                    setAbonoParcialMonto(Math.round(totalFactura / 2));
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.25rem',
+                  padding: '0.75rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid',
+                  borderColor: estadoPago === 'ABONO_PARCIAL' ? 'var(--color-accent-gold)' : 'var(--color-border)',
+                  backgroundColor: estadoPago === 'ABONO_PARCIAL' ? 'var(--color-accent-gold-light)' : '#FFFFFF',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.85rem', color: 'var(--color-accent-gold)' }}>
+                  <Clock size={15} />
+                  <span>Abono Parcial</span>
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                  Pago inicial con saldo restante
+                </span>
+              </button>
+
+              {/* 3. Pendiente */}
+              <button
+                type="button"
+                onClick={() => setEstadoPago('PENDIENTE')}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.25rem',
+                  padding: '0.75rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid',
+                  borderColor: estadoPago === 'PENDIENTE' ? 'var(--color-crimson)' : 'var(--color-border)',
+                  backgroundColor: estadoPago === 'PENDIENTE' ? 'var(--color-crimson-light)' : '#FFFFFF',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.85rem', color: 'var(--color-crimson)' }}>
+                  <AlertTriangle size={15} />
+                  <span>Pendiente</span>
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                  Por cobrar / A crédito
+                </span>
+              </button>
+            </div>
+
+            {/* Abono Parcial custom input */}
+            {estadoPago === 'ABONO_PARCIAL' && (
+              <div
+                style={{
+                  backgroundColor: 'var(--color-accent-gold-light)',
+                  border: '1px solid var(--color-accent-gold-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.85rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <label htmlFor="abono-parcial-input" style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--color-rosewood-deep)' }}>
+                    Monto abonado por el cliente (COP):
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-rosewood)' }}>$</span>
+                    <input
+                      id="abono-parcial-input"
+                      type="number"
+                      min="1"
+                      max={totalFactura - 1}
+                      value={abonoParcialMonto}
+                      onChange={(e) =>
+                        setAbonoParcialMonto(e.target.value === '' ? '' : Number(e.target.value))
+                      }
+                      placeholder="Monto de abono"
+                      className="form-input"
+                      style={{ width: '8.5rem', padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
+                      required
+                    />
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Abono registrado: <strong>{formatCOP(valorAbonadoCalculado)}</strong></span>
+                  <span style={{ color: 'var(--color-crimson)', fontWeight: 700 }}>
+                    Saldo pendiente: {formatCOP(saldoPendienteCalculado)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Total calculation banner */}
         <div
           style={{
@@ -394,18 +631,25 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
         >
           <div>
             <span style={{ fontSize: '0.8rem', color: 'var(--color-rosewood)', fontWeight: 600, display: 'block' }}>
-              Total general de la factura
+              Total general de la venta
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-              {items.length} {items.length === 1 ? 'referencia cosmética' : 'referencias cosméticas'}
+              {items.length} {items.length === 1 ? 'referencia cosmética' : 'referencias cosméticas'} · Estado: <strong>{estadoPago}</strong>
             </span>
           </div>
-          <span
-            className="tabular-numbers"
-            style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-rosewood-deep)' }}
-          >
-            {formatCOP(totalFactura)}
-          </span>
+          <div style={{ textAlign: 'right' }}>
+            <span
+              className="tabular-numbers"
+              style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-rosewood-deep)', display: 'block' }}
+            >
+              {formatCOP(totalFactura)}
+            </span>
+            {estadoPago === 'ABONO_PARCIAL' && (
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-crimson)', fontWeight: 600 }}>
+                Saldo: {formatCOP(saldoPendienteCalculado)}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Footer Actions */}

@@ -501,11 +501,20 @@ export const inventoryApi = {
       headers['X-XSRF-TOKEN'] = token;
     }
 
+    // Preserve exact backend contract for POST /factura/crear
+    const bodyPayload: any = {
+      cliente: input.cliente.trim(),
+      detalles: input.detalles,
+    };
+    if (input.telefonoCliente) {
+      bodyPayload.telefonoCliente = input.telefonoCliente.trim();
+    }
+
     const res = await fetch(`${BASE_URL}/factura/crear`, {
       method: 'POST',
       credentials: 'include',
       headers,
-      body: JSON.stringify(input),
+      body: JSON.stringify(bodyPayload),
     });
 
     if (!res.ok) {
@@ -519,7 +528,19 @@ export const inventoryApi = {
       throw new ApiError(errorText || `Error al registrar factura (${res.status})`, res.status);
     }
 
-    return await res.json();
+    const createdFactura: Factura = await res.json();
+    return createdFactura;
+  },
+
+  async recordInvoicePayment(id: number, additionalPayment: number, isDemo: boolean): Promise<Factura> {
+    if (isDemo) {
+      return demoStore.updateInvoicePayment(id, additionalPayment);
+    }
+    // In connected mode, backend doesn't support updating payment status yet
+    throw new ApiError(
+      'El registro de abonos está disponible en Modo Demostración. En modo conectado, esta función requiere soporte adicional en el backend Spring Boot.',
+      501
+    );
   },
 
   // Diagnostic helper to test backend connectivity

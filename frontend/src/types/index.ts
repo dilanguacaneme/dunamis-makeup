@@ -39,10 +39,14 @@ export interface FacturaDetalleInput {
   cantidad: number;
 }
 
+export type EstadoPagoFactura = 'PAGADA' | 'ABONO_PARCIAL' | 'PENDIENTE' | 'SIN_REGISTRO';
+
 export interface FacturaInput {
   cliente: string;
   telefonoCliente?: string;
   detalles: FacturaDetalleInput[];
+  estadoPago?: EstadoPagoFactura;
+  valorAbonado?: number;
 }
 
 export interface DetalleFactura {
@@ -61,6 +65,9 @@ export interface Factura {
   fecha?: string;
   total: number;
   detalles?: DetalleFactura[];
+  estadoPago?: EstadoPagoFactura;
+  valorAbonado?: number;
+  saldoPendiente?: number;
 }
 
 export interface Usuario {
@@ -73,9 +80,11 @@ export type FilterCategory = 'TODAS' | CategoriaProducto;
 
 export type FilterStock = 'TODOS' | 'AGOTADOS' | 'DISPONIBLES';
 
+export type FilterPaymentStatus = 'TODOS' | EstadoPagoFactura;
+
 export type ViewMode = 'table' | 'grid';
 
-export type ActiveTab = 'inventory' | 'invoices' | 'brands';
+export type ActiveTab = 'inventory' | 'invoices' | 'monthly-sales' | 'brands';
 
 export interface ToastMessage {
   id: string;
