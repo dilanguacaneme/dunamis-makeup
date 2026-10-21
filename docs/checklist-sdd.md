@@ -82,7 +82,7 @@ Nivel 6 (Simulación Desacoplada):
   - `POST /marcas` (Crear marca con nombre único, solo ADMIN).
   - `PATCH /marcas/{id}` (Actualizar nombre o alternar `activa: boolean`, solo ADMIN).
 - **Sembrado inicial:** Trendy, Purpure, Milagros, Magna.
-- **Frontend:** `BrandManagementModal.tsx` accesible desde el inventario para administradores.
+- **Frontend:** Vista dedicada `BrandManagementView.tsx` (navegable desde el `Sidebar.tsx`) y modal `BrandManagementModal.tsx`.
 
 ### Inconsistencias y Mejoras Pendientes
 1. **Inconsistencia en reactivación de marcas:** `GET /marcas` ejecuta `findByActivaTrueOrderByNombreAsc()`. Cuando una administradora desactiva una marca desde la UI (`activa: false`), esta desaparece de la respuesta del backend, haciendo imposible reactivarla desde la interfaz.
@@ -90,7 +90,7 @@ Nivel 6 (Simulación Desacoplada):
 
 ### Checklist
 - [ ] Habilitar en backend la consulta de marcas inactivas para el rol `ADMIN`.
-- [ ] Actualizar `BrandManagementModal.tsx` para mostrar marcas inactivas con opción de reactivación.
+- [ ] Actualizar `BrandManagementView.tsx` y `BrandManagementModal.tsx` para listar marcas inactivas con opción de reactivación.
 - [ ] Agregar tests unitarios para `MarcaService` validando unicidad de nombres, creación y actualización.
 - [ ] Validar que un producto nuevo no pueda asignarse a una marca inactiva.
 
@@ -135,18 +135,25 @@ Nivel 6 (Simulación Desacoplada):
   - `POST /factura/crear` (Crea factura, valida existencias y descuenta stock en `@Transactional`).
   - `GET /factura/obtener-facturas` (Historial: ADMIN ve todas, VENDEDOR ve solo las suyas).
   - `GET /factura/obtener-factura-por-id/{id}` (Detalle con restricción de propiedad por vendedor).
-- **Frontend:** `QuickSaleModal.tsx`, `InvoiceHistoryView.tsx`, `InvoiceDetailModal.tsx`.
+- **Frontend:**
+  - `QuickSaleModal.tsx`: Registro de venta multilínea con cálculo dinámico.
+  - `InvoiceHistoryView.tsx`: Historial con buscador y filtros.
+  - `InvoiceDetailModal.tsx`: Vista detallada de factura con exportación e impresión.
+  - `MonthlySalesView.tsx`: Vista dedicada de resumen y análisis de ventas mensuales.
+  - `pdfGenerator.ts`: Generación y descarga directa de ticket/factura en formato PDF (`jspdf`).
+  - Navegación global con `Sidebar.tsx`, `DesktopTopBar.tsx` y `MobileHeader.tsx`.
 
 ### Inconsistencias y Mejoras Pendientes
-1. **Falta de método de pago:** La factura no registra la modalidad de pago (efectivo, transferencia, Nequi, Daviplata, tarjeta). Existe una rama pendiente de integrar (`feature/backend-payment-tracking`).
+1. **Falta de método de pago y abonos:** La factura actual en `main` no registra la modalidad de pago (efectivo, transferencia, Nequi, Daviplata, tarjeta) ni abonos parciales. Esta capacidad fue prototipada en la rama `feature/backend-payment-tracking` y debe integrarse bajo spec.
 2. **Fecha sin componente horario:** `Factura.fecha` es `LocalDate.now()`. No incluye hora/minuto (`LocalDateTime`), dificultando ordenar cronológicamente las ventas de un mismo día o generar cierres de caja.
 3. **Sin soporte de anulación de factura:** No existe forma de cancelar una venta ni revertir de forma atómica el stock al inventario.
 
 ### Checklist
 - [ ] Migrar el campo `fecha` de `LocalDate` a `LocalDateTime`.
-- [ ] Incorporar método de pago en la factura (efectivo, transferencia, mixto).
+- [ ] Integrar seguimiento de pagos y abonos en backend (sincronizando la lógica de `feature/backend-payment-tracking`).
 - [ ] Implementar flujo de anulación de facturas con restitución atómica de inventario.
 - [ ] Crear tests transaccionales que garanticen rollback completo si algún producto del pedido carece de existencias suficientes.
+- [ ] Probar descarga de factura en PDF (`pdfGenerator.ts`) y visualización en `MonthlySalesView.tsx`.
 - [ ] Probar segregación de facturas por rol en UI y API.
 
 ---
