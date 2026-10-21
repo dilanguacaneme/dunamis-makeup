@@ -1,4 +1,13 @@
-import type { Producto, ProductoInput, FacturaInput, Factura, Usuario, Marca, MarcaInput } from '../types';
+import type {
+  Producto,
+  ProductoInput,
+  FacturaInput,
+  Factura,
+  Usuario,
+  Marca,
+  MarcaInput,
+  EstadoPagoFactura,
+} from '../types';
 
 export const INITIAL_DEMO_BRANDS: Marca[] = [
   { id: 1, nombre: 'Trendy', activa: true },
@@ -139,6 +148,9 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     vendedorUsuario: 'maryuri',
     fecha: '2026-10-15',
     total: 133000,
+    estadoPago: 'PAGADA',
+    valorAbonado: 133000,
+    saldoPendiente: 0,
     detalles: [
       {
         id: 1,
@@ -162,6 +174,9 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     vendedorUsuario: 'caterin',
     fecha: '2026-10-16',
     total: 90000,
+    estadoPago: 'ABONO_PARCIAL',
+    valorAbonado: 50000,
+    saldoPendiente: 40000,
     detalles: [
       {
         id: 3,
@@ -177,14 +192,95 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     telefonoCliente: '315 771 9900',
     vendedorNombre: 'Maryuri Andrea Salazar',
     vendedorUsuario: 'maryuri',
-    fecha: '2026-10-16',
+    fecha: '2026-10-18',
     total: 110000,
+    estadoPago: 'PENDIENTE',
+    valorAbonado: 0,
+    saldoPendiente: 110000,
     detalles: [
       {
         id: 4,
         producto: INITIAL_DEMO_PRODUCTS[9],
         cantidad: 1,
         subtotal: 110000,
+      },
+    ],
+  },
+  {
+    id: 1000,
+    cliente: 'Camila Ospina',
+    telefonoCliente: '318 901 2233',
+    vendedorNombre: 'Caterin Rojas Hererra',
+    vendedorUsuario: 'caterin',
+    fecha: '2026-09-28',
+    total: 86000,
+    estadoPago: 'PAGADA',
+    valorAbonado: 86000,
+    saldoPendiente: 0,
+    detalles: [
+      {
+        id: 5,
+        producto: INITIAL_DEMO_PRODUCTS[7],
+        cantidad: 1,
+        subtotal: 38000,
+      },
+      {
+        id: 6,
+        producto: INITIAL_DEMO_PRODUCTS[1],
+        cantidad: 1,
+        subtotal: 48000,
+      },
+    ],
+  },
+  {
+    id: 999,
+    cliente: 'Daniela Toro',
+    telefonoCliente: '320 554 1188',
+    vendedorNombre: 'Maryuri Andrea Salazar',
+    vendedorUsuario: 'maryuri',
+    fecha: '2026-09-14',
+    total: 147000,
+    estadoPago: 'PAGADA',
+    valorAbonado: 147000,
+    saldoPendiente: 0,
+    detalles: [
+      {
+        id: 7,
+        producto: INITIAL_DEMO_PRODUCTS[2],
+        cantidad: 1,
+        subtotal: 62000,
+      },
+      {
+        id: 8,
+        producto: INITIAL_DEMO_PRODUCTS[0],
+        cantidad: 1,
+        subtotal: 85000,
+      },
+    ],
+  },
+  {
+    id: 998,
+    cliente: 'Isabella Gómez',
+    telefonoCliente: '310 443 9922',
+    vendedorNombre: 'Caterin Rojas Hererra',
+    vendedorUsuario: 'caterin',
+    fecha: '2026-08-22',
+    total: 78000,
+    estadoPago: 'PAGADA',
+    valorAbonado: 78000,
+    saldoPendiente: 0,
+    detalles: [
+      {
+        id: 9,
+        producto: INITIAL_DEMO_PRODUCTS[4],
+        cantidad: 1,
+        subtotal: 34000,
+      },
+      {
+        id: 10,
+        producto: INITIAL_DEMO_PRODUCTS[8],
+        cantidad: 1,
+        subtotal: 42000,
       },
     ],
   },
@@ -202,9 +298,9 @@ export const DEMO_SELLER_USER: Usuario = {
   role: 'VENDEDOR',
 };
 
-const STORAGE_PRODUCTS_KEY = 'dunamis_demo_inventory_v2';
-const STORAGE_BRANDS_KEY = 'dunamis_demo_brands_v2';
-const STORAGE_INVOICES_KEY = 'dunamis_demo_invoices_v2';
+const STORAGE_PRODUCTS_KEY = 'dunamis_demo_inventory_v3';
+const STORAGE_BRANDS_KEY = 'dunamis_demo_brands_v3';
+const STORAGE_INVOICES_KEY = 'dunamis_demo_invoices_v3';
 
 class DemoStore {
   private products: Producto[];
@@ -404,7 +500,6 @@ class DemoStore {
   }
 
   public getLowStockProducts(): Producto[] {
-    // Backend GET /producto/acabarse returns products where cantidad = 0
     return this.products.filter((p) => p.cantidad === 0);
   }
 
@@ -492,6 +587,23 @@ class DemoStore {
     const today = new Date().toISOString().split('T')[0];
     const nextId = this.invoices.length > 0 ? Math.max(...this.invoices.map((i) => i.id)) + 1 : 1001;
 
+    // Payment status calculation
+    const estadoPago: EstadoPagoFactura = input.estadoPago || 'PAGADA';
+    let valorAbonado = 0;
+    let saldoPendiente = 0;
+
+    if (estadoPago === 'PAGADA') {
+      valorAbonado = total;
+      saldoPendiente = 0;
+    } else if (estadoPago === 'PENDIENTE') {
+      valorAbonado = 0;
+      saldoPendiente = total;
+    } else if (estadoPago === 'ABONO_PARCIAL') {
+      valorAbonado =
+        input.valorAbonado !== undefined ? Number(input.valorAbonado) : Math.round(total / 2);
+      saldoPendiente = Math.max(0, total - valorAbonado);
+    }
+
     const newInvoice: Factura = {
       id: nextId,
       cliente: input.cliente.trim(),
@@ -501,12 +613,40 @@ class DemoStore {
       fecha: today,
       total,
       detalles: detallesProcesados,
+      estadoPago,
+      valorAbonado,
+      saldoPendiente,
     };
 
     this.invoices.unshift(newInvoice);
     this.saveInvoices();
     this.saveProducts();
     return newInvoice;
+  }
+
+  public updateInvoicePayment(id: number, additionalPayment: number): Factura {
+    const invoice = this.invoices.find((inv) => inv.id === id);
+    if (!invoice) {
+      throw new Error(`Factura #${id} no encontrada`);
+    }
+
+    const currentAbonado =
+      invoice.valorAbonado !== undefined
+        ? invoice.valorAbonado
+        : invoice.estadoPago === 'PAGADA'
+        ? invoice.total
+        : 0;
+
+    const newAbonado = Math.min(invoice.total, currentAbonado + additionalPayment);
+    const newSaldo = Math.max(0, invoice.total - newAbonado);
+    const newEstado: EstadoPagoFactura = newSaldo === 0 ? 'PAGADA' : 'ABONO_PARCIAL';
+
+    invoice.valorAbonado = newAbonado;
+    invoice.saldoPendiente = newSaldo;
+    invoice.estadoPago = newEstado;
+
+    this.saveInvoices();
+    return invoice;
   }
 
   public resetToDefaults(): void {
