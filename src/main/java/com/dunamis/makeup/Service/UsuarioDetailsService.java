@@ -20,10 +20,13 @@ public class UsuarioDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String nombreUsuario) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByNombreUsuarioIgnoreCase(nombreUsuario)
+        String usernameNormalizado = nombreUsuario == null ? "" : nombreUsuario.trim();
+
+        Usuario usuario = usuarioRepository.findByNombreUsuarioIgnoreCase(usernameNormalizado)
                 .orElseThrow(() -> new UsernameNotFoundException("Credenciales inválidas"));
 
-        RolUsuario rol = usuario.getRol() == null ? RolUsuario.ADMIN : usuario.getRol();
+        // Principio 12 y Menor Privilegio (RF-012): rol null se mapea defensivamente a VENDEDOR
+        RolUsuario rol = usuario.getRol() == null ? RolUsuario.VENDEDOR : usuario.getRol();
 
         return User.withUsername(usuario.getNombreUsuario())
                 .password(usuario.getPasswordHash())

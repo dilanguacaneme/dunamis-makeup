@@ -66,7 +66,7 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
     2. *Verde:* Configurar `CookieCsrfTokenRepository`, `SpaCsrfTokenRequestHandler` y endpoint `/api/auth/csrf` en `AuthController`.
   - **Hecho cuando:** `.\mvnw.cmd test -Dtest=AuthCsrfIntegrationTest` pasa al 100% con estado verde.
 
-- [ ] **Tarea 5: TDD — Robustez en `UsuarioDetailsService` y Tolerancia Brownfield**
+- [x] **Tarea 5: TDD — Robustez en `UsuarioDetailsService` y Tolerancia Brownfield**
   - **Estimación:** ~25 min
   - **Dependencias:** Tarea 2, Tarea 3.
   - **Requisitos cubiertos:** RF-006, RF-012.
