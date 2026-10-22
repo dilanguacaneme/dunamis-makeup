@@ -9,3 +9,5 @@
 8. Pruebas Backend: Cada endpoint y regla de negocio debe contar con tests unitarios y de integración.
 9. Pruebas Frontend: Los flujos críticos y estados de UI deben validarse con tests automatizados.
 10. Límites: No añadir dependencias externas sin justificación técnica y validación de compatibilidad.
+11. Respuestas de error: Fallas de API (4xx/5xx) responden en JSON estructurado (error, message, timestamp); cero texto plano.
+12. Compatibilidad Brownfield: Las refactorizaciones deben preservar y tolerar datos históricos sin romper estados previos.
