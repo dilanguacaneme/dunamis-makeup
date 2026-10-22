@@ -46,9 +46,8 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
   - **Descripción:** Crear los records inmutables `ErrorResponse(error, message, timestamp)` y `CsrfResponse(ready)` en `dto/common/` y `dto/auth/`.
   - **Hecho cuando:** `.\mvnw.cmd test-compile` compila con éxito y una prueba unitaria confirma que `ErrorResponse` serializa exactamente la estructura JSON `{ "error": "...", "message": "...", "timestamp": ... }`.
 
-- [ ] **Tarea 2: DTOs de Autenticación (`LoginRequest` y `UsuarioResponse`)**
-  - **Estimación:** ~20 min
-  - **Dependencias:** Tarea 1.
+- [x] **Tarea 2: DTOs de Autenticación (`LoginRequest` y `UsuarioResponse`)**
+  - **Estimación:** ~20 min | **Dependencias:** Tarea 1.
   - **Requisitos cubiertos:** RF-003, RF-004, RF-008.
   - **Descripción:** Implementar `LoginRequest` con anotaciones Jakarta Validation (`@NotBlank`, `@Size`) y `UsuarioResponse(username, fullName, role)` desacoplado de entidades JPA.
   - **Hecho cuando:** `.\mvnw.cmd test-compile` compila sin errores y un test unitario con `Validator` confirma que payloads vacíos o con campos en blanco son rechazados con violaciones de validación.
