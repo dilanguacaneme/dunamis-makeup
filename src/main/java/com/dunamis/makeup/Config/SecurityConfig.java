@@ -22,6 +22,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import com.dunamis.makeup.dto.common.ErrorResponse;
+import org.springframework.security.web.csrf.CsrfException;
+import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +32,8 @@ import java.util.function.Supplier;
 
 @Configuration
 public class SecurityConfig {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -66,7 +71,14 @@ public class SecurityConfig {
                                 response, HttpStatus.OK.value(), "{\"authenticated\":false}")))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) -> writeJson(
-                                response, HttpStatus.UNAUTHORIZED.value(), "{\"message\":\"Se requiere iniciar sesión\"}")))
+                                response, HttpStatus.UNAUTHORIZED.value(), "{\"message\":\"Se requiere iniciar sesión\"}"))
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            boolean isCsrf = accessDeniedException instanceof CsrfException;
+                            String errorCode = isCsrf ? "CSRF_INVALID" : "FORBIDDEN";
+                            String message = isCsrf ? "Token CSRF inválido o ausente" : "Acceso denegado";
+                            writeJson(response, HttpStatus.FORBIDDEN.value(),
+                                    OBJECT_MAPPER.writeValueAsString(ErrorResponse.of(errorCode, message)));
+                        }))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .requestCache(cache -> cache.disable());
 

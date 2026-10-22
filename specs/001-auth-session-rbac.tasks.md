@@ -58,9 +58,8 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
   - **Descripción:** Configurar `src/test/resources/application-test.properties` con base de datos en memoria (H2) y propiedades mock para ejecutar tests sin requerir PostgreSQL ni variables `ADMIN_*_PASSWORD`.
   - **Hecho cuando:** `.\mvnw.cmd test` ejecuta el contexto de prueba de Spring Boot sin fallos por variables de entorno faltantes ni conexión a base de datos externa.
 
-- [ ] **Tarea 4: TDD — Protección CSRF y Handshake (`/api/auth/csrf`)**
-  - **Estimación:** ~30 min
-  - **Dependencias:** Tarea 1, Tarea 3.
+- [x] **Tarea 4: TDD — Protección CSRF y Handshake (`/api/auth/csrf`)**
+  - **Estimación:** ~30 min | **Dependencias:** Tarea 1, Tarea 3.
   - **Requisitos cubiertos:** RF-001, RF-002.
   - **Descripción:**
     1. *Rojo:* Crear `AuthCsrfIntegrationTest` validando `GET /api/auth/csrf` (emisión de cookie `XSRF-TOKEN` y `{ready: true}`) y rechazo `403` estructurado en mutaciones sin cabecera.

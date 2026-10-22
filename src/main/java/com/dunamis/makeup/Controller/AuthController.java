@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import com.dunamis.makeup.dto.auth.CsrfResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,9 +31,6 @@ public class AuthController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         String role = usuario.getRol() == null ? "ADMIN" : usuario.getRol().name();
         return new UsuarioResponse(usuario.getNombreUsuario(), usuario.getNombreCompleto(), role);
-    }
-
-    public record CsrfResponse(boolean ready) {
     }
 
     public record UsuarioResponse(String username, String fullName, String role) {
