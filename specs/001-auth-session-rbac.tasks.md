@@ -75,7 +75,7 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
     2. *Verde:* Implementar en `UsuarioDetailsService` la normalización `toLowerCase().trim()` y la asignación defensiva de roles según el Principio 12.
   - **Hecho cuando:** Los tests unitarios de `UsuarioDetailsService` pasan verificando que las cuentas inactivas lanzan `DisabledException` y los roles nulos mapean a `VENDEDOR`.
 
-- [ ] **Tarea 6: TDD — Login JSON con DTO y Manejo de Sesión (`POST /api/auth/login`)**
+- [x] **Tarea 6: TDD — Login JSON con DTO y Manejo de Sesión (`POST /api/auth/login`)**
   - **Estimación:** ~30 min
   - **Dependencias:** Tarea 2, Tarea 4, Tarea 5.
   - **Requisitos cubiertos:** RF-003, RF-004, RF-005, RF-007.
@@ -84,7 +84,7 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
     2. *Verde:* Implementar filtro/controlador de login JSON y configurar `AuthenticationEntryPoint` para retornar `ErrorResponse`.
   - **Hecho cuando:** `.\mvnw.cmd test -Dtest=AuthLoginIntegrationTest` pasa los casos de login exitoso, 400 Bad Request y 401 Unauthorized.
 
-- [ ] **Tarea 7: TDD — Consulta de Sesión (`/me`) y Logout Idempotente**
+- [x] **Tarea 7: TDD — Consulta de Sesión (`/me`) y Logout Idempotente**
   - **Estimación:** ~25 min
   - **Dependencias:** Tarea 6.
   - **Requisitos cubiertos:** RF-008, RF-009, RF-010, RF-011.
@@ -93,7 +93,7 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
     2. *Verde:* Implementar endpoint `/me` devolviendo `UsuarioResponse` y handler de logout que limpie `JSESSIONID` y responda 200 OK de forma idempotente.
   - **Hecho cuando:** Los tests de `/me` y logout pasan al 100% en `.\mvnw.cmd test -Dtest=AuthLoginIntegrationTest`.
 
-- [ ] **Tarea 8: TDD — Control de Acceso Basado en Roles (RBAC)**
+- [x] **Tarea 8: TDD — Control de Acceso Basado en Roles (RBAC)**
   - **Estimación:** ~30 min
   - **Dependencias:** Tarea 6, Tarea 7.
   - **Requisitos cubiertos:** RF-013, RF-014, RF-015.
@@ -102,7 +102,7 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
     2. *Verde:* Configurar `authorizeHttpRequests` y `AccessDeniedHandler` retornando `ErrorResponse` uniforme.
   - **Hecho cuando:** `.\mvnw.cmd test -Dtest=AuthRbacSecurityTest` pasa al 100% sin excepciones de seguridad no controladas.
 
-- [ ] **Tarea 9: TDD — Sembrado Inicial Idempotente y No Bloqueante (`UsuariosIniciales`)**
+- [x] **Tarea 9: TDD — Sembrado Inicial Idempotente y No Bloqueante (`UsuariosIniciales`)**
   - **Estimación:** ~25 min
   - **Dependencias:** Tarea 3, Tarea 5.
   - **Requisitos cubiertos:** RF-016, RF-017.
@@ -111,7 +111,7 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
     2. *Verde:* Refactorizar `UsuariosIniciales` para chequear la existencia previa de los registros antes de validar las variables de entorno.
   - **Hecho cuando:** `.\mvnw.cmd test -Dtest=UsuariosInicialesTest` pasa confirmando la idempotencia en reinicios.
 
-- [ ] **Tarea 10: Integración Frontend — Cliente HTTP (`api.ts`) y Contratos JSON**
+- [x] **Tarea 10: Integración Frontend — Cliente HTTP (`api.ts`) y Contratos JSON**
   - **Estimación:** ~30 min
   - **Dependencias:** Tarea 4, Tarea 6, Tarea 7.
   - **Requisitos cubiertos:** RF-001, RF-003, RF-008, RF-010.
@@ -121,7 +121,7 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
     3. Crear prueba unitaria frontend `frontend/src/services/api.auth.test.ts`.
   - **Hecho cuando:** `npm --prefix frontend run build` compila con 0 errores de TypeScript y las pruebas unitarias del cliente pasan limpiamente.
 
-- [ ] **Tarea 11: Integración Frontend — Pantalla de Login (`LoginScreen.tsx`)**
+- [x] **Tarea 11: Integración Frontend — Pantalla de Login (`LoginScreen.tsx`)**
   - **Estimación:** ~25 min
   - **Dependencias:** Tarea 10.
   - **Requisitos cubiertos:** RF-004, RF-005.
@@ -130,7 +130,7 @@ Cada tarea sigue el ciclo didáctico y de calidad estipulado en `.agents/skills/
     2. Crear prueba en `LoginScreen.test.tsx`.
   - **Hecho cuando:** `npm --prefix frontend run lint` reporta 0 advertencias y la prueba de formulario pasa.
 
-- [ ] **Tarea 12: Verificación Integral End-to-End y Cierre de Módulo 001**
+- [x] **Tarea 12: Verificación Integral End-to-End y Cierre de Módulo 001**
   - **Estimación:** ~20 min
   - **Dependencias:** Tareas 1 a 11.
   - **Requisitos cubiertos:** RF-001 al RF-018 (Completitud total).
