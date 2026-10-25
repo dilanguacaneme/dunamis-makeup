@@ -92,3 +92,13 @@ export interface ToastMessage {
   title: string;
   message: string;
 }
+
+export interface ErrorResponse {
+  error: string;
+  message: string;
+  timestamp: number;
+}
+
+export interface CsrfResponse {
+  ready: boolean;
+}

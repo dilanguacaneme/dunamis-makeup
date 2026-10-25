@@ -92,23 +92,22 @@ export const inventoryApi = {
     const token = getXsrfToken();
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
       Accept: 'application/json',
     };
     if (token) {
       headers['X-XSRF-TOKEN'] = token;
     }
 
-    const body = new URLSearchParams();
-    body.append('username', username.trim());
-    body.append('password', password);
-
     try {
       const res = await fetch(`${BASE_URL}/api/auth/login`, {
         method: 'POST',
         credentials: 'include',
         headers,
-        body: body.toString(),
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+        }),
       });
 
       if (!res.ok) {
