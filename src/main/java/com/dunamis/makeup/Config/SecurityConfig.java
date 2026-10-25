@@ -5,11 +5,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
@@ -43,8 +46,8 @@ public class SecurityConfig {
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/csrf", "/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/me", "/api/auth/logout").hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers("/api/auth/csrf", "/api/auth/login", "/api/auth/logout").permitAll()
+                        .requestMatchers("/api/auth/me").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.GET, "/producto", "/producto/**", "/marcas", "/marcas/**", "/factura", "/factura/**")
                         .hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.POST, "/factura/crear").hasAnyRole("ADMIN", "VENDEDOR")
@@ -55,34 +58,30 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/producto", "/producto/**", "/marcas", "/marcas/**")
                         .hasRole("ADMIN")
                         .anyRequest().hasRole("ADMIN"))
-                .formLogin(form -> form
-                        .loginProcessingUrl("/api/auth/login")
-                        .usernameParameter("username")
-                        .passwordParameter("password")
-                        .successHandler((request, response, authentication) -> writeJson(
-                                response, HttpStatus.OK.value(), "{\"authenticated\":true}"))
-                        .failureHandler((request, response, exception) -> writeJson(
-                                response, HttpStatus.UNAUTHORIZED.value(), "{\"message\":\"Usuario o contraseña incorrectos\"}")))
-                .logout(logout -> logout
-                        .logoutUrl("/api/auth/logout")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID", "XSRF-TOKEN")
-                        .logoutSuccessHandler((request, response, authentication) -> writeJson(
-                                response, HttpStatus.OK.value(), "{\"authenticated\":false}")))
+                .securityContext(securityContext -> securityContext
+                        .securityContextRepository(new HttpSessionSecurityContextRepository()))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) -> writeJson(
-                                response, HttpStatus.UNAUTHORIZED.value(), "{\"message\":\"Se requiere iniciar sesión\"}"))
+                                response, HttpStatus.UNAUTHORIZED.value(),
+                                OBJECT_MAPPER.writeValueAsString(ErrorResponse.of("UNAUTHORIZED", "Se requiere iniciar sesión"))))
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             boolean isCsrf = accessDeniedException instanceof CsrfException;
                             String errorCode = isCsrf ? "CSRF_INVALID" : "FORBIDDEN";
-                            String message = isCsrf ? "Token CSRF inválido o ausente" : "Acceso denegado";
+                            String message = isCsrf ? "Token CSRF inválido o ausente" : "Acceso denegado: permisos insuficientes";
                             writeJson(response, HttpStatus.FORBIDDEN.value(),
                                     OBJECT_MAPPER.writeValueAsString(ErrorResponse.of(errorCode, message)));
                         }))
                 .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
                 .requestCache(cache -> cache.disable());
 
         return http.build();
+    }
+
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean

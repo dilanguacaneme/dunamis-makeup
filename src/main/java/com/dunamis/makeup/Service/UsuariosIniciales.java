@@ -36,7 +36,7 @@ public class UsuariosIniciales implements ApplicationRunner {
         usuarioRepository.findAll().stream()
                 .filter(usuario -> usuario.getRol() == null)
                 .forEach(usuario -> {
-                    usuario.setRol(RolUsuario.ADMIN);
+                    usuario.setRol(RolUsuario.VENDEDOR);
                     usuarioRepository.save(usuario);
                 });
 
