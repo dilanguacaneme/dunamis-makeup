@@ -43,7 +43,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ---
 
-- [ ] **Tarea 2: Lógica de Servicio, Integridad Referencial con Facturación y Valuación**
+- [x] **Tarea 2: Lógica de Servicio, Integridad Referencial con Facturación y Valuación**
   - **Estimación:** ~25-30 min
   - **Dependencias:** Tarea 1.
   - **Requisitos cubiertos:** RF-002, RF-006, RF-008, RF-009, RF-012, RF-013, RF-015, RF-016, RF-017, RF-019.

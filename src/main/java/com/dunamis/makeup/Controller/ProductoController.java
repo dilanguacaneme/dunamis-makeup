@@ -1,6 +1,7 @@
 package com.dunamis.makeup.Controller;
 
 import com.dunamis.makeup.Entity.Producto;
+import com.dunamis.makeup.dto.producto.ProductoResponse;
 import com.dunamis.makeup.Exeption.InventarioVacioException;
 import com.dunamis.makeup.Exeption.ProductoNoEncontradoException;
 import com.dunamis.makeup.Service.ProductoService;
@@ -48,7 +49,7 @@ public class ProductoController {
 
         try {
 
-            Producto producto = productoService.buscarProductoPorId(id);
+            ProductoResponse producto = productoService.buscarProductoPorId(id);
             return ResponseEntity.ok(producto);
         }
         catch (ProductoNoEncontradoException e) {
@@ -64,7 +65,7 @@ public class ProductoController {
 
         try {
 
-            Producto productoAEliminar = productoService.borrarProductoPorId(id);
+            ProductoResponse productoAEliminar = productoService.borrarProductoPorId(id);
 
             return ResponseEntity.ok(productoAEliminar);
 
