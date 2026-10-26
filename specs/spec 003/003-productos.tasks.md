@@ -62,7 +62,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ---
 
-- [ ] **Tarea 3: Endpoints REST, Control de Acceso RBAC y Pruebas MockMvc**
+- [x] **Tarea 3: Endpoints REST, Control de Acceso RBAC y Pruebas MockMvc**
   - **Estimación:** ~25-30 min
   - **Dependencias:** Tarea 1, Tarea 2.
   - **Requisitos cubiertos:** RF-003, RF-004, RF-005, RF-006, RF-007, RF-008, RF-009, RF-011, RF-012, RF-013, RF-014, RF-016, RF-017, RF-018, RF-019.

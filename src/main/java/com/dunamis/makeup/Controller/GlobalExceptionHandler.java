@@ -1,5 +1,7 @@
 package com.dunamis.makeup.Controller;
 
+import com.dunamis.makeup.Exeption.InventarioVacioException;
+import com.dunamis.makeup.Exeption.ProductoNoEncontradoException;
 import com.dunamis.makeup.dto.auth.LoginRequest;
 import com.dunamis.makeup.dto.common.ErrorResponse;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -33,6 +35,18 @@ public class GlobalExceptionHandler {
         String message = ex.getReason() != null ? ex.getReason() : "Error en la solicitud";
         return ResponseEntity.status(ex.getStatusCode())
                 .body(ErrorResponse.of(error, message));
+    }
+
+    @ExceptionHandler(ProductoNoEncontradoException.class)
+    public ResponseEntity<ErrorResponse> handleProductoNoEncontrado(ProductoNoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InventarioVacioException.class)
+    public ResponseEntity<ErrorResponse> handleInventarioVacio(InventarioVacioException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
