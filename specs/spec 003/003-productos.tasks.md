@@ -26,7 +26,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ## Desglose de Tareas (<30 min)
 
-- [ ] **Tarea 1: DTOs Tipados, Modelo de Entidad (`activo`) y Validaciones de Entrada**
+- [x] **Tarea 1: DTOs Tipados, Modelo de Entidad (`activo`) y Validaciones de Entrada**
   - **Estimación:** ~20-25 min
   - **Dependencias:** Ninguna (Cimiento de contratos).
   - **Requisitos cubiertos:** RF-001, RF-002, RF-008, RF-010, RF-012, RF-013, RF-014.

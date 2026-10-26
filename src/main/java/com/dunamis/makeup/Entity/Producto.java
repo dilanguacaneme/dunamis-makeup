@@ -1,6 +1,5 @@
 package com.dunamis.makeup.Entity;
 
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
@@ -17,9 +16,8 @@ import lombok.Setter;
 @Setter
 public class Producto {
 
-
     @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull(message = "El nombre del producto no puede estar vacio")
@@ -47,5 +45,17 @@ public class Producto {
     @JoinColumn(name = "marca_id")
     private Marca marca;
 
+    @Column(nullable = false)
+    private Boolean activo = Boolean.TRUE;
 
+    @PrePersist
+    @PostLoad
+    public void ensureDefaults() {
+        if (this.activo == null) {
+            this.activo = Boolean.TRUE;
+        }
+        if (this.totalProducto == null && this.precio != null && this.cantidad != null) {
+            this.totalProducto = this.precio * this.cantidad;
+        }
+    }
 }
