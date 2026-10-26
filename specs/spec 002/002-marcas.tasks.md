@@ -50,7 +50,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
     2. *Verde:* Refactorizar `MarcaService` para operar con DTOs y normalización estricta, y asegurar la idempotencia no destructiva en `MarcasIniciales`.
   - **Hecho cuando:** `.\mvnw.cmd test -Dtest=MarcaServiceTest,MarcasInicialesTest` pasa limpiamente con 0 fallos.
 
-- [ ] **Tarea 3: Endpoints REST (`GET`, `POST`, `PATCH`), RBAC y Pruebas MockMvc**
+- [x] **Tarea 3: Endpoints REST (`GET`, `POST`, `PATCH`), RBAC y Pruebas MockMvc**
   - **Estimación:** ~25-30 min
   - **Dependencias:** Tarea 1, Tarea 2.
   - **Requisitos cubiertos:** RF-002, RF-003, RF-004, RF-005, RF-006, RF-007, RF-008, RF-009, RF-010, RF-011, RF-012, RF-013, RF-014.

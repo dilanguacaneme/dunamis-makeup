@@ -10,6 +10,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -18,6 +19,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of("UNAUTHORIZED", "Usuario o contraseña incorrectos"));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException ex) {
+        String error = switch (ex.getStatusCode().value()) {
+            case 404 -> "NOT_FOUND";
+            case 409 -> "CONFLICT";
+            case 400 -> "BAD_REQUEST";
+            case 403 -> "FORBIDDEN";
+            default -> ex.getStatusCode().toString();
+        };
+        String message = ex.getReason() != null ? ex.getReason() : "Error en la solicitud";
+        return ResponseEntity.status(ex.getStatusCode())
+                .body(ErrorResponse.of(error, message));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
