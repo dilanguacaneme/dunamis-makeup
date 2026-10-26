@@ -26,7 +26,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ## Desglose de Tareas (<30 min)
 
-- [ ] **Tarea 1: DTOs Tipados y Mapeo Centralizado de Errores**
+- [x] **Tarea 1: DTOs Tipados y Mapeo Centralizado de Errores**
   - **Estimación:** ~20-25 min
   - **Dependencias:** Ninguna (Cimiento de contratos).
   - **Requisitos cubiertos:** RF-001, RF-007, RF-011.
