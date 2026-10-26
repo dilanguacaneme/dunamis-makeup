@@ -334,16 +334,19 @@ class DemoStore {
     }
   }
 
-  public getBrands(): Marca[] {
-    return this.brands.filter((b) => b.activa !== false);
+    public getBrands(incluirInactivas = false): Marca[] {
+    const list = incluirInactivas
+      ? [...this.brands]
+      : this.brands.filter((b) => b.activa !== false);
+    return list.sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   public getAllBrands(): Marca[] {
-    return [...this.brands];
+    return [...this.brands].sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   public createBrand(input: MarcaInput): Marca {
-    const nombre = input.nombre.trim();
+    const nombre = input.nombre.trim().replace(/\s+/g, ' ');
     if (!nombre) {
       throw new Error('El nombre de la marca es obligatorio');
     }
@@ -368,7 +371,7 @@ class DemoStore {
       throw new Error('Marca no encontrada');
     }
     if (input.nombre !== undefined) {
-      const nombre = input.nombre.trim();
+      const nombre = input.nombre.trim().replace(/\s+/g, ' ');
       if (!nombre) {
         throw new Error('El nombre de la marca es obligatorio');
       }

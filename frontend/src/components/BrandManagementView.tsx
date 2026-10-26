@@ -6,7 +6,7 @@ interface BrandManagementViewProps {
   brands: Marca[];
   onCreateBrand: (input: MarcaInput) => Promise<void>;
   onUpdateBrand: (id: number, input: Partial<MarcaInput>) => Promise<void>;
-  onRefreshBrands: () => Promise<void>;
+  onRefreshBrands: (incluirInactivas?: boolean) => Promise<void>;
   isAdmin?: boolean;
 }
 
@@ -20,16 +20,29 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
   const [newBrandName, setNewBrandName] = useState('');
   const [editingBrandId, setEditingBrandId] = useState<number | null>(null);
   const [editingBrandName, setEditingBrandName] = useState('');
+  const [filterMode, setFilterMode] = useState<'activas' | 'todas'>('activas');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const handleFilterChange = async (mode: 'activas' | 'todas') => {
+    setFilterMode(mode);
+    try {
+      setIsRefreshing(true);
+      await onRefreshBrands(mode === 'todas');
+    } catch (err: any) {
+      setError(err.message || 'Error al filtrar marcas.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const handleCreateBrand = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const cleanName = newBrandName.trim();
-    if (!cleanName) {
-      setError('Por favor escribe el nombre de la marca cosmética.');
+    const cleanName = newBrandName.trim().replace(/\s+/g, ' ');
+    if (!cleanName || cleanName.length < 2) {
+      setError('Por favor escribe un nombre de marca válido (mínimo 2 caracteres).');
       return;
     }
 
@@ -37,7 +50,7 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
       setIsSubmitting(true);
       await onCreateBrand({ nombre: cleanName });
       setNewBrandName('');
-      await onRefreshBrands();
+      await onRefreshBrands(filterMode === 'todas');
     } catch (err: any) {
       setError(err.message || 'Error al registrar la marca cosmética.');
     } finally {
@@ -53,9 +66,9 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
 
   const handleSaveRename = async (id: number) => {
     setError(null);
-    const cleanName = editingBrandName.trim();
-    if (!cleanName) {
-      setError('El nombre de la marca no puede quedar vacío.');
+    const cleanName = editingBrandName.trim().replace(/\s+/g, ' ');
+    if (!cleanName || cleanName.length < 2) {
+      setError('El nombre de la marca debe tener al menos 2 caracteres.');
       return;
     }
 
@@ -63,7 +76,7 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
       setIsSubmitting(true);
       await onUpdateBrand(id, { nombre: cleanName });
       setEditingBrandId(null);
-      await onRefreshBrands();
+      await onRefreshBrands(filterMode === 'todas');
     } catch (err: any) {
       setError(err.message || 'Error al renombrar la marca cosmética.');
     } finally {
@@ -80,9 +93,22 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
     try {
       setIsSubmitting(true);
       await onUpdateBrand(brand.id, { activa: false });
-      await onRefreshBrands();
+      await onRefreshBrands(filterMode === 'todas');
     } catch (err: any) {
       setError(err.message || 'Error al desactivar la marca.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReactivate = async (brand: Marca) => {
+    setError(null);
+    try {
+      setIsSubmitting(true);
+      await onUpdateBrand(brand.id, { activa: true });
+      await onRefreshBrands(filterMode === 'todas');
+    } catch (err: any) {
+      setError(err.message || 'Error al reactivar la marca.');
     } finally {
       setIsSubmitting(false);
     }
@@ -91,11 +117,15 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
   const handleManualRefresh = async () => {
     try {
       setIsRefreshing(true);
-      await onRefreshBrands();
+      await onRefreshBrands(filterMode === 'todas');
+    } catch (err: any) {
+      setError(err.message || 'Error al recargar marcas.');
     } finally {
       setIsRefreshing(false);
     }
   };
+
+  const activeBrandsCount = brands.filter((b) => b.activa !== false).length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -161,12 +191,61 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
               </span>
             </div>
             <p style={{ fontSize: '0.825rem', color: 'var(--color-text-muted)' }}>
-              Catálogo de marcas activas utilizadas para clasificar las referencias del Atelier.
+              Catálogo de marcas activas e históricas para referencias del Atelier Dunamis Makeup.
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+          {/* Segment Filter for Admin (RF-017) */}
+          {isAdmin && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--color-border)',
+                padding: '0.2rem',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => handleFilterChange('activas')}
+                style={{
+                  padding: '0.35rem 0.75rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: filterMode === 'activas' ? 'var(--color-rosewood)' : 'transparent',
+                  color: filterMode === 'activas' ? '#FFFFFF' : 'var(--color-text-muted)',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                Solo Activas
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFilterChange('todas')}
+                style={{
+                  padding: '0.35rem 0.75rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: filterMode === 'todas' ? 'var(--color-rosewood)' : 'transparent',
+                  color: filterMode === 'todas' ? '#FFFFFF' : 'var(--color-text-muted)',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                Todas las Marcas
+              </button>
+            </div>
+          )}
+
           <div
             style={{
               backgroundColor: 'var(--color-rose-subtle)',
@@ -177,7 +256,10 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
               color: 'var(--color-text-muted)',
             }}
           >
-            Marcas activas: <strong style={{ color: 'var(--color-rosewood-deep)' }}>{brands.length}</strong>
+            Activas: <strong style={{ color: 'var(--color-rosewood-deep)' }}>{activeBrandsCount}</strong>
+            {filterMode === 'todas' && (
+              <> | Total: <strong style={{ color: 'var(--color-rosewood-deep)' }}>{brands.length}</strong></>
+            )}
           </div>
           <button
             type="button"
@@ -259,30 +341,29 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
                   id="brand-view-name"
                   type="text"
                   className="form-input"
+                  placeholder="Ej: Rare Beauty, NARS, Fenty..."
                   value={newBrandName}
                   onChange={(e) => setNewBrandName(e.target.value)}
-                  placeholder="Ej: Trendy, Purpure, Milagros, Magna..."
                   disabled={isSubmitting}
+                  maxLength={80}
+                  required
                 />
-                <span className="form-hint">
-                  Conectado a POST /marcas en el backend oficial.
-                </span>
               </div>
 
               <button
                 type="submit"
                 className="btn-primary"
                 disabled={isSubmitting || !newBrandName.trim()}
-                style={{ width: '100%', marginTop: '0.5rem' }}
+                style={{ width: '100%', marginTop: '0.75rem' }}
               >
                 <Plus size={16} />
-                <span>{isSubmitting ? 'Guardando marca...' : 'Registrar marca en catálogo'}</span>
+                <span>{isSubmitting ? 'Registrando...' : 'Agregar al Catálogo'}</span>
               </button>
             </form>
           </div>
         )}
 
-        {/* Brands List Table */}
+        {/* Brand List Card */}
         <div
           style={{
             backgroundColor: '#FFFFFF',
@@ -313,7 +394,7 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
                   color: 'var(--color-rosewood-deep)',
                 }}
               >
-                Catálogo Activo de Marcas
+                {filterMode === 'todas' ? 'Todas las Marcas (Activas e Inactivas)' : 'Catálogo Activo de Marcas'}
               </h3>
               <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
                 Referencias asociadas a productos cosméticos
@@ -344,12 +425,13 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
                 borderRadius: 'var(--radius-md)',
               }}
             >
-              No hay marcas activas registradas en este momento.
+              No hay marcas para mostrar en este filtro.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               {brands.map((brand) => {
                 const isEditing = editingBrandId === brand.id;
+                const isActiva = brand.activa !== false;
 
                 return (
                   <div
@@ -361,9 +443,10 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
                       padding: '0.75rem 1rem',
                       borderRadius: 'var(--radius-md)',
                       border: '1px solid var(--color-border)',
-                      backgroundColor: 'var(--color-surface)',
+                      backgroundColor: isActiva ? 'var(--color-surface)' : 'rgba(240, 235, 235, 0.4)',
+                      opacity: isActiva ? 1 : 0.85,
                       gap: '0.75rem',
-                      transition: 'background-color var(--transition-fast)',
+                      transition: 'all var(--transition-fast)',
                     }}
                   >
                     {isEditing ? (
@@ -376,6 +459,7 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
                           style={{ padding: '0.35rem 0.65rem', fontSize: '0.85rem' }}
                           autoFocus
                           disabled={isSubmitting}
+                          maxLength={80}
                         />
                         <button
                           type="button"
@@ -411,7 +495,13 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
                             #{brand.id}
                           </span>
                           <div>
-                            <span style={{ fontWeight: 600, color: 'var(--color-rosewood-deep)' }}>
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                color: isActiva ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                                textDecoration: isActiva ? 'none' : 'line-through',
+                              }}
+                            >
                               {brand.nombre}
                             </span>
                             <span
@@ -420,13 +510,13 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
                                 marginLeft: '0.5rem',
                                 fontSize: '0.68rem',
                                 fontWeight: 600,
-                                color: 'var(--color-sage)',
-                                backgroundColor: 'var(--color-sage-light)',
+                                color: isActiva ? 'var(--color-sage)' : 'var(--color-crimson)',
+                                backgroundColor: isActiva ? 'var(--color-sage-light)' : 'var(--color-crimson-light)',
                                 padding: '0.05rem 0.45rem',
                                 borderRadius: 'var(--radius-full)',
                               }}
                             >
-                              Activa
+                              {isActiva ? 'Activa' : 'Inactiva'}
                             </span>
                           </div>
                         </div>
@@ -443,20 +533,37 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
                               <Edit2 size={13} />
                               <span className="hidden sm:inline">Renombrar</span>
                             </button>
-                            <button
-                              type="button"
-                              className="btn-ghost"
-                              onClick={() => handleDeactivate(brand)}
-                              title="Desactivar marca del catálogo activo"
-                              style={{
-                                padding: '0.35rem 0.55rem',
-                                fontSize: '0.78rem',
-                                color: 'var(--color-crimson)',
-                              }}
-                            >
-                              <Ban size={13} />
-                              <span className="hidden sm:inline">Desactivar</span>
-                            </button>
+                            {isActiva ? (
+                              <button
+                                type="button"
+                                className="btn-ghost"
+                                onClick={() => handleDeactivate(brand)}
+                                title="Desactivar marca del catálogo activo"
+                                style={{
+                                  padding: '0.35rem 0.55rem',
+                                  fontSize: '0.78rem',
+                                  color: 'var(--color-crimson)',
+                                }}
+                              >
+                                <Ban size={13} />
+                                <span className="hidden sm:inline">Desactivar</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn-ghost"
+                                onClick={() => handleReactivate(brand)}
+                                title="Reactivar marca para el catálogo activo"
+                                style={{
+                                  padding: '0.35rem 0.55rem',
+                                  fontSize: '0.78rem',
+                                  color: 'var(--color-sage)',
+                                }}
+                              >
+                                <Check size={13} />
+                                <span className="hidden sm:inline">Reactivar</span>
+                              </button>
+                            )}
                           </div>
                         )}
                       </>

@@ -314,8 +314,8 @@ export const App: React.FC = () => {
     await loadData(isDemo, user);
   };
 
-  const handleRefreshBrands = async () => {
-    const list = await inventoryApi.getBrands(isDemo);
+  const handleRefreshBrands = async (incluirInactivas = false) => {
+    const list = await inventoryApi.getBrands(isDemo, incluirInactivas);
     setBrands(list);
   };
 

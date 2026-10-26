@@ -65,7 +65,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
     2. *Verde:* Adaptar `MarcaController` y las reglas de `SecurityConfig` para satisfacer todos los casos de prueba con respuestas tipadas en DTOs.
   - **Hecho cuando:** `.\mvnw.cmd test -Dtest=MarcaIntegrationTest,MarcaRbacSecurityTest` pasa al 100% en verde sobre base de datos H2 en memoria.
 
-- [ ] **Tarea 4: Integración Frontend (API, UI con Reactivación y Modo Demostración)**
+- [x] **Tarea 4: Integración Frontend (API, UI con Reactivación y Modo Demostración)**
   - **Estimación:** ~25-30 min
   - **Dependencias:** Tarea 3.
   - **Requisitos cubiertos:** RF-002, RF-003, RF-017, RF-018, RF-019.

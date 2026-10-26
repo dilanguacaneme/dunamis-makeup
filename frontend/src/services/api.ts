@@ -357,20 +357,28 @@ export const inventoryApi = {
     return await res.json();
   },
 
-  // --- BRANDS API ---
-  async getBrands(isDemo: boolean): Promise<Marca[]> {
+    // --- BRANDS API ---
+  async getBrands(isDemo: boolean, incluirInactivas = false): Promise<Marca[]> {
     if (isDemo) {
-      return demoStore.getBrands();
+      return demoStore.getBrands(incluirInactivas);
     }
 
-    const res = await fetch(`${BASE_URL}/marcas`, {
+    const query = incluirInactivas ? '?incluirInactivas=true' : '';
+    const res = await fetch(`${BASE_URL}/marcas${query}`, {
       method: 'GET',
       credentials: 'include',
       headers: { Accept: 'application/json' },
     });
 
     if (!res.ok) {
-      throw new ApiError(`Error al consultar marcas (${res.status})`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al consultar marcas (${res.status})`, res.status);
     }
 
     return await res.json();
