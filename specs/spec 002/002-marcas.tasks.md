@@ -78,7 +78,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
     3. Actualizar `frontend/src/services/demoStore.ts` para replicar el parámetro `incluirInactivas`, el toggle de reactivación y la unicidad insensible a mayúsculas/minúsculas.
   - **Hecho cuando:** `npm --prefix frontend run lint` reporta 0 advertencias/errores, `npm --prefix frontend run build` compila con éxito, y las marcas inactivas pueden ser visualizadas y reactivadas fluidamente en la UI.
 
-- [ ] **Tarea 5: Verificación Integral E2E, Cobertura y Cierre de Spec 002**
+- [x] **Tarea 5: Verificación Integral E2E, Cobertura y Cierre de Spec 002**
   - **Estimación:** ~15-20 min
   - **Dependencias:** Tareas 1, 2, 3, 4.
   - **Requisitos cubiertos:** RF-001 a RF-019 (Definition of Done completa).

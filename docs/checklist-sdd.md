@@ -89,10 +89,10 @@ Nivel 6 (Simulación Desacoplada):
 2. **Falta de soporte para listar todas las marcas:** Se requiere un parámetro como `/marcas?todas=true` o endpoint administrativo exclusivo para gestionar marcas inactivas.
 
 ### Checklist
-- [ ] Habilitar en backend la consulta de marcas inactivas para el rol `ADMIN`.
-- [ ] Actualizar `BrandManagementView.tsx` y `BrandManagementModal.tsx` para listar marcas inactivas con opción de reactivación.
-- [ ] Agregar tests unitarios para `MarcaService` validando unicidad de nombres, creación y actualización.
-- [ ] Validar que un producto nuevo no pueda asignarse a una marca inactiva.
+- [x] Habilitar en backend la consulta de marcas inactivas para el rol `ADMIN`.
+- [x] Actualizar `BrandManagementView.tsx` y `BrandManagementModal.tsx` para listar marcas inactivas con opción de reactivación.
+- [x] Agregar tests unitarios para `MarcaService` validando unicidad de nombres, creación y actualización.
+- [x] Validar que un producto nuevo no pueda asignarse a una marca inactiva.
 
 ---
 

@@ -1,9 +1,12 @@
 package com.dunamis.makeup.controller;
 
+import com.dunamis.makeup.Entity.CategoriaProducto;
 import com.dunamis.makeup.Entity.Marca;
+import com.dunamis.makeup.Entity.Producto;
 import com.dunamis.makeup.Entity.RolUsuario;
 import com.dunamis.makeup.Entity.Usuario;
 import com.dunamis.makeup.Repository.MarcaRepository;
+import com.dunamis.makeup.Repository.ProductoRepository;
 import com.dunamis.makeup.Repository.UsuarioRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +35,9 @@ class MarcaIntegrationTest {
 
     @Autowired
     private MarcaRepository marcaRepository;
+
+    @Autowired
+    private ProductoRepository productoRepository;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -272,5 +278,35 @@ class MarcaIntegrationTest {
                         .cookie(csrfCookie)
                         .header("X-XSRF-TOKEN", csrfCookie.getValue()))
                 .andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    @DisplayName("Desactivar marca preserva integridad referencial de productos asociados (RF-015)")
+    void testIntegridadMarcaInactivaConProductos() throws Exception {
+        Marca marca = marcaRepository.save(new Marca("Marca Con Productos"));
+        Producto producto = new Producto();
+        producto.setNombre("Labial Velvet");
+        producto.setPrecio(25000.0);
+        producto.setCantidad(10);
+        producto.setCategoria(CategoriaProducto.LABIOS);
+        producto.setMarca(marca);
+        producto = productoRepository.save(producto);
+
+        // Desactivar marca vía PATCH
+        mockMvc.perform(patch("/marcas/" + marca.getId())
+                        .session(adminSession)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"activa\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activa").value(false));
+
+        // Verificar persistencia del producto e integridad referencial (RF-015, Principio 5 y 12)
+        Producto productoEnDb = productoRepository.findById(producto.getId()).orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals("Labial Velvet", productoEnDb.getNombre());
+        org.junit.jupiter.api.Assertions.assertNotNull(productoEnDb.getMarca());
+        org.junit.jupiter.api.Assertions.assertEquals(marca.getId(), productoEnDb.getMarca().getId());
+        org.junit.jupiter.api.Assertions.assertEquals(false, productoEnDb.getMarca().getActiva());
     }
 }
