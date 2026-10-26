@@ -118,11 +118,11 @@ Nivel 6 (Simulación Desacoplada):
 3. **Cálculo redundante en base de datos:** El atributo `totalProducto` (`precio * cantidad`) se persiste físicamente y se recalcula a mano en cada servicio, propenso a desincronizarse.
 
 ### Checklist
-- [ ] Implementar borrado lógico (`activo = false`) en `Producto`.
-- [ ] Bloquear borrado físico de productos asociados a facturas existentes.
-- [ ] Implementar umbral configurable para alerta de stock bajo (no solo agotados en 0).
-- [ ] Agregar tests para CRUD de productos, validación de existencias no negativas y recálculo de inventario.
-- [ ] Probar ajuste rápido de stock (+ / -) y filtros por categoría desde el frontend.
+- [x] Implementar borrado lógico (`activo = false`) en `Producto`.
+- [x] Bloquear borrado físico de productos asociados a facturas existentes.
+- [x] Implementar umbral configurable para alerta de stock bajo (no solo agotados en 0).
+- [x] Agregar tests para CRUD de productos, validación de existencias no negativas y recálculo de inventario.
+- [x] Probar ajuste rápido de stock (+ / -) y filtros por categoría desde el frontend.
 
 ---
 
