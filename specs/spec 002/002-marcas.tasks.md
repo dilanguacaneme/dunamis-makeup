@@ -36,7 +36,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
     3. Asegurar que las violaciones de validación Jakarta (`MethodArgumentNotValidException`) se canalicen a través de `ErrorResponse` uniforme con código `"BAD_REQUEST"`.
   - **Hecho cuando:** `.\mvnw.cmd test -Dtest=MarcaDtoTest` pasa al 100% y `.\mvnw.cmd test-compile` compila limpiamente sin errores.
 
-- [ ] **Tarea 2: Lógica de Servicio, Normalización Canónica y Sembrado Idempotente**
+- [x] **Tarea 2: Lógica de Servicio, Normalización Canónica y Sembrado Idempotente**
   - **Estimación:** ~25-30 min
   - **Dependencias:** Tarea 1.
   - **Requisitos cubiertos:** RF-006, RF-008, RF-010, RF-014, RF-015, RF-016.
