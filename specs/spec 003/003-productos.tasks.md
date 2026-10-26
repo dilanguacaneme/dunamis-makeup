@@ -82,7 +82,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ---
 
-- [ ] **Tarea 4: Frontend UI, Filtro de Inactivos, Reactivación y Modo Demostración**
+- [x] **Tarea 4: Frontend UI, Filtro de Inactivos, Reactivación y Modo Demostración**
   - **Estimación:** ~25-30 min
   - **Dependencias:** Tarea 3.
   - **Requisitos cubiertos:** RF-003, RF-004, RF-016, RF-017, RF-020.

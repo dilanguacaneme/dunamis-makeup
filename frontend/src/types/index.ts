@@ -20,6 +20,7 @@ export interface Producto {
   totalProducto?: number;
   categoria: CategoriaProducto;
   marca?: Marca | null;
+  activo?: boolean;
 }
 
 export interface ProductoInput {
@@ -30,6 +31,7 @@ export interface ProductoInput {
   marca?: {
     id: number;
   };
+  activo?: boolean;
 }
 
 export interface FacturaDetalleInput {

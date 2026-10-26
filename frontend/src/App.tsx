@@ -93,6 +93,7 @@ export const App: React.FC = () => {
   };
 
   const isAdmin = user?.role === 'ADMIN';
+  const [showInactiveProducts, setShowInactiveProducts] = useState(false);
 
   // Health check helper
   const refreshBackendHealth = useCallback(async () => {
@@ -105,11 +106,15 @@ export const App: React.FC = () => {
   }, []);
 
   // Data Loading for authenticated dashboard
-  const loadData = useCallback(async (currentDemoState: boolean, currentUser?: Usuario | null) => {
+  const loadData = useCallback(async (currentDemoState: boolean, currentUser?: Usuario | null, incluirInactivosOverride?: boolean) => {
     const activeUser = currentUser !== undefined ? currentUser : user;
     if (!activeUser) {
       return;
     }
+
+    const wantInactivos = activeUser.role === 'ADMIN'
+      ? (incluirInactivosOverride !== undefined ? incluirInactivosOverride : showInactiveProducts)
+      : false;
 
     setIsLoading(true);
     setError(null);
@@ -130,7 +135,7 @@ export const App: React.FC = () => {
 
       // Fetch datasets in parallel
       const [prods, total, lowStock, brandsList, invoicesList] = await Promise.all([
-        inventoryApi.getProducts(currentDemoState),
+        inventoryApi.getProducts(currentDemoState, wantInactivos),
         inventoryApi.getTotalInventory(currentDemoState),
         inventoryApi.getLowStockProducts(currentDemoState),
         inventoryApi.getBrands(currentDemoState),
@@ -157,7 +162,7 @@ export const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, showInactiveProducts]);
 
   // Initial Authentication Gate Verification
   useEffect(() => {
@@ -358,10 +363,29 @@ export const App: React.FC = () => {
     if (!deletingProduct) return;
     try {
       await inventoryApi.deleteProduct(deletingProduct.id, isDemo);
-      addToast('info', 'Producto Eliminado', `Se eliminó "${deletingProduct.nombre}" del inventario.`);
+      addToast('info', 'Producto Desactivado', `Se desactivó "${deletingProduct.nombre}" del inventario visible.`);
       await loadData(isDemo, user);
     } catch (err: any) {
       addToast('error', 'Error al Eliminar', err.message || 'No se pudo borrar el producto.');
+    }
+  };
+
+  const handleToggleMostrarInactivos = async (mostrar: boolean) => {
+    setShowInactiveProducts(mostrar);
+    await loadData(isDemo, user, mostrar);
+  };
+
+  const handleReactivateProduct = async (product: Producto) => {
+    try {
+      await inventoryApi.updateProduct(product.id, { activo: true }, isDemo);
+      addToast(
+        'success',
+        'Producto Reactivado',
+        `Se reactivó exitosamente "${product.nombre}" en el catálogo activo.`
+      );
+      await loadData(isDemo, user);
+    } catch (err: any) {
+      addToast('error', 'Error de Reactivación', err.message || 'No se pudo reactivar el producto.');
     }
   };
 
@@ -570,6 +594,8 @@ export const App: React.FC = () => {
                 criticalCount={lowStockProducts.length}
                 onOpenLowStockDrawer={() => setIsLowStockDrawerOpen(true)}
                 isAdmin={isAdmin}
+                mostrarInactivos={showInactiveProducts}
+                onToggleMostrarInactivos={handleToggleMostrarInactivos}
               />
 
               {/* Content presentation */}
@@ -617,6 +643,7 @@ export const App: React.FC = () => {
                   onQuickAdjustStock={handleQuickAdjustStock}
                   updatingStockId={updatingStockId}
                   isAdmin={isAdmin}
+                  onReactivate={handleReactivateProduct}
                 />
               ) : (
                 <ProductGrid
@@ -626,6 +653,7 @@ export const App: React.FC = () => {
                   onQuickAdjustStock={handleQuickAdjustStock}
                   updatingStockId={updatingStockId}
                   isAdmin={isAdmin}
+                  onReactivate={handleReactivateProduct}
                 />
               )}
             </>

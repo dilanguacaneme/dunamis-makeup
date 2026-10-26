@@ -411,8 +411,10 @@ class DemoStore {
     }
   }
 
-  public getProducts(): Producto[] {
-    return [...this.products];
+  public getProducts(incluirInactivos = false): Producto[] {
+    return incluirInactivos
+      ? [...this.products]
+      : this.products.filter((p) => p.activo !== false);
   }
 
   public getProductById(id: number): Producto | undefined {
@@ -441,6 +443,7 @@ class DemoStore {
       totalProducto: Number(input.precio) * Math.max(0, Number(input.cantidad)),
       categoria: input.categoria,
       marca,
+      activo: true,
     };
     this.products.push(newProduct);
     this.saveProducts();
@@ -473,6 +476,8 @@ class DemoStore {
       updatedMarca = foundMarca;
     }
 
+    const updatedActivo = input.activo !== undefined ? input.activo : current.activo !== false;
+
     const updated: Producto = {
       ...current,
       nombre: updatedNombre,
@@ -481,6 +486,7 @@ class DemoStore {
       categoria: updatedCategoria,
       marca: updatedMarca,
       totalProducto: updatedPrecio * updatedCantidad,
+      activo: updatedActivo,
     };
 
     this.products[index] = updated;
@@ -493,17 +499,21 @@ class DemoStore {
     if (index === -1) {
       throw new Error(`Producto con ID ${id} no encontrado`);
     }
-    const [deleted] = this.products.splice(index, 1);
+    const current = this.products[index];
+    // Borrado lógico para emular el comportamiento seguro de producción (Principio 5)
+    current.activo = false;
     this.saveProducts();
-    return deleted;
+    return current;
   }
 
   public getTotalInventory(): number {
-    return this.products.reduce((acc, p) => acc + (p.totalProducto || p.precio * p.cantidad), 0);
+    return this.products
+      .filter((p) => p.activo !== false)
+      .reduce((acc, p) => acc + (p.totalProducto || p.precio * p.cantidad), 0);
   }
 
-  public getLowStockProducts(): Producto[] {
-    return this.products.filter((p) => p.cantidad === 0);
+  public getLowStockProducts(umbral = 0): Producto[] {
+    return this.products.filter((p) => p.activo !== false && p.cantidad <= umbral);
   }
 
   // --- INVOICES ---

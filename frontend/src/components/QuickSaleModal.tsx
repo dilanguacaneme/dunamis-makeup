@@ -60,7 +60,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
   onSaleSuccess,
   isDemo,
 }) => {
-  const availableProducts = products.filter((p) => p.cantidad > 0);
+  const availableProducts = products.filter((p) => p.activo !== false && p.cantidad > 0);
 
   const [cliente, setCliente] = useState('');
   const [telefonoCliente, setTelefonoCliente] = useState('');

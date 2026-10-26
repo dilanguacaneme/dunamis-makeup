@@ -18,6 +18,8 @@ interface ProductToolbarProps {
   criticalCount: number;
   onOpenLowStockDrawer: () => void;
   isAdmin?: boolean;
+  mostrarInactivos?: boolean;
+  onToggleMostrarInactivos?: (mostrar: boolean) => void;
 }
 
 export const ProductToolbar: React.FC<ProductToolbarProps> = ({
@@ -36,6 +38,8 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
   criticalCount,
   onOpenLowStockDrawer,
   isAdmin = true,
+  mostrarInactivos = false,
+  onToggleMostrarInactivos,
 }) => {
   const categories: { key: FilterCategory; label: string }[] = [
     { key: 'TODAS', label: 'Todas las zonas' },
@@ -279,6 +283,55 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
             <AlertTriangle size={14} />
             <span>{criticalCount} agotado(s)</span>
           </button>
+        )}
+
+        {/* Admin Inactive Products Filter */}
+        {isAdmin && onToggleMostrarInactivos && (
+          <div
+            style={{
+              display: 'inline-flex',
+              backgroundColor: 'var(--color-rose-subtle)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.15rem',
+              gap: '0.15rem',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => onToggleMostrarInactivos(false)}
+              style={{
+                padding: '0.35rem 0.65rem',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: !mostrarInactivos ? '#FFFFFF' : 'transparent',
+                color: !mostrarInactivos ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                boxShadow: !mostrarInactivos ? 'var(--shadow-subtle)' : 'none',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Activos
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleMostrarInactivos(true)}
+              style={{
+                padding: '0.35rem 0.65rem',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: mostrarInactivos ? '#FFFFFF' : 'transparent',
+                color: mostrarInactivos ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                boxShadow: mostrarInactivos ? 'var(--shadow-subtle)' : 'none',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Todos (con inactivos)
+            </button>
+          </div>
         )}
 
         {/* New Product CTA (Contextual to inventory, Admin only) */}

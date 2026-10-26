@@ -165,12 +165,13 @@ export const inventoryApi = {
   },
 
   // Products: Get all
-  async getProducts(isDemo: boolean): Promise<Producto[]> {
+  async getProducts(isDemo: boolean, incluirInactivos = false): Promise<Producto[]> {
     if (isDemo) {
-      return demoStore.getProducts();
+      return demoStore.getProducts(incluirInactivos);
     }
 
-    const res = await fetch(`${BASE_URL}/producto/obtener-productos`, {
+    const query = incluirInactivos ? '?incluirInactivos=true' : '';
+    const res = await fetch(`${BASE_URL}/producto/obtener-productos${query}`, {
       method: 'GET',
       credentials: 'include',
       headers: { Accept: 'application/json' },
@@ -181,7 +182,14 @@ export const inventoryApi = {
     }
 
     if (!res.ok) {
-      throw new ApiError(`Error al consultar productos (${res.status})`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al consultar productos (${res.status})`, res.status);
     }
 
     return await res.json();
@@ -211,20 +219,28 @@ export const inventoryApi = {
     return typeof data === 'number' ? data : 0;
   },
 
-  // Products: Low stock products (acabarse) - returns items where cantidad = 0
-  async getLowStockProducts(isDemo: boolean): Promise<Producto[]> {
+  // Products: Low stock products (acabarse) - returns items where cantidad <= umbral (default 0)
+  async getLowStockProducts(isDemo: boolean, umbral?: number): Promise<Producto[]> {
     if (isDemo) {
-      return demoStore.getLowStockProducts();
+      return demoStore.getLowStockProducts(umbral);
     }
 
-    const res = await fetch(`${BASE_URL}/producto/acabarse`, {
+    const query = umbral !== undefined ? `?umbral=${umbral}` : '';
+    const res = await fetch(`${BASE_URL}/producto/acabarse${query}`, {
       method: 'GET',
       credentials: 'include',
       headers: { Accept: 'application/json' },
     });
 
     if (!res.ok) {
-      throw new ApiError(`Error al consultar productos agotados (${res.status})`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al consultar productos agotados (${res.status})`, res.status);
     }
 
     return await res.json();
@@ -254,7 +270,7 @@ export const inventoryApi = {
     };
 
     if (input.marca?.id) {
-      bodyPayload.marca = { id: input.marca.id };
+      bodyPayload.marcaId = input.marca.id;
     }
 
     const res = await fetch(`${BASE_URL}/producto/crear`, {
@@ -299,7 +315,8 @@ export const inventoryApi = {
     if (input.precio !== undefined) bodyPayload.precio = Number(input.precio);
     if (input.cantidad !== undefined) bodyPayload.cantidad = Math.max(0, Number(input.cantidad));
     if (input.categoria !== undefined) bodyPayload.categoria = input.categoria;
-    if (input.marca?.id) bodyPayload.marca = { id: input.marca.id };
+    if (input.marca?.id !== undefined) bodyPayload.marcaId = input.marca.id;
+    if (input.activo !== undefined) bodyPayload.activo = input.activo;
 
     const res = await fetch(`${BASE_URL}/producto/actualizar/${id}`, {
       method: 'PATCH',
