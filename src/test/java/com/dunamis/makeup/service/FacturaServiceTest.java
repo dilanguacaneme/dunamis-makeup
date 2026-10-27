@@ -1,8 +1,10 @@
 package com.dunamis.makeup.service;
 
 import com.dunamis.makeup.entity.*;
+import com.dunamis.makeup.exception.ConflictoEstadoException;
 import com.dunamis.makeup.exception.ProductoInsuficienteException;
 import com.dunamis.makeup.exception.ProductoNoEncontradoException;
+import com.dunamis.makeup.exception.ReglaNegocioException;
 import com.dunamis.makeup.repository.AbonoFacturaRepository;
 import com.dunamis.makeup.repository.FacturaRepository;
 import com.dunamis.makeup.repository.ProductoRepository;
@@ -17,8 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -265,10 +266,9 @@ class FacturaServiceTest {
                     null
             );
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+            ReglaNegocioException ex = assertThrows(ReglaNegocioException.class, () ->
                     facturaService.crearFactura(request, "maryuri"));
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-            assertTrue(ex.getReason().contains("inactivo"));
+            assertTrue(ex.getMessage().contains("inactivo"));
             verify(facturaRepository, never()).save(any());
         }
 
@@ -311,9 +311,8 @@ class FacturaServiceTest {
                     null
             );
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+            ReglaNegocioException ex = assertThrows(ReglaNegocioException.class, () ->
                     facturaService.crearFactura(requestSobrepago, "maryuri"));
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
             verify(facturaRepository, never()).save(any());
         }
     }
@@ -392,10 +391,9 @@ class FacturaServiceTest {
 
             RegistrarAbonoRequest req = new RegistrarAbonoRequest(65000.0, MedioPago.EFECTIVO, null);
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+            ReglaNegocioException ex = assertThrows(ReglaNegocioException.class, () ->
                     facturaService.registrarAbono(50L, req, "maryuri", true));
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-            assertTrue(ex.getReason().contains("supera el saldo pendiente"));
+            assertTrue(ex.getMessage().contains("supera el saldo pendiente"));
             verify(abonoFacturaRepository, never()).save(any());
         }
 
@@ -408,10 +406,9 @@ class FacturaServiceTest {
 
             RegistrarAbonoRequest req = new RegistrarAbonoRequest(10000.0, MedioPago.EFECTIVO, null);
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+            ReglaNegocioException ex = assertThrows(ReglaNegocioException.class, () ->
                     facturaService.registrarAbono(50L, req, "maryuri", true));
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-            assertTrue(ex.getReason().contains("totalmente pagada"));
+            assertTrue(ex.getMessage().contains("totalmente pagada"));
         }
 
         @Test
@@ -422,10 +419,9 @@ class FacturaServiceTest {
 
             RegistrarAbonoRequest req = new RegistrarAbonoRequest(10000.0, MedioPago.EFECTIVO, null);
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+            ConflictoEstadoException ex = assertThrows(ConflictoEstadoException.class, () ->
                     facturaService.registrarAbono(50L, req, "maryuri", true));
-            assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
-            assertTrue(ex.getReason().contains("factura anulada"));
+            assertTrue(ex.getMessage().contains("factura anulada"));
         }
 
         @Test
@@ -436,9 +432,8 @@ class FacturaServiceTest {
 
             RegistrarAbonoRequest req = new RegistrarAbonoRequest(10000.0, MedioPago.EFECTIVO, null);
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+            assertThrows(AccessDeniedException.class, () ->
                     facturaService.registrarAbono(50L, req, "vendedor_2", false)); // esAdmin = false
-            assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
         }
     }
 }

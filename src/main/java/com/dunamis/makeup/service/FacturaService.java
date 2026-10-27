@@ -1,18 +1,20 @@
 package com.dunamis.makeup.service;
 
 import com.dunamis.makeup.entity.*;
+import com.dunamis.makeup.exception.ConflictoEstadoException;
 import com.dunamis.makeup.exception.ProductoInsuficienteException;
 import com.dunamis.makeup.exception.ProductoNoEncontradoException;
+import com.dunamis.makeup.exception.RecursoNoEncontradoException;
+import com.dunamis.makeup.exception.ReglaNegocioException;
 import com.dunamis.makeup.repository.AbonoFacturaRepository;
 import com.dunamis.makeup.repository.FacturaRepository;
 import com.dunamis.makeup.repository.ProductoRepository;
 import com.dunamis.makeup.repository.UsuarioRepository;
 import com.dunamis.makeup.dto.factura.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -35,10 +37,10 @@ public class FacturaService {
     @Transactional
     public FacturaResponse crearFactura(CrearFacturaRequest request, String vendedorUsuario) {
         if (request.cliente() == null || request.cliente().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre del cliente es obligatorio");
+            throw new ReglaNegocioException("El nombre del cliente es obligatorio");
         }
         if (request.detalles() == null || request.detalles().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La factura debe tener al menos un producto");
+            throw new ReglaNegocioException("La factura debe tener al menos un producto");
         }
 
         Factura factura = new Factura();
@@ -57,10 +59,10 @@ public class FacturaService {
         Map<Long, Integer> cantidadesPorProducto = new LinkedHashMap<>();
         for (CrearDetalleFacturaRequest item : request.detalles()) {
             if (item.productoId() == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cada detalle debe identificar un producto");
+                throw new ReglaNegocioException("Cada detalle debe identificar un producto");
             }
             if (item.cantidad() == null || item.cantidad() <= 0) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La cantidad de cada producto debe ser mayor que cero");
+                throw new ReglaNegocioException("La cantidad de cada producto debe ser mayor que cero");
             }
             cantidadesPorProducto.merge(item.productoId(), item.cantidad(), Integer::sum);
         }
@@ -75,8 +77,7 @@ public class FacturaService {
                     .orElseThrow(() -> new ProductoNoEncontradoException(productoId));
 
             if (Boolean.FALSE.equals(producto.getActivo())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "El producto '" + producto.getNombre() + "' (id: " + productoId + ") se encuentra inactivo y no puede ser facturado");
+                throw new ReglaNegocioException("El producto '" + producto.getNombre() + "' (id: " + productoId + ") se encuentra inactivo y no puede ser facturado");
             }
 
             if (producto.getCantidad() < cantidadTotalRequerida) {
@@ -131,8 +132,7 @@ public class FacturaService {
             factura.setSaldoPendiente(totalFactura);
         } else if (estado == EstadoPagoFactura.ABONO_PARCIAL) {
             if (request.valorAbonado() == null || request.valorAbonado() <= 0.0 || request.valorAbonado() >= totalFactura) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "El valor abonado para abono parcial debe ser mayor a cero y menor al total de la factura");
+                throw new ReglaNegocioException("El valor abonado para abono parcial debe ser mayor a cero y menor al total de la factura");
             }
             double abonado = request.valorAbonado();
             factura.setValorAbonado(abonado);
@@ -149,29 +149,28 @@ public class FacturaService {
     @Transactional
     public AbonoResponse registrarAbono(Long facturaId, RegistrarAbonoRequest request, String usuarioRegistro, boolean esAdmin) {
         Factura factura = facturaRepository.findById(facturaId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Factura no encontrada con id: " + facturaId));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Factura", facturaId));
 
         if (!esAdmin && !factura.getVendedorUsuario().equalsIgnoreCase(usuarioRegistro)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: no tiene permisos sobre esta factura");
+            throw new AccessDeniedException("Acceso denegado: no tiene permisos sobre esta factura");
         }
 
         if (Boolean.TRUE.equals(factura.getAnulada())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "No es posible registrar abonos en una factura anulada");
+            throw new ConflictoEstadoException("No es posible registrar abonos en una factura anulada");
         }
 
         factura.asegurarValoresPorDefecto();
 
         if (factura.getEstadoPago() == EstadoPagoFactura.PAGADA || factura.getSaldoPendiente() <= 0.0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La factura ya se encuentra totalmente pagada");
+            throw new ReglaNegocioException("La factura ya se encuentra totalmente pagada");
         }
 
         if (request.monto() == null || request.monto() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El monto del abono debe ser mayor a cero");
+            throw new ReglaNegocioException("El monto del abono debe ser mayor a cero");
         }
 
         if (request.monto() > factura.getSaldoPendiente()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "El monto del abono ($" + request.monto() + ") supera el saldo pendiente de la factura ($" + factura.getSaldoPendiente() + ")");
+            throw new ReglaNegocioException("El monto del abono ($" + request.monto() + ") supera el saldo pendiente de la factura ($" + factura.getSaldoPendiente() + ")");
         }
 
         double nuevoAbonado = factura.getValorAbonado() + request.monto();
@@ -198,10 +197,10 @@ public class FacturaService {
     @Transactional(readOnly = true)
     public List<AbonoResponse> listarAbonosPorFactura(Long facturaId, String usuario, boolean esAdmin) {
         Factura factura = facturaRepository.findById(facturaId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Factura no encontrada con id: " + facturaId));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Factura", facturaId));
 
         if (!esAdmin && !factura.getVendedorUsuario().equalsIgnoreCase(usuario)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso denegado: no tiene permisos sobre esta factura");
+            throw new AccessDeniedException("Acceso denegado: no tiene permisos sobre esta factura");
         }
 
         return abonoFacturaRepository.findByFacturaIdOrderByFechaAscIdAsc(facturaId)
@@ -222,7 +221,7 @@ public class FacturaService {
         return (administrador
                 ? facturaRepository.findById(id)
                 : facturaRepository.findByIdAndVendedorUsuarioIgnoreCase(id, vendedorUsuario))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Factura no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Factura", id));
     }
 
     @Transactional(readOnly = true)
@@ -240,10 +239,10 @@ public class FacturaService {
     @Transactional
     public FacturaResponse anularFactura(Long id, AnularFacturaRequest request) {
         Factura factura = facturaRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Factura no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Factura", id));
 
         if (Boolean.TRUE.equals(factura.getAnulada())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "La factura con id " + id + " ya se encuentra anulada");
+            throw new ConflictoEstadoException("La factura con id " + id + " ya se encuentra anulada");
         }
 
         // Restituir existencias a cada producto facturado
@@ -262,36 +261,11 @@ public class FacturaService {
 
         factura.setAnulada(true);
         factura.setFechaAnulacion(LocalDateTime.now());
-        if (request != null && request.motivo() != null && !request.motivo().isBlank()) {
-            factura.setMotivoAnulacion(request.motivo().trim());
-        }
+        factura.setMotivoAnulacion(request != null && request.motivo() != null && !request.motivo().isBlank()
+                ? request.motivo().trim()
+                : "Anulada por la administradora");
 
         Factura guardada = facturaRepository.save(factura);
         return FacturaResponse.fromEntity(guardada);
-    }
-
-    // Método de soporte transitorio para controladores existentes antes de Tarea 3
-    @Transactional
-    public Factura crearFactura(Factura factura, String vendedorUsuario) {
-        List<CrearDetalleFacturaRequest> detalles = factura.getDetalles() != null
-                ? factura.getDetalles().stream()
-                .map(d -> new CrearDetalleFacturaRequest(
-                        d.getProducto() != null ? d.getProducto().getId() : null,
-                        d.getCantidad()))
-                .toList()
-                : Collections.emptyList();
-
-        CrearFacturaRequest req = new CrearFacturaRequest(
-                factura.getCliente(),
-                factura.getTelefonoCliente(),
-                detalles,
-                factura.getEstadoPago(),
-                factura.getValorAbonado(),
-                null,
-                null
-        );
-
-        FacturaResponse resp = crearFactura(req, vendedorUsuario);
-        return facturaRepository.findById(resp.id()).orElse(factura);
     }
 }

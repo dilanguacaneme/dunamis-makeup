@@ -16,6 +16,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.lang.reflect.Method;
@@ -138,6 +139,18 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals("UNAUTHORIZED", response.getBody().error());
         assertEquals("Usuario o contraseña incorrectos", response.getBody().message());
+    }
+
+    @Test
+    @DisplayName("Debe manejar HttpRequestMethodNotSupportedException retornando HTTP 405 Method Not Allowed")
+    void testHandleHttpRequestMethodNotSupported() {
+        HttpRequestMethodNotSupportedException ex = new HttpRequestMethodNotSupportedException("DELETE");
+        ResponseEntity<ErrorResponse> response = handler.handleHttpRequestMethodNotSupported(ex);
+
+        assertEquals(HttpStatus.METHOD_NOT_ALLOWED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("METHOD_NOT_ALLOWED", response.getBody().error());
+        assertEquals("El método HTTP no está permitido para este recurso", response.getBody().message());
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.dunamis.makeup.entity.CategoriaProducto;
 import com.dunamis.makeup.entity.Marca;
 import com.dunamis.makeup.entity.Producto;
 import com.dunamis.makeup.exception.ProductoNoEncontradoException;
+import com.dunamis.makeup.exception.ReglaNegocioException;
 import com.dunamis.makeup.repository.DetalleFacturaRepository;
 import com.dunamis.makeup.repository.MarcaRepository;
 import com.dunamis.makeup.repository.ProductoRepository;
@@ -117,11 +118,10 @@ class ProductoServiceTest {
 
             when(marcaRepository.findById(999L)).thenReturn(Optional.empty());
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            ReglaNegocioException ex = assertThrows(ReglaNegocioException.class,
                     () -> productoService.crearProducto(request));
 
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-            assertTrue(ex.getReason().contains("La marca seleccionada no existe"));
+            assertTrue(ex.getMessage().contains("La marca seleccionada no existe"));
             verify(productoRepository, never()).save(any());
         }
 
@@ -134,11 +134,10 @@ class ProductoServiceTest {
 
             when(marcaRepository.findById(2L)).thenReturn(Optional.of(marcaInactiva));
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            ReglaNegocioException ex = assertThrows(ReglaNegocioException.class,
                     () -> productoService.crearProducto(request));
 
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-            assertTrue(ex.getReason().contains("inactiva"));
+            assertTrue(ex.getMessage().contains("inactiva"));
             verify(productoRepository, never()).save(any());
         }
     }
@@ -210,11 +209,10 @@ class ProductoServiceTest {
             when(productoRepository.findById(100L)).thenReturn(Optional.of(productoEjemplo));
             when(marcaRepository.findById(2L)).thenReturn(Optional.of(marcaInactiva));
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            ReglaNegocioException ex = assertThrows(ReglaNegocioException.class,
                     () -> productoService.actualizarProducto(100L, request));
 
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-            assertTrue(ex.getReason().contains("inactiva"));
+            assertTrue(ex.getMessage().contains("inactiva"));
         }
     }
 

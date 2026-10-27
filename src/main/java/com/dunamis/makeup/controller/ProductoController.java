@@ -4,13 +4,14 @@ import com.dunamis.makeup.service.ProductoService;
 import com.dunamis.makeup.dto.producto.ActualizarProductoRequest;
 import com.dunamis.makeup.dto.producto.CrearProductoRequest;
 import com.dunamis.makeup.dto.producto.ProductoResponse;
+import com.dunamis.makeup.exception.ReglaNegocioException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -38,8 +39,7 @@ public class ProductoController {
     ) {
         if (incluirInactivos && (authentication == null || authentication.getAuthorities().stream()
                 .noneMatch(a -> a.getAuthority().equals("ROLE_ADMIN")))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Acceso denegado: la consulta de productos inactivos es exclusiva de administradores");
+            throw new AccessDeniedException("Acceso denegado: la consulta de productos inactivos es exclusiva de administradores");
         }
 
         List<ProductoResponse> lista = productoService.buscarProductos(incluirInactivos);
@@ -83,8 +83,7 @@ public class ProductoController {
             @RequestParam(name = "umbral", required = false) Integer umbral
     ) {
         if (umbral != null && umbral < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "El umbral de existencias debe ser un número entero mayor o igual a cero");
+            throw new ReglaNegocioException("El umbral de existencias debe ser un número entero mayor o igual a cero");
         }
 
         List<ProductoResponse> lstProntoAAcabar = productoService.productoCercaAcabarse(umbral);

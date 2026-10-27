@@ -1,14 +1,14 @@
 package com.dunamis.makeup.service;
 
 import com.dunamis.makeup.entity.Marca;
+import com.dunamis.makeup.exception.ConflictoEstadoException;
+import com.dunamis.makeup.exception.RecursoNoEncontradoException;
 import com.dunamis.makeup.repository.MarcaRepository;
 import com.dunamis.makeup.dto.marca.ActualizarMarcaRequest;
 import com.dunamis.makeup.dto.marca.CrearMarcaRequest;
 import com.dunamis.makeup.dto.marca.MarcaResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ public class MarcaService {
     public MarcaResponse crearMarca(CrearMarcaRequest request) {
         String nombreNormalizado = normalizarNombre(request.nombre());
         if (marcaRepository.findByNombreIgnoreCase(nombreNormalizado).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una marca con ese nombre");
+            throw new ConflictoEstadoException("Ya existe una marca con ese nombre");
         }
         Marca marca = new Marca(nombreNormalizado);
         return MarcaResponse.fromEntity(marcaRepository.save(marca));
@@ -48,7 +48,7 @@ public class MarcaService {
     public Marca crearMarca(Marca marca) {
         String nombre = normalizarNombre(marca.getNombre());
         if (marcaRepository.findByNombreIgnoreCase(nombre).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una marca con ese nombre");
+            throw new ConflictoEstadoException("Ya existe una marca con ese nombre");
         }
         return marcaRepository.save(new Marca(nombre));
     }
@@ -56,7 +56,7 @@ public class MarcaService {
     @Transactional
     public MarcaResponse actualizarMarca(Long id, ActualizarMarcaRequest request) {
         Marca marca = marcaRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Marca no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Marca", id));
 
         if (request.nombre() != null && !request.nombre().isBlank()) {
             String nuevoNombre = normalizarNombre(request.nombre());
@@ -64,7 +64,7 @@ public class MarcaService {
                 marcaRepository.findByNombreIgnoreCase(nuevoNombre)
                         .filter(otra -> !otra.getId().equals(id))
                         .ifPresent(otra -> {
-                            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una marca con ese nombre");
+                            throw new ConflictoEstadoException("Ya existe una marca con ese nombre");
                         });
                 marca.setNombre(nuevoNombre);
             }
@@ -78,28 +78,32 @@ public class MarcaService {
     }
 
     @Transactional
-    public Marca actualizarMarca(Long id, Marca cambios) {
+    public Marca actualizarMarca(Long id, Marca datosNuevos) {
         Marca marca = marcaRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Marca no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Marca", id));
 
-        if (cambios.getNombre() != null) {
-            String nombre = normalizarNombre(cambios.getNombre());
-            marcaRepository.findByNombreIgnoreCase(nombre)
-                    .filter(otra -> !otra.getId().equals(id))
-                    .ifPresent(otra -> {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una marca con ese nombre");
-                    });
-            marca.setNombre(nombre);
+        if (datosNuevos.getNombre() != null && !datosNuevos.getNombre().isBlank()) {
+            String nuevoNombre = normalizarNombre(datosNuevos.getNombre());
+            if (!nuevoNombre.equalsIgnoreCase(marca.getNombre())) {
+                marcaRepository.findByNombreIgnoreCase(nuevoNombre)
+                        .filter(otra -> !otra.getId().equals(id))
+                        .ifPresent(otra -> {
+                            throw new ConflictoEstadoException("Ya existe una marca con ese nombre");
+                        });
+                marca.setNombre(nuevoNombre);
+            }
         }
-        if (cambios.getActiva() != null) {
-            marca.setActiva(cambios.getActiva());
+
+        if (datosNuevos.getActiva() != null) {
+            marca.setActiva(datosNuevos.getActiva());
         }
+
         return marcaRepository.save(marca);
     }
 
-    public String normalizarNombre(String nombre) {
-        if (nombre == null || nombre.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la marca es obligatorio");
+    private String normalizarNombre(String nombre) {
+        if (nombre == null) {
+            return "";
         }
         return nombre.trim().replaceAll("\\s+", " ");
     }

@@ -188,7 +188,7 @@ class MarcaIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonPayload))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("BAD_REQUEST"));
+                .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"));
     }
 
     @Test
@@ -254,7 +254,7 @@ class MarcaIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("BAD_REQUEST"));
+                .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"));
     }
 
     @Test

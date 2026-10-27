@@ -3,6 +3,7 @@ package com.dunamis.makeup.service;
 import com.dunamis.makeup.entity.Marca;
 import com.dunamis.makeup.entity.Producto;
 import com.dunamis.makeup.exception.ProductoNoEncontradoException;
+import com.dunamis.makeup.exception.ReglaNegocioException;
 import com.dunamis.makeup.repository.DetalleFacturaRepository;
 import com.dunamis.makeup.repository.MarcaRepository;
 import com.dunamis.makeup.repository.ProductoRepository;
@@ -10,13 +11,10 @@ import com.dunamis.makeup.dto.producto.ActualizarProductoRequest;
 import com.dunamis.makeup.dto.producto.CrearProductoRequest;
 import com.dunamis.makeup.dto.producto.ProductoResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProductoService {
@@ -44,7 +42,7 @@ public class ProductoService {
         String nombreNormalizado = normalizarNombre(request.nombre());
         Marca marca = marcaRepository.findById(request.marcaId())
                 .filter(m -> Boolean.TRUE.equals(m.getActiva()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "La marca seleccionada no existe o está inactiva"));
+                .orElseThrow(() -> new ReglaNegocioException("La marca seleccionada no existe o está inactiva"));
 
         Producto producto = new Producto();
         producto.setNombre(nombreNormalizado);
@@ -85,14 +83,14 @@ public class ProductoService {
 
         if (request.precio() != null) {
             if (request.precio() < 0) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El precio no puede ser negativo");
+                throw new ReglaNegocioException("El precio no puede ser negativo");
             }
             producto.setPrecio(request.precio());
         }
 
         if (request.cantidad() != null) {
             if (request.cantidad() < 0) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las existencias no pueden ser negativas");
+                throw new ReglaNegocioException("Las existencias no pueden ser negativas");
             }
             producto.setCantidad(request.cantidad());
         }
@@ -104,7 +102,7 @@ public class ProductoService {
         if (request.marcaId() != null) {
             Marca marca = marcaRepository.findById(request.marcaId())
                     .filter(m -> Boolean.TRUE.equals(m.getActiva()))
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "La marca seleccionada no existe o está inactiva"));
+                    .orElseThrow(() -> new ReglaNegocioException("La marca seleccionada no existe o está inactiva"));
             producto.setMarca(marca);
         }
 
@@ -157,14 +155,14 @@ public class ProductoService {
     @Transactional
     public Producto crearProducto(Producto producto) {
         if (producto.getCantidad() == null || producto.getCantidad() < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las existencias deben ser cero o más");
+            throw new ReglaNegocioException("Las existencias deben ser cero o más");
         }
         if (producto.getMarca() == null || producto.getMarca().getId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seleccione una marca para el producto");
+            throw new ReglaNegocioException("Seleccione una marca para el producto");
         }
         Marca marca = marcaRepository.findById(producto.getMarca().getId())
                 .filter(m -> Boolean.TRUE.equals(m.getActiva()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "La marca seleccionada no existe o está inactiva"));
+                .orElseThrow(() -> new ReglaNegocioException("La marca seleccionada no existe o está inactiva"));
         producto.setMarca(marca);
         producto.setNombre(normalizarNombre(producto.getNombre()));
         producto.setTotalProducto(producto.getCantidad() * producto.getPrecio());
@@ -196,7 +194,7 @@ public class ProductoService {
         }
         if (producto.getCantidad() != null) {
             if (producto.getCantidad() < 0) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las existencias no pueden ser negativas");
+                throw new ReglaNegocioException("Las existencias no pueden ser negativas");
             }
             productoActualizar.setCantidad(producto.getCantidad());
         }
@@ -205,14 +203,14 @@ public class ProductoService {
         }
         if (producto.getPrecio() != null) {
             if (producto.getPrecio() < 0) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El precio no puede ser negativo");
+                throw new ReglaNegocioException("El precio no puede ser negativo");
             }
             productoActualizar.setPrecio(producto.getPrecio());
         }
         if (producto.getMarca() != null && producto.getMarca().getId() != null) {
             Marca marca = marcaRepository.findById(producto.getMarca().getId())
                     .filter(m -> Boolean.TRUE.equals(m.getActiva()))
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "La marca seleccionada no existe o está inactiva"));
+                    .orElseThrow(() -> new ReglaNegocioException("La marca seleccionada no existe o está inactiva"));
             productoActualizar.setMarca(marca);
         }
         if (producto.getActivo() != null) {

@@ -238,7 +238,7 @@ class ProductoIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payloadInvalido))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("BAD_REQUEST")));
+                .andExpect(jsonPath("$.error", is("VALIDATION_FAILED")));
     }
 
     @Test
@@ -290,7 +290,7 @@ class ProductoIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("BAD_REQUEST")));
+                .andExpect(jsonPath("$.error", is("VALIDATION_FAILED")));
     }
 
     @Test

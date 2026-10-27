@@ -54,7 +54,7 @@ Este documento desglosa los requisitos de la [especificación](005-calidad-api-e
 
 ---
 
-- [ ] **Tarea 3: Desacoplamiento Estricto de Controladores y Eliminación de Entidades JPA en Capa Web**
+- [x] **Tarea 3: Desacoplamiento Estricto de Controladores y Eliminación de Entidades JPA en Capa Web**
   - **Estimación:** ~15 min
   - **Dependencias:** Tareas 1 y 2.
   - **Requisitos cubiertos:** RF-011, RF-012, RF-013, RF-014.

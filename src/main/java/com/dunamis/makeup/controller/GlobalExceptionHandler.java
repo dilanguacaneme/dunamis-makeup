@@ -15,6 +15,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,8 +44,13 @@ public class GlobalExceptionHandler {
     // 2. Errores de Acceso y Autorización RBAC (403 Forbidden)
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        String mensaje = (ex.getMessage() != null && !ex.getMessage().isBlank()
+                && !ex.getMessage().equalsIgnoreCase("Access is denied")
+                && !ex.getMessage().equalsIgnoreCase("Acceso denegado"))
+                ? ex.getMessage()
+                : "Acceso denegado: permisos insuficientes";
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ErrorResponse.of("FORBIDDEN", "Acceso denegado: permisos insuficientes para realizar esta operación"));
+                .body(ErrorResponse.of("FORBIDDEN", mensaje));
     }
 
     // 3. Recursos no encontrados (404 Not Found)
@@ -131,7 +137,14 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(error, message));
     }
 
-    // 11. Fallback Global de Excepciones no Controladas (500 Internal Server Error seguro)
+    // 11. Método HTTP No Soportado (405 Method Not Allowed)
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ErrorResponse.of("METHOD_NOT_ALLOWED", "El método HTTP no está permitido para este recurso"));
+    }
+
+    // 12. Fallback Global de Excepciones no Controladas (500 Internal Server Error seguro)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
         log.error("Excepción no controlada en el servidor", ex);

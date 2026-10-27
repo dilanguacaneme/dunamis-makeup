@@ -1,6 +1,8 @@
 package com.dunamis.makeup.service;
 
 import com.dunamis.makeup.entity.Marca;
+import com.dunamis.makeup.exception.ConflictoEstadoException;
+import com.dunamis.makeup.exception.RecursoNoEncontradoException;
 import com.dunamis.makeup.repository.MarcaRepository;
 import com.dunamis.makeup.service.MarcaService;
 import com.dunamis.makeup.dto.marca.ActualizarMarcaRequest;
@@ -115,11 +117,10 @@ class MarcaServiceTest {
 
             when(marcaRepository.findByNombreIgnoreCase("trendy")).thenReturn(Optional.of(existente));
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            ConflictoEstadoException ex = assertThrows(ConflictoEstadoException.class,
                     () -> marcaService.crearMarca(request));
 
-            assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
-            assertEquals("Ya existe una marca con ese nombre", ex.getReason());
+            assertEquals("Ya existe una marca con ese nombre", ex.getMessage());
             verify(marcaRepository, never()).save(any(Marca.class));
         }
     }
@@ -158,11 +159,10 @@ class MarcaServiceTest {
 
             ActualizarMarcaRequest request = new ActualizarMarcaRequest("Purpure", null);
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            ConflictoEstadoException ex = assertThrows(ConflictoEstadoException.class,
                     () -> marcaService.actualizarMarca(1L, request));
 
-            assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
-            assertEquals("Ya existe una marca con ese nombre", ex.getReason());
+            assertEquals("Ya existe una marca con ese nombre", ex.getMessage());
         }
 
         @Test
@@ -188,11 +188,10 @@ class MarcaServiceTest {
 
             ActualizarMarcaRequest request = new ActualizarMarcaRequest("Nueva Marca", true);
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            RecursoNoEncontradoException ex = assertThrows(RecursoNoEncontradoException.class,
                     () -> marcaService.actualizarMarca(99L, request));
 
-            assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
-            assertEquals("Marca no encontrada", ex.getReason());
+            assertEquals("Marca no encontrado con id: 99", ex.getMessage());
         }
     }
 }
