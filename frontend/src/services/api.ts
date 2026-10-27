@@ -568,10 +568,11 @@ export const inventoryApi = {
     additionalPayment: number,
     isDemo: boolean,
     medioPago: MedioPago = 'EFECTIVO',
-    notas?: string
+    notas?: string,
+    currentUser?: Usuario | null
   ): Promise<Factura> {
     if (isDemo) {
-      return demoStore.updateInvoicePayment(id, additionalPayment, medioPago, notas);
+      return demoStore.updateInvoicePayment(id, additionalPayment, medioPago, notas, currentUser);
     }
 
     await this.ensureCsrf();
@@ -618,9 +619,14 @@ export const inventoryApi = {
     throw new ApiError('Error al recuperar factura actualizada tras registrar abono', updatedRes.status);
   },
 
-  async cancelInvoice(id: number, motivo: string, isDemo: boolean = false): Promise<Factura> {
+  async cancelInvoice(
+    id: number,
+    motivo: string,
+    isDemo: boolean = false,
+    currentUser?: Usuario | null
+  ): Promise<Factura> {
     if (isDemo) {
-      return demoStore.cancelInvoice(id, motivo);
+      return demoStore.cancelInvoice(id, motivo, currentUser);
     }
 
     await this.ensureCsrf();

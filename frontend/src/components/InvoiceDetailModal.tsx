@@ -132,7 +132,8 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
         Number(abonoInput),
         isDemo,
         medioPagoInput,
-        notaInput.trim() ? notaInput.trim() : undefined
+        notaInput.trim() ? notaInput.trim() : undefined,
+        currentUser
       );
       setInvoice(updated);
       setAbonoInput('');
@@ -161,7 +162,8 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
       const updated = await inventoryApi.cancelInvoice(
         invoice.id,
         cancelMotivo.trim(),
-        isDemo
+        isDemo,
+        currentUser
       );
       setInvoice(updated);
       setShowCancelPrompt(false);

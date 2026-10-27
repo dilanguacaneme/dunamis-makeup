@@ -501,8 +501,18 @@ class DemoStore {
       throw new Error(`Producto con ID ${id} no encontrado`);
     }
     const current = this.products[index];
-    // Borrado lógico para emular el comportamiento seguro de producción (Principio 5)
-    current.activo = false;
+    const tieneFacturas = this.invoices.some((inv) =>
+      inv.detalles?.some((d) => d.producto.id === id)
+    );
+
+    if (tieneFacturas) {
+      // Borrado lógico para emular el comportamiento seguro de producción (Principio 5)
+      current.activo = false;
+    } else {
+      // Sin facturas asociadas: borrado físico
+      this.products.splice(index, 1);
+    }
+
     this.saveProducts();
     return current;
   }
@@ -514,6 +524,9 @@ class DemoStore {
   }
 
   public getLowStockProducts(umbral = 0): Producto[] {
+    if (umbral < 0) {
+      throw new Error('El umbral no puede ser negativo');
+    }
     return this.products.filter((p) => p.activo !== false && p.cantidad <= umbral);
   }
 
@@ -570,9 +583,7 @@ class DemoStore {
       throw new Error('La factura debe tener al menos un producto');
     }
 
-    let total = 0;
-    const detallesProcesados = [];
-
+    // FASE 1: Validación previa atómica de existencias y estado activo
     for (const item of input.detalles) {
       if (!item.cantidad || item.cantidad <= 0) {
         throw new Error('La cantidad de cada producto debe ser mayor que cero');
@@ -581,10 +592,20 @@ class DemoStore {
       if (!product) {
         throw new Error(`Producto #${item.producto.id} no encontrado`);
       }
+      if (product.activo !== undefined && !product.activo) {
+        throw new Error(`No se puede facturar el producto "${product.nombre}" porque está inactivo`);
+      }
       if (product.cantidad < item.cantidad) {
         throw new Error(`Stock insuficiente para "${product.nombre}". Disponible: ${product.cantidad} unidades.`);
       }
+    }
 
+    // FASE 2: Descuento atómico de existencias y construcción de líneas
+    let total = 0;
+    const detallesProcesados = [];
+
+    for (const item of input.detalles) {
+      const product = this.products.find((p) => p.id === item.producto.id)!;
       product.cantidad -= item.cantidad;
       product.totalProducto = product.cantidad * product.precio;
       const subtotal = item.cantidad * product.precio;
@@ -598,7 +619,7 @@ class DemoStore {
       });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString();
     const nextId = this.invoices.length > 0 ? Math.max(...this.invoices.map((i) => i.id)) + 1 : 1001;
 
     // Payment status calculation
@@ -642,15 +663,29 @@ class DemoStore {
     id: number,
     additionalPayment: number,
     medioPago: MedioPago = 'EFECTIVO',
-    notas?: string
+    notas?: string,
+    currentUser?: Usuario | null
   ): Factura {
     const invoice = this.invoices.find((inv) => inv.id === id);
     if (!invoice) {
       throw new Error(`Factura #${id} no encontrada`);
     }
 
+    if (
+      currentUser?.role === 'VENDEDOR' &&
+      invoice.vendedorUsuario &&
+      currentUser.username &&
+      invoice.vendedorUsuario.toLowerCase() !== currentUser.username.toLowerCase()
+    ) {
+      throw new Error('Acceso denegado: no tiene permisos para abonar a una factura de otro vendedor');
+    }
+
     if (invoice.anulada) {
       throw new Error('No es posible registrar abonos en una factura anulada');
+    }
+
+    if (additionalPayment <= 0) {
+      throw new Error('El monto del abono debe ser mayor a cero');
     }
 
     const currentAbonado =
@@ -660,7 +695,15 @@ class DemoStore {
         ? invoice.total
         : 0;
 
-    const currentSaldo = invoice.saldoPendiente !== undefined ? invoice.saldoPendiente : Math.max(0, invoice.total - currentAbonado);
+    const currentSaldo =
+      invoice.saldoPendiente !== undefined
+        ? invoice.saldoPendiente
+        : Math.max(0, invoice.total - currentAbonado);
+
+    if (currentSaldo <= 0 || invoice.estadoPago === 'PAGADA') {
+      throw new Error(`La factura #${id} ya se encuentra totalmente pagada`);
+    }
+
     if (additionalPayment > currentSaldo) {
       throw new Error(`El abono ($${additionalPayment}) supera el saldo pendiente ($${currentSaldo})`);
     }
@@ -689,11 +732,16 @@ class DemoStore {
     return invoice;
   }
 
-  public cancelInvoice(id: number, motivo?: string): Factura {
+  public cancelInvoice(id: number, motivo?: string, currentUser?: Usuario | null): Factura {
     const invoice = this.invoices.find((inv) => inv.id === id);
     if (!invoice) {
       throw new Error(`Factura #${id} no encontrada`);
     }
+
+    if (currentUser?.role === 'VENDEDOR') {
+      throw new Error('Acceso denegado: solo los administradores pueden anular facturas');
+    }
+
     if (invoice.anulada) {
       throw new Error(`La factura #${id} ya se encuentra anulada`);
     }

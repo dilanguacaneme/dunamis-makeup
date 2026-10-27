@@ -18,7 +18,7 @@ Este documento desglosa los requisitos de la [especificación](006-modo-demo-loc
 
 ---
 
-- [ ] **Tarea 2: Consolidación de Facturación Atómica, Abonos y Anulación en `demoStore`**
+- [x] **Tarea 2: Consolidación de Facturación Atómica, Abonos y Anulación en `demoStore`**
   - **Estimación:** ~15 min
   - **Dependencias:** Tarea 1.
   - **Requisitos cubiertos:** RF-007, RF-008, RF-009, RF-010, RF-012, RF-013, RF-014.
