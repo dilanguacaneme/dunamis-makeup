@@ -97,7 +97,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ---
 
-- [ ] **Tarea 4: Frontend UI, Visor de Detalle con Abonos, Anulación ADMIN, PDF y Modo Demostración**
+- [x] **Tarea 4: Frontend UI, Visor de Detalle con Abonos, Anulación ADMIN, PDF y Modo Demostración**
   - **Estimación:** ~25-30 min
   - **Dependencias:** Tareas 1, 2 y 3.
   - **Requisitos cubiertos:** RF-010, RF-014, RF-016, RF-017, RF-021.

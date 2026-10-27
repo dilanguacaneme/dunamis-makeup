@@ -12,6 +12,7 @@ import {
   Clock,
   AlertTriangle,
   HelpCircle,
+  Ban,
 } from 'lucide-react';
 import { downloadInvoicePDF, formatCOP } from '../services/pdfGenerator';
 import type { Factura, Usuario, FilterPaymentStatus, EstadoPagoFactura } from '../types';
@@ -55,55 +56,89 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
 
       // 3. Payment status filter
       if (paymentFilter !== 'TODOS') {
-        const status = inv.estadoPago || 'SIN_REGISTRO';
-        if (status !== paymentFilter) return false;
+        if (paymentFilter === 'ANULADA') {
+          if (!inv.anulada) return false;
+        } else {
+          if (inv.anulada) return false;
+          const status = inv.estadoPago || 'SIN_REGISTRO';
+          if (status !== paymentFilter) return false;
+        }
       }
 
       return true;
     });
   }, [invoices, searchQuery, dateFilter, paymentFilter]);
 
-  // Totals calculations
+  // Totals calculations (exclude cancelled invoices)
   const totalFacturadoSum = useMemo(() => {
-    return filteredInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+    return filteredInvoices
+      .filter((inv) => !inv.anulada)
+      .reduce((sum, inv) => sum + (inv.total || 0), 0);
   }, [filteredInvoices]);
 
   const totalRecaudadoSum = useMemo(() => {
-    return filteredInvoices.reduce((sum, inv) => {
-      const estado: EstadoPagoFactura = inv.estadoPago || 'SIN_REGISTRO';
-      if (estado === 'SIN_REGISTRO') {
-        return sum + (inv.valorAbonado || 0); // Do NOT count as cobradas by default!
-      }
-      if (estado === 'PAGADA') {
-        return sum + (inv.total || 0);
-      }
-      if (estado === 'ABONO_PARCIAL') {
-        return sum + (inv.valorAbonado !== undefined ? inv.valorAbonado : 0);
-      }
-      return sum;
-    }, 0);
+    return filteredInvoices
+      .filter((inv) => !inv.anulada)
+      .reduce((sum, inv) => {
+        const estado: EstadoPagoFactura = inv.estadoPago || 'SIN_REGISTRO';
+        if (estado === 'SIN_REGISTRO') {
+          return sum + (inv.valorAbonado || 0); // Do NOT count as cobradas by default!
+        }
+        if (estado === 'PAGADA') {
+          return sum + (inv.total || 0);
+        }
+        if (estado === 'ABONO_PARCIAL') {
+          return sum + (inv.valorAbonado !== undefined ? inv.valorAbonado : 0);
+        }
+        return sum;
+      }, 0);
   }, [filteredInvoices]);
 
   const saldoPendienteSum = useMemo(() => {
-    return filteredInvoices.reduce((sum, inv) => {
-      const estado: EstadoPagoFactura = inv.estadoPago || 'SIN_REGISTRO';
-      if (estado === 'SIN_REGISTRO') {
-        return sum; // Do not count as pending debt without record
-      }
-      if (estado === 'PENDIENTE') {
-        return sum + (inv.total || 0);
-      }
-      if (estado === 'ABONO_PARCIAL') {
-        const abonado = inv.valorAbonado !== undefined ? inv.valorAbonado : 0;
-        return sum + (inv.saldoPendiente !== undefined ? inv.saldoPendiente : Math.max(0, (inv.total || 0) - abonado));
-      }
-      return sum;
-    }, 0);
+    return filteredInvoices
+      .filter((inv) => !inv.anulada)
+      .reduce((sum, inv) => {
+        const estado: EstadoPagoFactura = inv.estadoPago || 'SIN_REGISTRO';
+        if (estado === 'SIN_REGISTRO') {
+          return sum; // Do not count as pending debt without record
+        }
+        if (estado === 'PENDIENTE') {
+          return sum + (inv.total || 0);
+        }
+        if (estado === 'ABONO_PARCIAL') {
+          const abonado = inv.valorAbonado !== undefined ? inv.valorAbonado : 0;
+          return sum + (inv.saldoPendiente !== undefined ? inv.saldoPendiente : Math.max(0, (inv.total || 0) - abonado));
+        }
+        return sum;
+      }, 0);
   }, [filteredInvoices]);
 
   const isSeller = user.role === 'VENDEDOR';
 
   const getPaymentStatusBadge = (invoice: Factura) => {
+    if (invoice.anulada) {
+      return (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            color: 'var(--color-crimson)',
+            backgroundColor: 'var(--color-crimson-light)',
+            border: '1px solid var(--color-crimson-border)',
+            padding: '0.15rem 0.55rem',
+            borderRadius: 'var(--radius-full)',
+          }}
+          title={`Factura anulada: ${invoice.motivoAnulacion || 'Sin motivo'}`}
+        >
+          <Ban size={11} />
+          <span>Anulada</span>
+        </span>
+      );
+    }
+
     const estado: EstadoPagoFactura = invoice.estadoPago || 'SIN_REGISTRO';
     const abonado = invoice.valorAbonado !== undefined ? invoice.valorAbonado : estado === 'PAGADA' ? invoice.total : 0;
     const saldo = invoice.saldoPendiente !== undefined ? invoice.saldoPendiente : Math.max(0, invoice.total - abonado);
@@ -329,7 +364,7 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
             )}
           </div>
 
-          {/* Payment Status Filter (Requirement 5) */}
+          {/* Payment Status Filter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <label htmlFor="inv-payment-filter" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
               Pago:
@@ -354,6 +389,7 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
               <option value="ABONO_PARCIAL">Abono parcial</option>
               <option value="PENDIENTE">Pendientes</option>
               <option value="SIN_REGISTRO">Sin registro de pago</option>
+              <option value="ANULADA">Facturas Anuladas</option>
             </select>
           </div>
 
@@ -493,15 +529,15 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
             </thead>
             <tbody>
               {filteredInvoices.map((invoice) => (
-                <tr key={invoice.id}>
-                  <td style={{ fontWeight: 700, color: 'var(--color-rosewood)' }}>
-                    #{invoice.id}
+                <tr key={invoice.id} style={invoice.anulada ? { opacity: 0.7, backgroundColor: 'rgba(217, 72, 95, 0.03)' } : undefined}>
+                  <td style={{ fontWeight: 700, color: invoice.anulada ? 'var(--color-crimson)' : 'var(--color-rosewood)' }}>
+                    #{invoice.id} {invoice.anulada && <span style={{ fontSize: '0.7rem' }}>❌</span>}
                   </td>
                   <td style={{ color: 'var(--color-text-muted)', fontSize: '0.825rem' }}>
                     {invoice.fecha || '—'}
                   </td>
                   <td>
-                    <div style={{ fontWeight: 600, color: 'var(--color-rosewood-deep)' }}>
+                    <div style={{ fontWeight: 600, color: invoice.anulada ? 'var(--color-text-muted)' : 'var(--color-rosewood-deep)', textDecoration: invoice.anulada ? 'line-through' : 'none' }}>
                       {invoice.cliente}
                     </div>
                   </td>
@@ -515,7 +551,11 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
                   <td style={{ textAlign: 'right' }}>
                     <span
                       className="tabular-numbers"
-                      style={{ fontWeight: 700, color: 'var(--color-rosewood-deep)' }}
+                      style={{
+                        fontWeight: 700,
+                        color: invoice.anulada ? 'var(--color-text-muted)' : 'var(--color-rosewood-deep)',
+                        textDecoration: invoice.anulada ? 'line-through' : 'none',
+                      }}
                     >
                       {formatCOP(invoice.total)}
                     </span>

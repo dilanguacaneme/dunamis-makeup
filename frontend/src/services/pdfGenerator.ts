@@ -86,9 +86,11 @@ export const downloadInvoicePDF = (invoice: Factura): void => {
   const vendedor = invoice.vendedorNombre || invoice.vendedorUsuario || 'Personal Atelier';
   doc.text(`Atendido por: ${vendedor}`, midX, currentY + 14);
 
-  // Payment status badge
+  // Payment status label
   const isSinRegistro = !invoice.estadoPago || invoice.estadoPago === 'SIN_REGISTRO';
-  const estadoLabel = isSinRegistro
+  const estadoLabel = invoice.anulada
+    ? 'FACTURA ANULADA'
+    : isSinRegistro
     ? 'Sin registro de pago'
     : invoice.estadoPago === 'PAGADA'
     ? 'Pagada en su totalidad'
@@ -97,6 +99,19 @@ export const downloadInvoicePDF = (invoice: Factura): void => {
     : 'Pendiente de Pago';
 
   doc.text(`Estado del pago: ${estadoLabel}`, midX, currentY + 20);
+
+  // Watermark/Banner if cancelled
+  if (invoice.anulada) {
+    doc.setFillColor(254, 237, 240); // light red
+    doc.setDrawColor(217, 72, 95); // crimson
+    doc.roundedRect(margin, currentY + 28, contentWidth, 12, 1.5, 1.5, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(180, 40, 40);
+    const motivoText = invoice.motivoAnulacion ? ` — Motivo: ${invoice.motivoAnulacion}` : '';
+    doc.text(`ANULADA: Factura sin validez contable ni comercial${motivoText}`, margin + 5, currentY + 36);
+    currentY += 16;
+  }
 
   // 3. Products Table Header
   currentY += 34;
@@ -177,7 +192,16 @@ export const downloadInvoicePDF = (invoice: Factura): void => {
   doc.setDrawColor(232, 213, 220);
   doc.line(summaryX + 5, currentY + 11, summaryX + summaryBoxWidth - 5, currentY + 11);
 
-  if (isSinRegistro) {
+  if (invoice.anulada) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(180, 40, 40);
+    doc.text('ESTADO: ANULADA', summaryX + 5, currentY + 17);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(107, 79, 91);
+    doc.text('Stock restituido', summaryX + 5, currentY + 24);
+  } else if (isSinRegistro) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.8);
     doc.setTextColor(107, 79, 91);

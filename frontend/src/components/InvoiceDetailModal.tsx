@@ -13,10 +13,13 @@ import {
   AlertTriangle,
   PlusCircle,
   HelpCircle,
+  Ban,
+  Trash2,
+  CreditCard,
 } from 'lucide-react';
 import { inventoryApi } from '../services/api';
 import { downloadInvoicePDF, formatCOP } from '../services/pdfGenerator';
-import type { Factura, Usuario, EstadoPagoFactura } from '../types';
+import type { Factura, Usuario, EstadoPagoFactura, MedioPago } from '../types';
 
 interface InvoiceDetailModalProps {
   invoiceId: number | null;
@@ -68,10 +71,18 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Partial payment form state (Demo mode support)
+  // Partial payment form state
   const [abonoInput, setAbonoInput] = useState<number | ''>('');
+  const [medioPagoInput, setMedioPagoInput] = useState<MedioPago>('EFECTIVO');
+  const [notaInput, setNotaInput] = useState<string>('');
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
   const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string | null>(null);
+
+  // Cancellation state (ADMIN only)
+  const [showCancelPrompt, setShowCancelPrompt] = useState(false);
+  const [cancelMotivo, setCancelMotivo] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelSuccessMsg, setCancelSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -119,10 +130,13 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
       const updated = await inventoryApi.recordInvoicePayment(
         invoice.id,
         Number(abonoInput),
-        isDemo
+        isDemo,
+        medioPagoInput,
+        notaInput.trim() ? notaInput.trim() : undefined
       );
       setInvoice(updated);
       setAbonoInput('');
+      setNotaInput('');
       setPaymentSuccessMsg(`Abono de ${formatCOP(Number(abonoInput))} registrado exitosamente.`);
       setTimeout(() => setPaymentSuccessMsg(null), 4000);
       if (onInvoiceUpdated) onInvoiceUpdated();
@@ -130,6 +144,35 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
       setError(err.message || 'Error al registrar el abono.');
     } finally {
       setIsRecordingPayment(false);
+    }
+  };
+
+  const handleCancelInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invoice) return;
+    if (cancelMotivo.trim().length < 5) {
+      setError('El motivo de anulación debe contener al menos 5 caracteres descriptivos.');
+      return;
+    }
+
+    try {
+      setIsCancelling(true);
+      setError(null);
+      const updated = await inventoryApi.cancelInvoice(
+        invoice.id,
+        cancelMotivo.trim(),
+        isDemo
+      );
+      setInvoice(updated);
+      setShowCancelPrompt(false);
+      setCancelMotivo('');
+      setCancelSuccessMsg('Factura anulada con éxito. Las unidades fueron restituidas al stock.');
+      setTimeout(() => setCancelSuccessMsg(null), 5000);
+      if (onInvoiceUpdated) onInvoiceUpdated();
+    } catch (err: any) {
+      setError(err.message || 'Error al anular la factura.');
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -148,6 +191,9 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
       ? invoice.saldoPendiente
       : Math.max(0, (invoice?.total || 0) - (valorAbonado || 0)));
 
+  const isAdmin = currentUser?.role === 'ADMIN';
+  const isAnulada = Boolean(invoice?.anulada);
+
   return (
     <div
       className="modal-content invoice-printable-container"
@@ -155,7 +201,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="invoice-detail-title"
-      style={{ maxWidth: '680px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+      style={{ maxWidth: '700px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
     >
       {/* Modal Header */}
       <div
@@ -166,7 +212,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: 'var(--color-rose-subtle)',
+          backgroundColor: isAnulada ? 'var(--color-crimson-light)' : 'var(--color-rose-subtle)',
           flexShrink: 0,
         }}
       >
@@ -176,14 +222,14 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
               width: '2.1rem',
               height: '2.1rem',
               borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--color-rosewood)',
+              backgroundColor: isAnulada ? 'var(--color-crimson)' : 'var(--color-rosewood)',
               color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Sparkles size={16} />
+            {isAnulada ? <Ban size={16} /> : <Sparkles size={16} />}
           </div>
           <div>
             <h2
@@ -192,13 +238,13 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                 fontFamily: 'var(--font-display)',
                 fontSize: '1.15rem',
                 fontWeight: 700,
-                color: 'var(--color-rosewood-deep)',
+                color: isAnulada ? 'var(--color-crimson)' : 'var(--color-rosewood-deep)',
               }}
             >
-              Comprobante de Factura #{invoiceId}
+              Comprobante de Factura #{invoiceId} {isAnulada && '(ANULADA)'}
             </h2>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-              Detalle oficial, descarga en PDF y control de pagos
+              Detalle oficial, descarga en PDF, abonos y trazabilidad
             </span>
           </div>
         </div>
@@ -224,12 +270,50 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
+              marginBottom: '1rem',
             }}
           >
             <AlertCircle size={18} />
             <span>{error}</span>
           </div>
-        ) : invoice ? (
+        ) : null}
+
+        {/* Cancelled Banner if anulada */}
+        {invoice && isAnulada && (
+          <div
+            style={{
+              backgroundColor: 'var(--color-crimson-light)',
+              border: '1.5px solid var(--color-crimson)',
+              color: 'var(--color-crimson)',
+              padding: '0.85rem 1rem',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.65rem',
+            }}
+          >
+            <Ban size={20} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
+            <div style={{ fontSize: '0.825rem' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.2rem' }}>
+                FACTURA ANULADA
+              </div>
+              <div>
+                <strong>Motivo:</strong> {invoice.motivoAnulacion || 'Sin motivo especificado'}
+              </div>
+              {invoice.fechaAnulacion && (
+                <div style={{ fontSize: '0.75rem', opacity: 0.9, marginTop: '0.15rem' }}>
+                  Fecha anulación: {invoice.fechaAnulacion}
+                </div>
+              )}
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, marginTop: '0.35rem', color: 'var(--color-rosewood-deep)' }}>
+                ✓ Las existencias de los productos fueron restituidas automáticamente al inventario.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {invoice && (
           <div className="printable-receipt">
             {/* Receipt Brand Banner */}
             <div
@@ -245,7 +329,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                   fontFamily: 'var(--font-display)',
                   fontSize: '1.35rem',
                   fontWeight: 700,
-                  color: 'var(--color-rosewood-deep)',
+                  color: isAnulada ? 'var(--color-crimson)' : 'var(--color-rosewood-deep)',
                   marginBottom: '0.2rem',
                 }}
               >
@@ -270,56 +354,76 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                 </span>
 
                 {/* Payment Status Pill */}
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.3rem',
-                    padding: '0.2rem 0.75rem',
-                    borderRadius: 'var(--radius-full)',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    backgroundColor:
-                      estadoPago === 'SIN_REGISTRO'
-                        ? 'var(--color-rose-subtle)'
-                        : estadoPago === 'PAGADA'
-                        ? 'var(--color-sage-light)'
-                        : estadoPago === 'ABONO_PARCIAL'
-                        ? 'var(--color-accent-gold-light)'
-                        : 'var(--color-crimson-light)',
-                    color:
-                      estadoPago === 'SIN_REGISTRO'
-                        ? 'var(--color-text-muted)'
-                        : estadoPago === 'PAGADA'
-                        ? 'var(--color-sage)'
-                        : estadoPago === 'ABONO_PARCIAL'
-                        ? 'var(--color-accent-gold)'
-                        : 'var(--color-crimson)',
-                    border: `1px solid ${
-                      estadoPago === 'SIN_REGISTRO'
-                        ? 'var(--color-border)'
-                        : estadoPago === 'PAGADA'
-                        ? 'var(--color-sage-border)'
-                        : estadoPago === 'ABONO_PARCIAL'
-                        ? 'var(--color-accent-gold-border)'
-                        : 'var(--color-crimson-border)'
-                    }`,
-                  }}
-                >
-                  {estadoPago === 'SIN_REGISTRO' && <HelpCircle size={12} />}
-                  {estadoPago === 'PAGADA' && <CheckCircle2 size={12} />}
-                  {estadoPago === 'ABONO_PARCIAL' && <Clock size={12} />}
-                  {estadoPago === 'PENDIENTE' && <AlertTriangle size={12} />}
-                  <span>
-                    {estadoPago === 'SIN_REGISTRO'
-                      ? 'Sin registro de pago'
-                      : estadoPago === 'PAGADA'
-                      ? 'Pagada'
-                      : estadoPago === 'ABONO_PARCIAL'
-                      ? 'Abono Parcial'
-                      : 'Pendiente'}
+                {isAnulada ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                      padding: '0.2rem 0.75rem',
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      backgroundColor: 'var(--color-crimson-light)',
+                      color: 'var(--color-crimson)',
+                      border: '1px solid var(--color-crimson-border)',
+                    }}
+                  >
+                    <Ban size={12} />
+                    <span>Factura Anulada</span>
                   </span>
-                </span>
+                ) : (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                      padding: '0.2rem 0.75rem',
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      backgroundColor:
+                        estadoPago === 'SIN_REGISTRO'
+                          ? 'var(--color-rose-subtle)'
+                          : estadoPago === 'PAGADA'
+                          ? 'var(--color-sage-light)'
+                          : estadoPago === 'ABONO_PARCIAL'
+                          ? 'var(--color-accent-gold-light)'
+                          : 'var(--color-crimson-light)',
+                      color:
+                        estadoPago === 'SIN_REGISTRO'
+                          ? 'var(--color-text-muted)'
+                          : estadoPago === 'PAGADA'
+                          ? 'var(--color-sage)'
+                          : estadoPago === 'ABONO_PARCIAL'
+                          ? 'var(--color-accent-gold)'
+                          : 'var(--color-crimson)',
+                      border: `1px solid ${
+                        estadoPago === 'SIN_REGISTRO'
+                          ? 'var(--color-border)'
+                          : estadoPago === 'PAGADA'
+                          ? 'var(--color-sage-border)'
+                          : estadoPago === 'ABONO_PARCIAL'
+                          ? 'var(--color-accent-gold-border)'
+                          : 'var(--color-crimson-border)'
+                      }`,
+                    }}
+                  >
+                    {estadoPago === 'SIN_REGISTRO' && <HelpCircle size={12} />}
+                    {estadoPago === 'PAGADA' && <CheckCircle2 size={12} />}
+                    {estadoPago === 'ABONO_PARCIAL' && <Clock size={12} />}
+                    {estadoPago === 'PENDIENTE' && <AlertTriangle size={12} />}
+                    <span>
+                      {estadoPago === 'SIN_REGISTRO'
+                        ? 'Sin registro de pago'
+                        : estadoPago === 'PAGADA'
+                        ? 'Pagada'
+                        : estadoPago === 'ABONO_PARCIAL'
+                        ? 'Abono Parcial'
+                        : 'Pendiente'}
+                    </span>
+                  </span>
+                )}
               </div>
             </div>
 
@@ -388,7 +492,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                     invoice.detalles.map((detalle, idx) => (
                       <tr key={idx} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
                         <td style={{ padding: '0.65rem 0.25rem' }}>
-                          <div style={{ fontWeight: 600, color: 'var(--color-rosewood-deep)' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--color-rosewood-deep)', textDecoration: isAnulada ? 'line-through' : 'none' }}>
                             {detalle.producto?.nombre || 'Producto cosmético'}
                           </div>
                           {detalle.producto?.marca && (
@@ -419,7 +523,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
               </table>
             </div>
 
-            {/* Payment & Balance Ledger Box (Requirement 5) */}
+            {/* Payment & Balance Ledger Box */}
             <div
               style={{
                 backgroundColor: 'var(--color-canvas)',
@@ -436,7 +540,15 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                 <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block' }}>
                   Total Factura:
                 </span>
-                <span className="tabular-numbers" style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-rosewood-deep)' }}>
+                <span
+                  className="tabular-numbers"
+                  style={{
+                    fontSize: '1.2rem',
+                    fontWeight: 700,
+                    color: isAnulada ? 'var(--color-text-muted)' : 'var(--color-rosewood-deep)',
+                    textDecoration: isAnulada ? 'line-through' : 'none',
+                  }}
+                >
                   {formatCOP(invoice.total)}
                 </span>
               </div>
@@ -450,7 +562,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                   style={{
                     fontSize: '1.1rem',
                     fontWeight: 700,
-                    color: isSinRegistro ? 'var(--color-text-muted)' : 'var(--color-sage)',
+                    color: isSinRegistro ? 'var(--color-text-muted)' : isAnulada ? 'var(--color-text-muted)' : 'var(--color-sage)',
                   }}
                 >
                   {isSinRegistro ? 'Sin registrar' : formatCOP(valorAbonado || 0)}
@@ -466,34 +578,77 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                   style={{
                     fontSize: '1.1rem',
                     fontWeight: 700,
-                    color: isSinRegistro ? 'var(--color-text-muted)' : (saldoPendiente || 0) > 0 ? 'var(--color-crimson)' : 'var(--color-sage)',
+                    color: isAnulada
+                      ? 'var(--color-text-muted)'
+                      : isSinRegistro
+                      ? 'var(--color-text-muted)'
+                      : (saldoPendiente || 0) > 0
+                      ? 'var(--color-crimson)'
+                      : 'var(--color-sage)',
                   }}
                 >
-                  {isSinRegistro ? 'Por conciliar' : formatCOP(saldoPendiente || 0)}
+                  {isAnulada ? 'Anulada' : isSinRegistro ? 'Por conciliar' : formatCOP(saldoPendiente || 0)}
                 </span>
               </div>
             </div>
 
-            {/* Notice for invoices with no payment record */}
-            {isSinRegistro && (
+            {/* List of Previous Abonos if any */}
+            {invoice.abonos && invoice.abonos.length > 0 && (
               <div
                 style={{
-                  backgroundColor: 'var(--color-rose-subtle)',
+                  backgroundColor: '#FFFFFF',
                   border: '1px solid var(--color-border)',
-                  color: 'var(--color-text-muted)',
-                  padding: '0.65rem 0.85rem',
                   borderRadius: 'var(--radius-md)',
-                  fontSize: '0.8rem',
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.45rem',
+                  padding: '0.85rem 1rem',
+                  marginBottom: '1.25rem',
                 }}
               >
-                <HelpCircle size={15} color="var(--color-rosewood)" style={{ flexShrink: 0 }} />
-                <span>
-                  Esta factura no cuenta con estado de pago registrado en el backend Spring Boot. Los abonos y cobros requieren soporte en la base de datos.
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', color: 'var(--color-rosewood-deep)', fontWeight: 700, fontSize: '0.825rem' }}>
+                  <CreditCard size={14} />
+                  <span>Historial de Pagos & Abonos ({invoice.abonos.length})</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  {invoice.abonos.map((abono, idx) => (
+                    <div
+                      key={abono.id || idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.35rem 0.6rem',
+                        backgroundColor: 'var(--color-canvas)',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.78rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--color-sage)' }}>
+                          {formatCOP(abono.monto)}
+                        </span>
+                        <span
+                          style={{
+                            padding: '0.1rem 0.4rem',
+                            backgroundColor: 'var(--color-rose-soft)',
+                            borderRadius: 'var(--radius-full)',
+                            fontSize: '0.7rem',
+                            fontWeight: 600,
+                            color: 'var(--color-rosewood)',
+                          }}
+                        >
+                          {abono.medioPago}
+                        </span>
+                        {abono.notas && (
+                          <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                            "{abono.notas}"
+                          </span>
+                        )}
+                      </div>
+                      <span style={{ color: 'var(--color-text-subtle)', fontSize: '0.72rem' }}>
+                        {abono.fecha || 'Reciente'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -519,8 +674,30 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
               </div>
             )}
 
-            {/* Payment Registration in Demo Mode */}
-            {!isSinRegistro && saldoPendiente && saldoPendiente > 0 && isDemo && (
+            {/* Cancel Success Feedback */}
+            {cancelSuccessMsg && (
+              <div
+                style={{
+                  backgroundColor: 'var(--color-sage-light)',
+                  border: '1px solid var(--color-sage-border)',
+                  color: 'var(--color-sage)',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                }}
+              >
+                <CheckCircle2 size={15} />
+                <span>{cancelSuccessMsg}</span>
+              </div>
+            )}
+
+            {/* Payment Registration Form (Available both Connected and Demo if pending balance & not cancelled) */}
+            {!isAnulada && saldoPendiente !== null && saldoPendiente > 0 && (
               <form
                 onSubmit={handleRecordPayment}
                 className="no-print"
@@ -531,68 +708,153 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                   padding: '0.85rem 1rem',
                   marginBottom: '1.25rem',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '0.75rem',
+                  flexDirection: 'column',
+                  gap: '0.65rem',
                 }}
               >
-                <div>
-                  <span style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--color-rosewood-deep)', display: 'block' }}>
-                    Registrar nuevo abono para saldar cuenta
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                    Saldo actual por cobrar: {formatCOP(saldoPendiente)}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--color-rosewood-deep)', display: 'block' }}>
+                      Registrar abono de pago
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                      Saldo actual por cobrar: <strong>{formatCOP(saldoPendiente)}</strong>
+                    </span>
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                  <input
-                    type="number"
-                    min="1"
-                    max={saldoPendiente}
-                    value={abonoInput}
-                    onChange={(e) => setAbonoInput(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder={`Hasta ${formatCOP(saldoPendiente)}`}
-                    className="form-input"
-                    style={{ width: '8.5rem', padding: '0.3rem 0.5rem', fontSize: '0.825rem', backgroundColor: '#FFFFFF' }}
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={isRecordingPayment || abonoInput === ''}
-                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
-                  >
-                    <PlusCircle size={13} />
-                    <span>{isRecordingPayment ? 'Registrando...' : 'Abonar'}</span>
-                  </button>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', alignItems: 'center' }}>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.15rem' }}>
+                      Monto a abonar (COP)*
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={saldoPendiente}
+                      value={abonoInput}
+                      onChange={(e) => setAbonoInput(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder={`Hasta ${formatCOP(saldoPendiente)}`}
+                      className="form-input"
+                      style={{ width: '100%', padding: '0.3rem 0.5rem', fontSize: '0.825rem', backgroundColor: '#FFFFFF' }}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.15rem' }}>
+                      Medio de pago*
+                    </label>
+                    <select
+                      value={medioPagoInput}
+                      onChange={(e) => setMedioPagoInput(e.target.value as MedioPago)}
+                      className="form-select"
+                      style={{ width: '100%', padding: '0.3rem 0.5rem', fontSize: '0.825rem', backgroundColor: '#FFFFFF' }}
+                    >
+                      <option value="EFECTIVO">Efectivo</option>
+                      <option value="TRANSFERENCIA">Transferencia bancaria</option>
+                      <option value="NEQUI">Nequi</option>
+                      <option value="DAVIPLATA">Daviplata</option>
+                      <option value="TARJETA">Tarjeta débito/crédito</option>
+                      <option value="OTRO">Otro medio</option>
+                    </select>
+                  </div>
+
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.15rem' }}>
+                      Nota o referencia (opcional)
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        value={notaInput}
+                        onChange={(e) => setNotaInput(e.target.value)}
+                        placeholder="Ej. Comprobante Nequi #84930"
+                        className="form-input"
+                        style={{ flex: 1, padding: '0.3rem 0.5rem', fontSize: '0.825rem', backgroundColor: '#FFFFFF' }}
+                        maxLength={255}
+                      />
+                      <button
+                        type="submit"
+                        className="btn-primary"
+                        disabled={isRecordingPayment || abonoInput === ''}
+                        style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                      >
+                        <PlusCircle size={13} />
+                        <span>{isRecordingPayment ? 'Abonando...' : 'Registrar Abono'}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </form>
             )}
 
-            {/* Connected Mode Notice (Requirement 5) */}
-            {!isDemo && !isSinRegistro && saldoPendiente !== null && saldoPendiente > 0 && (
-              <div
+            {/* Cancellation Confirmation Prompt (ADMIN only) */}
+            {showCancelPrompt && !isAnulada && (
+              <form
+                onSubmit={handleCancelInvoice}
                 className="no-print"
                 style={{
-                  backgroundColor: 'var(--color-rose-subtle)',
-                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-crimson-light)',
+                  border: '1.5px solid var(--color-crimson)',
                   borderRadius: 'var(--radius-md)',
-                  padding: '0.65rem 0.85rem',
+                  padding: '1rem',
                   marginBottom: '1.25rem',
-                  fontSize: '0.75rem',
-                  color: 'var(--color-text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.45rem',
                 }}
               >
-                <AlertCircle size={15} color="var(--color-rosewood)" style={{ flexShrink: 0 }} />
-                <span>
-                  El backend actual registra el total general. La persistencia de abonos multi-dispositivo requiere actualización de base de datos en Spring Boot.
-                </span>
-              </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: 'var(--color-crimson)', fontWeight: 700, fontSize: '0.875rem', marginBottom: '0.4rem' }}>
+                  <AlertTriangle size={16} />
+                  <span>¿Deseas anular la Factura #{invoice.id}?</span>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--color-text-main)', marginBottom: '0.65rem' }}>
+                  Esta acción es irreversible: la factura quedará sin validez comercial y las unidades vendidas serán devueltas automáticamente al stock.
+                </p>
+
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <label htmlFor="cancel-motivo" style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--color-crimson)', display: 'block', marginBottom: '0.2rem' }}>
+                    Motivo de la anulación (mínimo 5 caracteres)*:
+                  </label>
+                  <input
+                    id="cancel-motivo"
+                    type="text"
+                    value={cancelMotivo}
+                    onChange={(e) => setCancelMotivo(e.target.value)}
+                    placeholder="Ej. Error de cobro en caja, cliente desistió de la compra..."
+                    className="form-input"
+                    style={{ width: '100%', padding: '0.35rem 0.6rem', fontSize: '0.825rem', backgroundColor: '#FFFFFF' }}
+                    required
+                    minLength={5}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      setShowCancelPrompt(false);
+                      setCancelMotivo('');
+                    }}
+                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={isCancelling || cancelMotivo.trim().length < 5}
+                    style={{
+                      padding: '0.35rem 0.85rem',
+                      fontSize: '0.8rem',
+                      backgroundColor: 'var(--color-crimson)',
+                      borderColor: 'var(--color-crimson)',
+                    }}
+                  >
+                    <Trash2 size={13} />
+                    <span>{isCancelling ? 'Anulando...' : 'Confirmar Anulación'}</span>
+                  </button>
+                </div>
+              </form>
             )}
 
             {/* Printable Footer */}
@@ -608,9 +870,9 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
               ¡Gracias por tu compra en Dunamis Makeup! Resalta tu belleza única.
             </div>
           </div>
-        ) : null}
+        )}
 
-        {/* Modal Actions (Requirement 4: PDF download option) */}
+        {/* Modal Actions */}
         <div
           className="no-print"
           style={{
@@ -625,7 +887,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {/* Download PDF button (Requirement 4) */}
+            {/* Download PDF button */}
             <button
               type="button"
               className="btn-primary"
@@ -648,6 +910,23 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
               <Printer size={15} />
               <span>Imprimir</span>
             </button>
+
+            {/* Cancel Invoice button (ADMIN only, not cancelled) */}
+            {isAdmin && invoice && !isAnulada && !showCancelPrompt && (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setShowCancelPrompt(true)}
+                title="Anular factura y devolver stock (Solo Administradores)"
+                style={{
+                  color: 'var(--color-crimson)',
+                  borderColor: 'var(--color-crimson-border)',
+                }}
+              >
+                <Ban size={14} />
+                <span>Anular Factura</span>
+              </button>
+            )}
           </div>
 
           <button type="button" className="btn-secondary" onClick={onClose}>

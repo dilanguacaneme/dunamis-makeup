@@ -43,12 +43,26 @@ export interface FacturaDetalleInput {
 
 export type EstadoPagoFactura = 'PAGADA' | 'ABONO_PARCIAL' | 'PENDIENTE' | 'SIN_REGISTRO';
 
+export type MedioPago = 'EFECTIVO' | 'TRANSFERENCIA' | 'NEQUI' | 'DAVIPLATA' | 'TARJETA' | 'OTRO';
+
+export interface AbonoFactura {
+  id?: number;
+  facturaId?: number;
+  monto: number;
+  fecha?: string;
+  medioPago: MedioPago;
+  notas?: string | null;
+  usuarioRegistro?: string;
+}
+
 export interface FacturaInput {
   cliente: string;
   telefonoCliente?: string;
   detalles: FacturaDetalleInput[];
   estadoPago?: EstadoPagoFactura;
   valorAbonado?: number;
+  medioPagoInicial?: MedioPago;
+  notasPago?: string;
 }
 
 export interface DetalleFactura {
@@ -70,6 +84,10 @@ export interface Factura {
   estadoPago?: EstadoPagoFactura;
   valorAbonado?: number;
   saldoPendiente?: number;
+  anulada?: boolean;
+  fechaAnulacion?: string | null;
+  motivoAnulacion?: string | null;
+  abonos?: AbonoFactura[];
 }
 
 export interface Usuario {
@@ -82,7 +100,7 @@ export type FilterCategory = 'TODAS' | CategoriaProducto;
 
 export type FilterStock = 'TODOS' | 'AGOTADOS' | 'DISPONIBLES';
 
-export type FilterPaymentStatus = 'TODOS' | EstadoPagoFactura;
+export type FilterPaymentStatus = 'TODOS' | EstadoPagoFactura | 'ANULADA';
 
 export type ViewMode = 'table' | 'grid';
 

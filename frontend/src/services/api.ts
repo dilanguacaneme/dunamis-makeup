@@ -6,6 +6,7 @@ import type {
   Usuario,
   Marca,
   MarcaInput,
+  MedioPago,
 } from '../types';
 import { demoStore, DEMO_ADMIN_USER } from './demoData';
 
@@ -525,10 +526,17 @@ export const inventoryApi = {
       headers['X-XSRF-TOKEN'] = token;
     }
 
-    // Preserve exact backend contract for POST /factura/crear
+    // Map input to match CrearFacturaRequest DTO
     const bodyPayload: any = {
       cliente: input.cliente.trim(),
-      detalles: input.detalles,
+      detalles: input.detalles.map((d) => ({
+        productoId: d.producto.id,
+        cantidad: d.cantidad,
+      })),
+      estadoPago: input.estadoPago,
+      valorAbonado: input.valorAbonado,
+      medioPagoInicial: input.medioPagoInicial || 'EFECTIVO',
+      notasPago: input.notasPago || null,
     };
     if (input.telefonoCliente) {
       bodyPayload.telefonoCliente = input.telefonoCliente.trim();
@@ -552,19 +560,98 @@ export const inventoryApi = {
       throw new ApiError(errorText || `Error al registrar factura (${res.status})`, res.status);
     }
 
-    const createdFactura: Factura = await res.json();
-    return createdFactura;
+    return await res.json();
   },
 
-  async recordInvoicePayment(id: number, additionalPayment: number, isDemo: boolean): Promise<Factura> {
+  async recordInvoicePayment(
+    id: number,
+    additionalPayment: number,
+    isDemo: boolean,
+    medioPago: MedioPago = 'EFECTIVO',
+    notas?: string
+  ): Promise<Factura> {
     if (isDemo) {
-      return demoStore.updateInvoicePayment(id, additionalPayment);
+      return demoStore.updateInvoicePayment(id, additionalPayment, medioPago, notas);
     }
-    // In connected mode, backend doesn't support updating payment status yet
-    throw new ApiError(
-      'El registro de abonos está disponible en Modo Demostración. En modo conectado, esta función requiere soporte adicional en el backend Spring Boot.',
-      501
-    );
+
+    await this.ensureCsrf();
+    const token = getXsrfToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['X-XSRF-TOKEN'] = token;
+    }
+
+    const res = await fetch(`${BASE_URL}/factura/${id}/abonos`, {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify({
+        monto: additionalPayment,
+        medioPago,
+        notas: notas || null,
+      }),
+    });
+
+    if (!res.ok) {
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al registrar abono (${res.status})`, res.status);
+    }
+
+    // Recuperar la factura actualizada
+    const updatedRes = await fetch(`${BASE_URL}/factura/obtener-factura-por-id/${id}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (updatedRes.ok) {
+      return await updatedRes.json();
+    }
+    throw new ApiError('Error al recuperar factura actualizada tras registrar abono', updatedRes.status);
+  },
+
+  async cancelInvoice(id: number, motivo: string, isDemo: boolean = false): Promise<Factura> {
+    if (isDemo) {
+      return demoStore.cancelInvoice(id, motivo);
+    }
+
+    await this.ensureCsrf();
+    const token = getXsrfToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['X-XSRF-TOKEN'] = token;
+    }
+
+    const res = await fetch(`${BASE_URL}/factura/${id}/anular`, {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify({ motivo: motivo || null }),
+    });
+
+    if (!res.ok) {
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al anular factura (${res.status})`, res.status);
+    }
+
+    return await res.json();
   },
 
   // Diagnostic helper to test backend connectivity

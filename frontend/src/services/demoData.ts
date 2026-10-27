@@ -7,6 +7,7 @@ import type {
   Marca,
   MarcaInput,
   EstadoPagoFactura,
+  MedioPago,
 } from '../types';
 
 export const INITIAL_DEMO_BRANDS: Marca[] = [
@@ -637,10 +638,19 @@ class DemoStore {
     return newInvoice;
   }
 
-  public updateInvoicePayment(id: number, additionalPayment: number): Factura {
+  public updateInvoicePayment(
+    id: number,
+    additionalPayment: number,
+    medioPago: MedioPago = 'EFECTIVO',
+    notas?: string
+  ): Factura {
     const invoice = this.invoices.find((inv) => inv.id === id);
     if (!invoice) {
       throw new Error(`Factura #${id} no encontrada`);
+    }
+
+    if (invoice.anulada) {
+      throw new Error('No es posible registrar abonos en una factura anulada');
     }
 
     const currentAbonado =
@@ -650,6 +660,11 @@ class DemoStore {
         ? invoice.total
         : 0;
 
+    const currentSaldo = invoice.saldoPendiente !== undefined ? invoice.saldoPendiente : Math.max(0, invoice.total - currentAbonado);
+    if (additionalPayment > currentSaldo) {
+      throw new Error(`El abono ($${additionalPayment}) supera el saldo pendiente ($${currentSaldo})`);
+    }
+
     const newAbonado = Math.min(invoice.total, currentAbonado + additionalPayment);
     const newSaldo = Math.max(0, invoice.total - newAbonado);
     const newEstado: EstadoPagoFactura = newSaldo === 0 ? 'PAGADA' : 'ABONO_PARCIAL';
@@ -658,6 +673,46 @@ class DemoStore {
     invoice.saldoPendiente = newSaldo;
     invoice.estadoPago = newEstado;
 
+    if (!invoice.abonos) {
+      invoice.abonos = [];
+    }
+    invoice.abonos.push({
+      id: Date.now(),
+      facturaId: invoice.id,
+      monto: additionalPayment,
+      fecha: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      medioPago,
+      notas: notas || null,
+    });
+
+    this.saveInvoices();
+    return invoice;
+  }
+
+  public cancelInvoice(id: number, motivo?: string): Factura {
+    const invoice = this.invoices.find((inv) => inv.id === id);
+    if (!invoice) {
+      throw new Error(`Factura #${id} no encontrada`);
+    }
+    if (invoice.anulada) {
+      throw new Error(`La factura #${id} ya se encuentra anulada`);
+    }
+
+    // Restituir inventario de cada producto vendido
+    if (invoice.detalles) {
+      for (const d of invoice.detalles) {
+        const prod = this.products.find((p) => p.id === d.producto.id);
+        if (prod) {
+          prod.cantidad += d.cantidad;
+          prod.totalProducto = prod.cantidad * prod.precio;
+        }
+      }
+      this.saveProducts();
+    }
+
+    invoice.anulada = true;
+    invoice.fechaAnulacion = new Date().toISOString();
+    invoice.motivoAnulacion = motivo || 'Anulada por la administradora';
     this.saveInvoices();
     return invoice;
   }
