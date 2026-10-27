@@ -34,7 +34,7 @@ Este documento desglosa los requisitos de la [especificación](005-calidad-api-e
 
 ---
 
-- [ ] **Tarea 2: Enriquecimiento de `ErrorResponse` y Manejador Global (`@RestControllerAdvice`)**
+- [x] **Tarea 2: Enriquecimiento de `ErrorResponse` y Manejador Global (`@RestControllerAdvice`)**
   - **Estimación:** ~20 min
   - **Dependencias:** Tarea 1.
   - **Requisitos cubiertos:** RF-003, RF-004, RF-005, RF-006, RF-007, RF-008, RF-009, RF-010.
