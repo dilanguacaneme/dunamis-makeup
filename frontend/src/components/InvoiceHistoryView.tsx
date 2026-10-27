@@ -36,6 +36,11 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
   const [dateFilter, setDateFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<FilterPaymentStatus>('TODOS');
 
+  // Total count of cancelled invoices
+  const anuladasCount = useMemo(() => {
+    return invoices.filter((inv) => inv.anulada).length;
+  }, [invoices]);
+
   const filteredInvoices = useMemo(() => {
     return invoices.filter((inv) => {
       // 1. Customer, ID, or seller search
@@ -54,12 +59,13 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
         if (inv.fecha !== dateFilter) return false;
       }
 
-      // 3. Payment status filter
-      if (paymentFilter !== 'TODOS') {
-        if (paymentFilter === 'ANULADA') {
-          if (!inv.anulada) return false;
-        } else {
-          if (inv.anulada) return false;
+      // 3. Payment status filter: Ocultar anuladas por defecto en vistas comerciales
+      if (paymentFilter === 'ANULADA') {
+        if (!inv.anulada) return false;
+      } else {
+        // En cualquier otra vista, se excluyen las anuladas para mantener la interfaz limpia
+        if (inv.anulada) return false;
+        if (paymentFilter !== 'TODOS') {
           const status = inv.estadoPago || 'SIN_REGISTRO';
           if (status !== paymentFilter) return false;
         }
@@ -364,10 +370,10 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
             )}
           </div>
 
-          {/* Payment Status Filter */}
+          {/* Payment Status Filter (Oculta anuladas por defecto) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <label htmlFor="inv-payment-filter" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
-              Pago:
+              Ver:
             </label>
             <select
               id="inv-payment-filter"
@@ -378,18 +384,20 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
                 padding: '0.3rem 0.65rem',
                 height: '2.45rem',
                 fontSize: '0.825rem',
-                backgroundColor: paymentFilter !== 'TODOS' ? 'var(--color-rose-soft)' : '#FFFFFF',
-                borderColor: paymentFilter !== 'TODOS' ? 'var(--color-rosewood)' : 'var(--color-border)',
-                color: paymentFilter !== 'TODOS' ? 'var(--color-rosewood-deep)' : 'var(--color-text-main)',
+                backgroundColor: paymentFilter === 'ANULADA' ? 'var(--color-crimson-light)' : paymentFilter !== 'TODOS' ? 'var(--color-rose-soft)' : '#FFFFFF',
+                borderColor: paymentFilter === 'ANULADA' ? 'var(--color-crimson-border)' : paymentFilter !== 'TODOS' ? 'var(--color-rosewood)' : 'var(--color-border)',
+                color: paymentFilter === 'ANULADA' ? 'var(--color-crimson)' : paymentFilter !== 'TODOS' ? 'var(--color-rosewood-deep)' : 'var(--color-text-main)',
                 fontWeight: paymentFilter !== 'TODOS' ? 600 : 500,
               }}
             >
-              <option value="TODOS">Todos los estados</option>
+              <option value="TODOS">Ventas Activas (Todas)</option>
               <option value="PAGADA">Pagadas</option>
               <option value="ABONO_PARCIAL">Abono parcial</option>
               <option value="PENDIENTE">Pendientes</option>
               <option value="SIN_REGISTRO">Sin registro de pago</option>
-              <option value="ANULADA">Facturas Anuladas</option>
+              {anuladasCount > 0 && (
+                <option value="ANULADA">🚫 Archivo de Anuladas ({anuladasCount})</option>
+              )}
             </select>
           </div>
 
@@ -425,8 +433,8 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
         {/* Filtered stats summary pills */}
         <div
           style={{
-            backgroundColor: 'var(--color-rose-subtle)',
-            border: '1px solid var(--color-border)',
+            backgroundColor: paymentFilter === 'ANULADA' ? 'var(--color-crimson-light)' : 'var(--color-rose-subtle)',
+            border: `1px solid ${paymentFilter === 'ANULADA' ? 'var(--color-crimson-border)' : 'var(--color-border)'}`,
             borderRadius: 'var(--radius-md)',
             padding: '0.45rem 0.95rem',
             display: 'flex',
@@ -436,36 +444,86 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
             flexWrap: 'wrap',
           }}
         >
-          <div>
-            Facturas: <strong style={{ color: 'var(--color-text-main)' }}>{filteredInvoices.length}</strong>
-          </div>
-          <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--color-border)' }} />
-          <div>
-            Total:{' '}
-            <strong className="tabular-numbers" style={{ color: 'var(--color-rosewood-deep)', fontWeight: 700 }}>
-              {formatCOP(totalFacturadoSum)}
-            </strong>
-          </div>
-          <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--color-border)' }} />
-          <div>
-            Recaudado:{' '}
-            <strong className="tabular-numbers" style={{ color: 'var(--color-sage)', fontWeight: 700 }}>
-              {formatCOP(totalRecaudadoSum)}
-            </strong>
-          </div>
-          {saldoPendienteSum > 0 && (
+          {paymentFilter === 'ANULADA' ? (
+            <div style={{ color: 'var(--color-crimson)', fontWeight: 600 }}>
+              Anuladas archivadas: <strong>{filteredInvoices.length}</strong> (Sin valor comercial)
+            </div>
+          ) : (
             <>
+              <div>
+                Ventas activas: <strong style={{ color: 'var(--color-text-main)' }}>{filteredInvoices.length}</strong>
+              </div>
               <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--color-border)' }} />
               <div>
-                Por cobrar:{' '}
-                <strong className="tabular-numbers" style={{ color: 'var(--color-crimson)', fontWeight: 700 }}>
-                  {formatCOP(saldoPendienteSum)}
+                Total:{' '}
+                <strong className="tabular-numbers" style={{ color: 'var(--color-rosewood-deep)', fontWeight: 700 }}>
+                  {formatCOP(totalFacturadoSum)}
                 </strong>
               </div>
+              <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--color-border)' }} />
+              <div>
+                Recaudado:{' '}
+                <strong className="tabular-numbers" style={{ color: 'var(--color-sage)', fontWeight: 700 }}>
+                  {formatCOP(totalRecaudadoSum)}
+                </strong>
+              </div>
+              {saldoPendienteSum > 0 && (
+                <>
+                  <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--color-border)' }} />
+                  <div>
+                    Por cobrar:{' '}
+                    <strong className="tabular-numbers" style={{ color: 'var(--color-crimson)', fontWeight: 700 }}>
+                      {formatCOP(saldoPendienteSum)}
+                    </strong>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
       </div>
+
+      {/* Banner when viewing Cancelled Invoices */}
+      {paymentFilter === 'ANULADA' && (
+        <div
+          style={{
+            backgroundColor: 'var(--color-crimson-light)',
+            border: '1px solid var(--color-crimson-border)',
+            color: 'var(--color-crimson)',
+            padding: '0.75rem 1rem',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.825rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Ban size={16} style={{ flexShrink: 0 }} />
+            <span>
+              Visualizando <strong>archivo histórico de facturas anuladas</strong> ({filteredInvoices.length}). Estas ventas no tienen valor comercial y sus existencias fueron devueltas al inventario.
+            </span>
+          </div>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => setPaymentFilter('TODOS')}
+            style={{
+              fontSize: '0.78rem',
+              color: 'var(--color-crimson)',
+              fontWeight: 700,
+              padding: '0.25rem 0.65rem',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--color-crimson-border)',
+              backgroundColor: '#FFFFFF',
+            }}
+          >
+            ← Volver a Ventas Activas
+          </button>
+        </div>
+      )}
 
       {/* Invoices Table */}
       {isLoading ? (
@@ -490,14 +548,20 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
         >
           <Receipt size={32} color="var(--color-rosewood)" />
           <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--color-rosewood-deep)' }}>
-            {invoices.length === 0 ? 'No se han registrado facturas todavía' : 'No se encontraron facturas'}
+            {paymentFilter === 'ANULADA'
+              ? 'No hay facturas anuladas registradas'
+              : invoices.length === 0
+              ? 'No se han registrado facturas todavía'
+              : 'No se encontraron facturas activas'}
           </h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', maxWidth: '420px' }}>
-            {invoices.length === 0
+            {paymentFilter === 'ANULADA'
+              ? 'El archivo de bajas está vacío. Todas las ventas emitidas continúan vigentes.'
+              : invoices.length === 0
               ? 'Cuando registres una venta, el comprobante y el descuento de existencias quedarán registrados aquí.'
-              : 'Ninguna factura coincide con los filtros de búsqueda, estado de pago o fecha seleccionada.'}
+              : 'Ninguna factura coincide con los filtros de búsqueda o fecha seleccionada.'}
           </p>
-          {invoices.length > 0 && (
+          {(searchQuery || dateFilter || paymentFilter !== 'TODOS') && (
             <button
               type="button"
               className="btn-secondary"
@@ -508,7 +572,7 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
               }}
               style={{ marginTop: '0.5rem' }}
             >
-              Restablecer filtros
+              Restablecer filtros a ventas activas
             </button>
           )}
         </div>
@@ -529,7 +593,10 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
             </thead>
             <tbody>
               {filteredInvoices.map((invoice) => (
-                <tr key={invoice.id} style={invoice.anulada ? { opacity: 0.7, backgroundColor: 'rgba(217, 72, 95, 0.03)' } : undefined}>
+                <tr
+                  key={invoice.id}
+                  style={invoice.anulada ? { opacity: 0.75, backgroundColor: 'rgba(217, 72, 95, 0.04)' } : undefined}
+                >
                   <td style={{ fontWeight: 700, color: invoice.anulada ? 'var(--color-crimson)' : 'var(--color-rosewood)' }}>
                     #{invoice.id} {invoice.anulada && <span style={{ fontSize: '0.7rem' }}>❌</span>}
                   </td>
@@ -537,7 +604,13 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
                     {invoice.fecha || '—'}
                   </td>
                   <td>
-                    <div style={{ fontWeight: 600, color: invoice.anulada ? 'var(--color-text-muted)' : 'var(--color-rosewood-deep)', textDecoration: invoice.anulada ? 'line-through' : 'none' }}>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        color: invoice.anulada ? 'var(--color-text-muted)' : 'var(--color-rosewood-deep)',
+                        textDecoration: invoice.anulada ? 'line-through' : 'none',
+                      }}
+                    >
                       {invoice.cliente}
                     </div>
                   </td>
@@ -573,7 +646,7 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
                         <span>Detalle</span>
                       </button>
 
-                      {/* Download PDF button (Requirement 4) */}
+                      {/* Download PDF button */}
                       <button
                         type="button"
                         className="btn-ghost"
