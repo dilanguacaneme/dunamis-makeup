@@ -1,8 +1,8 @@
 package com.dunamis.makeup.service;
 
-import com.dunamis.makeup.Entity.Marca;
-import com.dunamis.makeup.Repository.MarcaRepository;
-import com.dunamis.makeup.Service.MarcaService;
+import com.dunamis.makeup.entity.Marca;
+import com.dunamis.makeup.repository.MarcaRepository;
+import com.dunamis.makeup.service.MarcaService;
 import com.dunamis.makeup.dto.marca.ActualizarMarcaRequest;
 import com.dunamis.makeup.dto.marca.CrearMarcaRequest;
 import com.dunamis.makeup.dto.marca.MarcaResponse;

@@ -17,7 +17,7 @@ Este documento desglosa los requisitos de la [especificación](005-calidad-api-e
 
 ## Detalle de Tareas
 
-- [ ] **Tarea 1: Refactorización de Paquete y Jerarquía de Excepciones de Dominio**
+- [x] **Tarea 1: Refactorización de Paquete y Jerarquía de Excepciones de Dominio**
   - **Estimación:** ~15 min
   - **Dependencias:** Ninguna (base del Nivel 5).
   - **Requisitos cubiertos:** RF-001, RF-002.

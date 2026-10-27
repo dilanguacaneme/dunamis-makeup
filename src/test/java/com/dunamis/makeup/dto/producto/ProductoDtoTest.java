@@ -1,8 +1,8 @@
 package com.dunamis.makeup.dto.producto;
 
-import com.dunamis.makeup.Entity.CategoriaProducto;
-import com.dunamis.makeup.Entity.Marca;
-import com.dunamis.makeup.Entity.Producto;
+import com.dunamis.makeup.entity.CategoriaProducto;
+import com.dunamis.makeup.entity.Marca;
+import com.dunamis.makeup.entity.Producto;
 import com.dunamis.makeup.dto.marca.MarcaResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;

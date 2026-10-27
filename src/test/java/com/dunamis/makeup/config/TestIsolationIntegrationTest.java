@@ -1,6 +1,6 @@
 package com.dunamis.makeup.config;
 
-import com.dunamis.makeup.Repository.UsuarioRepository;
+import com.dunamis.makeup.repository.UsuarioRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

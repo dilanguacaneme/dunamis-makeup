@@ -1,6 +1,6 @@
 package com.dunamis.makeup.dto.marca;
 
-import com.dunamis.makeup.Entity.Marca;
+import com.dunamis.makeup.entity.Marca;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

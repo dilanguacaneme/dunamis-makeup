@@ -1,13 +1,13 @@
 package com.dunamis.makeup.service;
 
-import com.dunamis.makeup.Entity.CategoriaProducto;
-import com.dunamis.makeup.Entity.Marca;
-import com.dunamis.makeup.Entity.Producto;
-import com.dunamis.makeup.Exeption.ProductoNoEncontradoException;
-import com.dunamis.makeup.Repository.DetalleFacturaRepository;
-import com.dunamis.makeup.Repository.MarcaRepository;
-import com.dunamis.makeup.Repository.ProductoRepository;
-import com.dunamis.makeup.Service.ProductoService;
+import com.dunamis.makeup.entity.CategoriaProducto;
+import com.dunamis.makeup.entity.Marca;
+import com.dunamis.makeup.entity.Producto;
+import com.dunamis.makeup.exception.ProductoNoEncontradoException;
+import com.dunamis.makeup.repository.DetalleFacturaRepository;
+import com.dunamis.makeup.repository.MarcaRepository;
+import com.dunamis.makeup.repository.ProductoRepository;
+import com.dunamis.makeup.service.ProductoService;
 import com.dunamis.makeup.dto.producto.ActualizarProductoRequest;
 import com.dunamis.makeup.dto.producto.CrearProductoRequest;
 import com.dunamis.makeup.dto.producto.ProductoResponse;

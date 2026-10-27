@@ -1,7 +1,7 @@
 package com.dunamis.makeup.dto.factura;
 
-import com.dunamis.makeup.Entity.EstadoPagoFactura;
-import com.dunamis.makeup.Entity.MedioPago;
+import com.dunamis.makeup.entity.EstadoPagoFactura;
+import com.dunamis.makeup.entity.MedioPago;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

@@ -1,8 +1,8 @@
 package com.dunamis.makeup.service;
 
-import com.dunamis.makeup.Entity.Marca;
-import com.dunamis.makeup.Repository.MarcaRepository;
-import com.dunamis.makeup.Service.MarcasIniciales;
+import com.dunamis.makeup.entity.Marca;
+import com.dunamis.makeup.repository.MarcaRepository;
+import com.dunamis.makeup.service.MarcasIniciales;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

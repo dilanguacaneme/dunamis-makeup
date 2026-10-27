@@ -1,6 +1,6 @@
 package com.dunamis.makeup.dto.marca;
 
-import com.dunamis.makeup.Entity.Marca;
+import com.dunamis.makeup.entity.Marca;
 
 /**
  * DTO inmutable de salida para la entidad Marca (Principio 2 de la Constitución).

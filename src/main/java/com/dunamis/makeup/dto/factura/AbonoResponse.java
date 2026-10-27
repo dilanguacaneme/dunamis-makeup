@@ -1,7 +1,7 @@
 package com.dunamis.makeup.dto.factura;
 
-import com.dunamis.makeup.Entity.AbonoFactura;
-import com.dunamis.makeup.Entity.MedioPago;
+import com.dunamis.makeup.entity.AbonoFactura;
+import com.dunamis.makeup.entity.MedioPago;
 
 import java.time.LocalDateTime;
 

@@ -1,6 +1,6 @@
 package com.dunamis.makeup.dto.factura;
 
-import com.dunamis.makeup.Entity.*;
+import com.dunamis.makeup.entity.*;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

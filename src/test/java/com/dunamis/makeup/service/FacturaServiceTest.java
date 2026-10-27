@@ -1,13 +1,13 @@
 package com.dunamis.makeup.service;
 
-import com.dunamis.makeup.Entity.*;
-import com.dunamis.makeup.Exeption.ProductoInsuficienteException;
-import com.dunamis.makeup.Exeption.ProductoNoEncontradoException;
-import com.dunamis.makeup.Repository.AbonoFacturaRepository;
-import com.dunamis.makeup.Repository.FacturaRepository;
-import com.dunamis.makeup.Repository.ProductoRepository;
-import com.dunamis.makeup.Repository.UsuarioRepository;
-import com.dunamis.makeup.Service.FacturaService;
+import com.dunamis.makeup.entity.*;
+import com.dunamis.makeup.exception.ProductoInsuficienteException;
+import com.dunamis.makeup.exception.ProductoNoEncontradoException;
+import com.dunamis.makeup.repository.AbonoFacturaRepository;
+import com.dunamis.makeup.repository.FacturaRepository;
+import com.dunamis.makeup.repository.ProductoRepository;
+import com.dunamis.makeup.repository.UsuarioRepository;
+import com.dunamis.makeup.service.FacturaService;
 import com.dunamis.makeup.dto.factura.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

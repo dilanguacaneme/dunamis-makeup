@@ -1,6 +1,6 @@
 package com.dunamis.makeup.dto.factura;
 
-import com.dunamis.makeup.Entity.DetalleFactura;
+import com.dunamis.makeup.entity.DetalleFactura;
 
 public record DetalleFacturaResponse(
     Long id,

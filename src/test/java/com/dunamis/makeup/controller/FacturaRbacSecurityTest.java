@@ -1,9 +1,9 @@
 package com.dunamis.makeup.controller;
 
-import com.dunamis.makeup.Entity.*;
-import com.dunamis.makeup.Repository.FacturaRepository;
-import com.dunamis.makeup.Repository.ProductoRepository;
-import com.dunamis.makeup.Repository.UsuarioRepository;
+import com.dunamis.makeup.entity.*;
+import com.dunamis.makeup.repository.FacturaRepository;
+import com.dunamis.makeup.repository.ProductoRepository;
+import com.dunamis.makeup.repository.UsuarioRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

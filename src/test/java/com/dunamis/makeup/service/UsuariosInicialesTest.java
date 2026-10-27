@@ -1,9 +1,9 @@
 package com.dunamis.makeup.service;
 
-import com.dunamis.makeup.Entity.RolUsuario;
-import com.dunamis.makeup.Entity.Usuario;
-import com.dunamis.makeup.Repository.UsuarioRepository;
-import com.dunamis.makeup.Service.UsuariosIniciales;
+import com.dunamis.makeup.entity.RolUsuario;
+import com.dunamis.makeup.entity.Usuario;
+import com.dunamis.makeup.repository.UsuarioRepository;
+import com.dunamis.makeup.service.UsuariosIniciales;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

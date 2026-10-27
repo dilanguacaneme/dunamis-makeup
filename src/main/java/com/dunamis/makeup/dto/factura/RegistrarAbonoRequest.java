@@ -1,6 +1,6 @@
 package com.dunamis.makeup.dto.factura;
 
-import com.dunamis.makeup.Entity.MedioPago;
+import com.dunamis.makeup.entity.MedioPago;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

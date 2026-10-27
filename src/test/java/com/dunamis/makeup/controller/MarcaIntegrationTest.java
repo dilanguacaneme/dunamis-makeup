@@ -1,13 +1,13 @@
 package com.dunamis.makeup.controller;
 
-import com.dunamis.makeup.Entity.CategoriaProducto;
-import com.dunamis.makeup.Entity.Marca;
-import com.dunamis.makeup.Entity.Producto;
-import com.dunamis.makeup.Entity.RolUsuario;
-import com.dunamis.makeup.Entity.Usuario;
-import com.dunamis.makeup.Repository.MarcaRepository;
-import com.dunamis.makeup.Repository.ProductoRepository;
-import com.dunamis.makeup.Repository.UsuarioRepository;
+import com.dunamis.makeup.entity.CategoriaProducto;
+import com.dunamis.makeup.entity.Marca;
+import com.dunamis.makeup.entity.Producto;
+import com.dunamis.makeup.entity.RolUsuario;
+import com.dunamis.makeup.entity.Usuario;
+import com.dunamis.makeup.repository.MarcaRepository;
+import com.dunamis.makeup.repository.ProductoRepository;
+import com.dunamis.makeup.repository.UsuarioRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

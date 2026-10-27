@@ -1,6 +1,6 @@
 package com.dunamis.makeup.dto.producto;
 
-import com.dunamis.makeup.Entity.CategoriaProducto;
+import com.dunamis.makeup.entity.CategoriaProducto;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
