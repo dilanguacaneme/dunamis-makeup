@@ -175,7 +175,7 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     vendedorUsuario: 'caterin',
     fecha: '2026-10-16',
     total: 90000,
-    estadoPago: 'ABONO_PARCIAL',
+    estadoPago: 'PARCIAL',
     valorAbonado: 50000,
     saldoPendiente: 40000,
     detalles: [
@@ -612,7 +612,7 @@ class DemoStore {
     } else if (estadoPago === 'PENDIENTE') {
       valorAbonado = 0;
       saldoPendiente = total;
-    } else if (estadoPago === 'ABONO_PARCIAL') {
+    } else if (estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL') {
       valorAbonado =
         input.valorAbonado !== undefined ? Number(input.valorAbonado) : Math.round(total / 2);
       saldoPendiente = Math.max(0, total - valorAbonado);
@@ -667,7 +667,7 @@ class DemoStore {
 
     const newAbonado = Math.min(invoice.total, currentAbonado + additionalPayment);
     const newSaldo = Math.max(0, invoice.total - newAbonado);
-    const newEstado: EstadoPagoFactura = newSaldo === 0 ? 'PAGADA' : 'ABONO_PARCIAL';
+    const newEstado: EstadoPagoFactura = newSaldo === 0 ? 'PAGADA' : 'PARCIAL';
 
     invoice.valorAbonado = newAbonado;
     invoice.saldoPendiente = newSaldo;

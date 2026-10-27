@@ -90,7 +90,11 @@ export const MonthlySalesView: React.FC<MonthlySalesViewProps> = ({
       // 2. Payment status
       if (paymentFilter !== 'TODOS') {
         const status = inv.estadoPago || 'SIN_REGISTRO';
-        if (status !== paymentFilter) return false;
+        if (paymentFilter === 'ABONO_PARCIAL' || paymentFilter === 'PARCIAL') {
+          if (status !== 'ABONO_PARCIAL' && status !== 'PARCIAL') return false;
+        } else if (status !== paymentFilter) {
+          return false;
+        }
       }
 
       return true;
@@ -120,7 +124,7 @@ export const MonthlySalesView: React.FC<MonthlySalesViewProps> = ({
       } else if (estado === 'PAGADA') {
         pagadasCount++;
         recaudado += invTotal;
-      } else if (estado === 'ABONO_PARCIAL') {
+      } else if (estado === 'PARCIAL' || estado === 'ABONO_PARCIAL') {
         abonosCount++;
         const valorAbonado = inv.valorAbonado !== undefined ? inv.valorAbonado : 0;
         const saldoPend =
@@ -189,6 +193,7 @@ export const MonthlySalesView: React.FC<MonthlySalesViewProps> = ({
             <span>Pagada</span>
           </span>
         );
+      case 'PARCIAL':
       case 'ABONO_PARCIAL':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.15rem' }}>

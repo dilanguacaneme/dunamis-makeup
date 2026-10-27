@@ -387,7 +387,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                           ? 'var(--color-rose-subtle)'
                           : estadoPago === 'PAGADA'
                           ? 'var(--color-sage-light)'
-                          : estadoPago === 'ABONO_PARCIAL'
+                          : estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL'
                           ? 'var(--color-accent-gold-light)'
                           : 'var(--color-crimson-light)',
                       color:
@@ -395,7 +395,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                           ? 'var(--color-text-muted)'
                           : estadoPago === 'PAGADA'
                           ? 'var(--color-sage)'
-                          : estadoPago === 'ABONO_PARCIAL'
+                          : estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL'
                           ? 'var(--color-accent-gold)'
                           : 'var(--color-crimson)',
                       border: `1px solid ${
@@ -403,7 +403,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                           ? 'var(--color-border)'
                           : estadoPago === 'PAGADA'
                           ? 'var(--color-sage-border)'
-                          : estadoPago === 'ABONO_PARCIAL'
+                          : estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL'
                           ? 'var(--color-accent-gold-border)'
                           : 'var(--color-crimson-border)'
                       }`,
@@ -411,14 +411,14 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                   >
                     {estadoPago === 'SIN_REGISTRO' && <HelpCircle size={12} />}
                     {estadoPago === 'PAGADA' && <CheckCircle2 size={12} />}
-                    {estadoPago === 'ABONO_PARCIAL' && <Clock size={12} />}
+                    {(estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL') && <Clock size={12} />}
                     {estadoPago === 'PENDIENTE' && <AlertTriangle size={12} />}
                     <span>
                       {estadoPago === 'SIN_REGISTRO'
                         ? 'Sin registro de pago'
                         : estadoPago === 'PAGADA'
                         ? 'Pagada'
-                        : estadoPago === 'ABONO_PARCIAL'
+                        : estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL'
                         ? 'Abono Parcial'
                         : 'Pendiente'}
                     </span>

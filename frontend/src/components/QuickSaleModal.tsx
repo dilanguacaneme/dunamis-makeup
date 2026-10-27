@@ -164,7 +164,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
     }
 
     // Validate partial payment amount if chosen (Demo mode only)
-    if (isDemo && estadoPago === 'ABONO_PARCIAL') {
+    if (isDemo && (estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL')) {
       if (valorAbonadoCalculado <= 0) {
         setError('El valor abonado debe ser mayor a cero. Para ventas sin anticipo elige "Pendiente".');
         return;
@@ -514,7 +514,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  setEstadoPago('ABONO_PARCIAL');
+                  setEstadoPago('PARCIAL');
                   if (abonoParcialMonto === '' && totalFactura > 0) {
                     setAbonoParcialMonto(Math.round(totalFactura / 2));
                   }
@@ -526,8 +526,8 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
                   padding: '0.75rem',
                   borderRadius: 'var(--radius-md)',
                   border: '1.5px solid',
-                  borderColor: estadoPago === 'ABONO_PARCIAL' ? 'var(--color-accent-gold)' : 'var(--color-border)',
-                  backgroundColor: estadoPago === 'ABONO_PARCIAL' ? 'var(--color-accent-gold-light)' : '#FFFFFF',
+                  borderColor: (estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL') ? 'var(--color-accent-gold)' : 'var(--color-border)',
+                  backgroundColor: (estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL') ? 'var(--color-accent-gold-light)' : '#FFFFFF',
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all var(--transition-fast)',
@@ -571,7 +571,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
             </div>
 
             {/* Abono Parcial custom input */}
-            {estadoPago === 'ABONO_PARCIAL' && (
+            {(estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL') && (
               <div
                 style={{
                   backgroundColor: 'var(--color-accent-gold-light)',
@@ -644,7 +644,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
             >
               {formatCOP(totalFactura)}
             </span>
-            {estadoPago === 'ABONO_PARCIAL' && (
+            {(estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL') && (
               <span style={{ fontSize: '0.75rem', color: 'var(--color-crimson)', fontWeight: 600 }}>
                 Saldo: {formatCOP(saldoPendienteCalculado)}
               </span>

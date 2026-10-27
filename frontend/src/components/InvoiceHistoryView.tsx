@@ -67,7 +67,11 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
         if (inv.anulada) return false;
         if (paymentFilter !== 'TODOS') {
           const status = inv.estadoPago || 'SIN_REGISTRO';
-          if (status !== paymentFilter) return false;
+          if (paymentFilter === 'ABONO_PARCIAL' || paymentFilter === 'PARCIAL') {
+            if (status !== 'ABONO_PARCIAL' && status !== 'PARCIAL') return false;
+          } else if (status !== paymentFilter) {
+            return false;
+          }
         }
       }
 
@@ -93,7 +97,7 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
         if (estado === 'PAGADA') {
           return sum + (inv.total || 0);
         }
-        if (estado === 'ABONO_PARCIAL') {
+        if (estado === 'PARCIAL' || estado === 'ABONO_PARCIAL') {
           return sum + (inv.valorAbonado !== undefined ? inv.valorAbonado : 0);
         }
         return sum;
@@ -111,7 +115,7 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
         if (estado === 'PENDIENTE') {
           return sum + (inv.total || 0);
         }
-        if (estado === 'ABONO_PARCIAL') {
+        if (estado === 'PARCIAL' || estado === 'ABONO_PARCIAL') {
           const abonado = inv.valorAbonado !== undefined ? inv.valorAbonado : 0;
           return sum + (inv.saldoPendiente !== undefined ? inv.saldoPendiente : Math.max(0, (inv.total || 0) - abonado));
         }
@@ -182,6 +186,7 @@ export const InvoiceHistoryView: React.FC<InvoiceHistoryViewProps> = ({
             <span>Pagada</span>
           </span>
         );
+      case 'PARCIAL':
       case 'ABONO_PARCIAL':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.1rem' }}>

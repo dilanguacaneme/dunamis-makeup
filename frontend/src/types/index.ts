@@ -41,7 +41,7 @@ export interface FacturaDetalleInput {
   cantidad: number;
 }
 
-export type EstadoPagoFactura = 'PAGADA' | 'ABONO_PARCIAL' | 'PENDIENTE' | 'SIN_REGISTRO';
+export type EstadoPagoFactura = 'PAGADA' | 'PARCIAL' | 'PENDIENTE' | 'ABONO_PARCIAL' | 'SIN_REGISTRO';
 
 export type MedioPago = 'EFECTIVO' | 'TRANSFERENCIA' | 'NEQUI' | 'DAVIPLATA' | 'TARJETA' | 'OTRO';
 

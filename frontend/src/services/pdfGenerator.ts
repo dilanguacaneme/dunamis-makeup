@@ -94,7 +94,7 @@ export const downloadInvoicePDF = (invoice: Factura): void => {
     ? 'Sin registro de pago'
     : invoice.estadoPago === 'PAGADA'
     ? 'Pagada en su totalidad'
-    : invoice.estadoPago === 'ABONO_PARCIAL'
+    : invoice.estadoPago === 'PARCIAL' || invoice.estadoPago === 'ABONO_PARCIAL'
     ? 'Abono Parcial'
     : 'Pendiente de Pago';
 

@@ -4,7 +4,7 @@ Este documento desglosa los requisitos de la [especificación](006-modo-demo-loc
 
 ---
 
-- [ ] **Tarea 1: Estandarización de Tipos y Normalización en `demoStore`**
+- [x] **Tarea 1: Estandarización de Tipos y Normalización en `demoStore`**
   - **Estimación:** ~15 min
   - **Dependencias:** Ninguna.
   - **Requisitos cubiertos:** RF-004, RF-005, RF-006, RF-011.
