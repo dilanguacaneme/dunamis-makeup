@@ -184,9 +184,18 @@ export const App: React.FC = () => {
         } else if (isMounted) {
           const savedDemoActive = localStorage.getItem('dunamis_demo_active') === 'true';
           if (savedDemoActive) {
-            setUser(DEMO_ADMIN_USER);
+            const savedUserStr = localStorage.getItem('dunamis_demo_user');
+            let demoUser = DEMO_ADMIN_USER;
+            if (savedUserStr) {
+              try {
+                demoUser = JSON.parse(savedUserStr);
+              } catch {
+                demoUser = DEMO_ADMIN_USER;
+              }
+            }
+            setUser(demoUser);
             setIsDemo(true);
-            await loadData(true, DEMO_ADMIN_USER);
+            await loadData(true, demoUser);
           } else {
             setUser(null);
           }
@@ -195,9 +204,18 @@ export const App: React.FC = () => {
         if (isMounted) {
           const savedDemoActive = localStorage.getItem('dunamis_demo_active') === 'true';
           if (savedDemoActive) {
-            setUser(DEMO_ADMIN_USER);
+            const savedUserStr = localStorage.getItem('dunamis_demo_user');
+            let demoUser = DEMO_ADMIN_USER;
+            if (savedUserStr) {
+              try {
+                demoUser = JSON.parse(savedUserStr);
+              } catch {
+                demoUser = DEMO_ADMIN_USER;
+              }
+            }
+            setUser(demoUser);
             setIsDemo(true);
-            await loadData(true, DEMO_ADMIN_USER);
+            await loadData(true, demoUser);
           } else {
             setUser(null);
           }
@@ -236,6 +254,7 @@ export const App: React.FC = () => {
     if (!isDemo || !user) return;
     const nextUser = user.role === 'ADMIN' ? DEMO_SELLER_USER : DEMO_ADMIN_USER;
     setUser(nextUser);
+    localStorage.setItem('dunamis_demo_user', JSON.stringify(nextUser));
     addToast(
       'info',
       'Rol de Demostración Cambiado',
@@ -248,6 +267,7 @@ export const App: React.FC = () => {
   const handleLogin = async (username: string, pass: string) => {
     const loggedUser = await inventoryApi.login(username, pass, false);
     localStorage.removeItem('dunamis_demo_active');
+    localStorage.removeItem('dunamis_demo_user');
     setUser(loggedUser);
     setBackendOnline(true);
     addToast(
@@ -263,8 +283,17 @@ export const App: React.FC = () => {
     setIsDemo(true);
     localStorage.setItem('dunamis_mode', 'demo');
     localStorage.setItem('dunamis_demo_active', 'true');
-    setUser(DEMO_ADMIN_USER);
-    void loadData(true, DEMO_ADMIN_USER);
+    const savedUserStr = localStorage.getItem('dunamis_demo_user');
+    let demoUser = DEMO_ADMIN_USER;
+    if (savedUserStr) {
+      try {
+        demoUser = JSON.parse(savedUserStr);
+      } catch {
+        demoUser = DEMO_ADMIN_USER;
+      }
+    }
+    setUser(demoUser);
+    void loadData(true, demoUser);
     addToast(
       'info',
       'Modo Demostración Activo',
@@ -275,7 +304,9 @@ export const App: React.FC = () => {
   // Reset Demo Catalog
   const handleResetDemoData = async () => {
     demoStore.resetToDefaults();
-    await loadData(true, user || DEMO_ADMIN_USER);
+    localStorage.removeItem('dunamis_demo_user');
+    setUser(DEMO_ADMIN_USER);
+    await loadData(true, DEMO_ADMIN_USER);
     addToast(
       'info',
       'Catálogo Demostración Restablecido',
@@ -290,6 +321,7 @@ export const App: React.FC = () => {
       setUser(null);
       localStorage.removeItem('dunamis_mode');
       localStorage.removeItem('dunamis_demo_active');
+      localStorage.removeItem('dunamis_demo_user');
       setIsDemo(false);
       setProducts([]);
       setTotalInventory(0);

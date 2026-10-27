@@ -37,7 +37,7 @@ Este documento desglosa los requisitos de la [especificación](006-modo-demo-loc
 
 ---
 
-- [ ] **Tarea 3: Persistencia de Sesión y Rol Demo en `App.tsx` y Resiliencia en Recarga**
+- [x] **Tarea 3: Persistencia de Sesión y Rol Demo en `App.tsx` y Resiliencia en Recarga**
   - **Estimación:** ~15 min
   - **Dependencias:** Tarea 2.
   - **Requisitos cubiertos:** RF-001, RF-002, RF-003.
