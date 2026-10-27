@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import static org.hamcrest.Matchers.*;
@@ -308,7 +309,7 @@ class ProductoIntegrationTest {
         factura.setCliente("Cliente Test Historial");
         factura.setVendedorUsuario("vendedor_prod_test");
         factura.setVendedorNombre("Vendedor Prod");
-        factura.setFecha(LocalDate.now());
+        factura.setFecha(LocalDateTime.now());
         factura.setTotal(40000.0);
         factura.setDetalles(new ArrayList<>());
 

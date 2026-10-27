@@ -26,7 +26,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ## Desglose de Tareas (<30 min)
 
-- [ ] **Tarea 1: DTOs Tipados, Enums Financieros y Modelo de Entidades (`Factura`, `DetalleFactura`, `AbonoFactura`)**
+- [x] **Tarea 1: DTOs Tipados, Enums Financieros y Modelo de Entidades (`Factura`, `DetalleFactura`, `AbonoFactura`)**
   - **Estimación:** ~20-25 min
   - **Dependencias:** Ninguna (Cimiento de contratos y persistencia).
   - **Requisitos cubiertos:** RF-001, RF-002, RF-007, RF-014, RF-020.

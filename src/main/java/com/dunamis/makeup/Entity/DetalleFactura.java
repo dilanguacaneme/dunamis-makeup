@@ -29,5 +29,7 @@ public class DetalleFactura {
     @Positive(message = "La cantidad del detalle debe ser mayor que cero")
     private Integer cantidad;
 
+    private Double precioUnitario;
+
     private Double subtotal;
 }

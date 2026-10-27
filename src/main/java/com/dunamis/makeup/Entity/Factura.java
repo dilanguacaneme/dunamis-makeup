@@ -6,7 +6,8 @@ import lombok.Setter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -30,11 +31,60 @@ public class Factura {
 
     @Column(length = 50)
     private String vendedorUsuario;
-    private LocalDate fecha = LocalDate.now();
+
+    @Column(nullable = false)
+    private LocalDateTime fecha = LocalDateTime.now();
+
     private Double total;
 
-    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL)
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private EstadoPagoFactura estadoPago = EstadoPagoFactura.PAGADA;
+
+    private Double valorAbonado;
+
+    private Double saldoPendiente;
+
+    @Column(nullable = false)
+    private Boolean anulada = false;
+
+    private LocalDateTime fechaAnulacion;
+
+    @Column(length = 500)
+    private String motivoAnulacion;
+
+    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true)
     @NotEmpty(message = "La factura debe tener al menos un producto")
     @Valid
-    private List<DetalleFactura> detalles;
+    private List<DetalleFactura> detalles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AbonoFactura> abonos = new ArrayList<>();
+
+    @PrePersist
+    @PostLoad
+    public void asegurarValoresPorDefecto() {
+        if (fecha == null) {
+            fecha = LocalDateTime.now();
+        }
+        if (anulada == null) {
+            anulada = false;
+        }
+        if (estadoPago == null) {
+            estadoPago = EstadoPagoFactura.PAGADA;
+        }
+        if (estadoPago == EstadoPagoFactura.PAGADA) {
+            if (valorAbonado == null || valorAbonado == 0.0) {
+                valorAbonado = total != null ? total : 0.0;
+            }
+            saldoPendiente = 0.0;
+        } else {
+            if (valorAbonado == null) {
+                valorAbonado = 0.0;
+            }
+            if (saldoPendiente == null && total != null) {
+                saldoPendiente = Math.max(0.0, total - valorAbonado);
+            }
+        }
+    }
 }
