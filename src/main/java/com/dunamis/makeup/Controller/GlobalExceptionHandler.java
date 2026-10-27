@@ -1,6 +1,7 @@
 package com.dunamis.makeup.Controller;
 
 import com.dunamis.makeup.Exeption.InventarioVacioException;
+import com.dunamis.makeup.Exeption.ProductoInsuficienteException;
 import com.dunamis.makeup.Exeption.ProductoNoEncontradoException;
 import com.dunamis.makeup.dto.auth.LoginRequest;
 import com.dunamis.makeup.dto.common.ErrorResponse;
@@ -41,6 +42,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleProductoNoEncontrado(ProductoNoEncontradoException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ProductoInsuficienteException.class)
+    public ResponseEntity<ErrorResponse> handleProductoInsuficiente(ProductoInsuficienteException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of("CONFLICT", ex.getMessage()));
     }
 
     @ExceptionHandler(InventarioVacioException.class)

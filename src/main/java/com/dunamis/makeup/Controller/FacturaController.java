@@ -1,16 +1,16 @@
 package com.dunamis.makeup.Controller;
 
-import com.dunamis.makeup.Entity.Factura;
-import com.dunamis.makeup.Exeption.ProductoInsuficienteException;
-import com.dunamis.makeup.Exeption.ProductoNoEncontradoException;
+import com.dunamis.makeup.dto.factura.*;
 import com.dunamis.makeup.Service.FacturaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 @RestController
@@ -21,25 +21,43 @@ public class FacturaController {
     private FacturaService facturaService;
 
     @PostMapping("/crear")
-    public ResponseEntity<Object> crearFactura(@Valid @RequestBody Factura factura, Authentication authentication) {
-        try {
-            Factura facturaCreada = facturaService.crearFactura(factura, authentication.getName());
-            return ResponseEntity.status(HttpStatus.CREATED).body(facturaCreada);
-        } catch (ProductoNoEncontradoException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (ProductoInsuficienteException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        }
+    public ResponseEntity<FacturaResponse> crearFactura(@Valid @RequestBody CrearFacturaRequest request, Authentication authentication) {
+        FacturaResponse facturaCreada = facturaService.crearFactura(request, authentication.getName());
+        return ResponseEntity.status(HttpStatus.CREATED).body(facturaCreada);
     }
 
     @GetMapping("/obtener-facturas")
-    public ResponseEntity<List<Factura>> listarFacturas(Authentication authentication) {
-        return ResponseEntity.ok(facturaService.listarFacturas(esAdministrador(authentication), authentication.getName()));
+    public ResponseEntity<List<FacturaResponse>> listarFacturas(Authentication authentication) {
+        return ResponseEntity.ok(facturaService.listarFacturasResponse(esAdministrador(authentication), authentication.getName()));
     }
 
     @GetMapping("/obtener-factura-por-id/{id}")
-    public ResponseEntity<Factura> buscarFactura(@PathVariable Long id, Authentication authentication) {
-        return ResponseEntity.ok(facturaService.buscarFactura(id, esAdministrador(authentication), authentication.getName()));
+    public ResponseEntity<FacturaResponse> buscarFactura(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(facturaService.buscarFacturaResponse(id, esAdministrador(authentication), authentication.getName()));
+    }
+
+    @PostMapping("/{id}/abonos")
+    public ResponseEntity<AbonoResponse> registrarAbono(
+            @PathVariable Long id,
+            @Valid @RequestBody RegistrarAbonoRequest request,
+            Authentication authentication) {
+        AbonoResponse abono = facturaService.registrarAbono(id, request, authentication.getName(), esAdministrador(authentication));
+        return ResponseEntity.status(HttpStatus.CREATED).body(abono);
+    }
+
+    @GetMapping("/{id}/abonos")
+    public ResponseEntity<List<AbonoResponse>> listarAbonos(
+            @PathVariable Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(facturaService.listarAbonosPorFactura(id, authentication.getName(), esAdministrador(authentication)));
+    }
+
+    @PostMapping("/{id}/anular")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<FacturaResponse> anularFactura(
+            @PathVariable Long id,
+            @RequestBody(required = false) AnularFacturaRequest request) {
+        return ResponseEntity.ok(facturaService.anularFactura(id, request));
     }
 
     private boolean esAdministrador(Authentication authentication) {

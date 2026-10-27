@@ -72,7 +72,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ---
 
-- [ ] **Tarea 3: Endpoints REST, Flujo de Anulación con Reposición de Stock y RBAC MockMvc**
+- [x] **Tarea 3: Endpoints REST, Flujo de Anulación con Reposición de Stock y RBAC MockMvc**
   - **Estimación:** ~25-30 min
   - **Dependencias:** Tareas 1 y 2.
   - **Requisitos cubiertos:** RF-008, RF-009, RF-010, RF-011, RF-012, RF-013, RF-017, RF-018, RF-019.

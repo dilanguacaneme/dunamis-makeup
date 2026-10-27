@@ -237,6 +237,39 @@ public class FacturaService {
         return FacturaResponse.fromEntity(buscarFactura(id, administrador, vendedorUsuario));
     }
 
+    @Transactional
+    public FacturaResponse anularFactura(Long id, AnularFacturaRequest request) {
+        Factura factura = facturaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Factura no encontrada con id: " + id));
+
+        if (Boolean.TRUE.equals(factura.getAnulada())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La factura con id " + id + " ya se encuentra anulada");
+        }
+
+        // Restituir existencias a cada producto facturado
+        if (factura.getDetalles() != null) {
+            for (DetalleFactura detalle : factura.getDetalles()) {
+                if (detalle.getProducto() != null) {
+                    Producto producto = productoRepository.findById(detalle.getProducto().getId())
+                            .orElse(detalle.getProducto());
+                    int nuevaCantidad = producto.getCantidad() + detalle.getCantidad();
+                    producto.setCantidad(nuevaCantidad);
+                    producto.setTotalProducto(nuevaCantidad * producto.getPrecio());
+                    productoRepository.save(producto);
+                }
+            }
+        }
+
+        factura.setAnulada(true);
+        factura.setFechaAnulacion(LocalDateTime.now());
+        if (request != null && request.motivo() != null && !request.motivo().isBlank()) {
+            factura.setMotivoAnulacion(request.motivo().trim());
+        }
+
+        Factura guardada = facturaRepository.save(factura);
+        return FacturaResponse.fromEntity(guardada);
+    }
+
     // Método de soporte transitorio para controladores existentes antes de Tarea 3
     @Transactional
     public Factura crearFactura(Factura factura, String vendedorUsuario) {

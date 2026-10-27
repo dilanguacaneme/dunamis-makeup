@@ -54,8 +54,6 @@ public class Factura {
     private String motivoAnulacion;
 
     @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true)
-    @NotEmpty(message = "La factura debe tener al menos un producto")
-    @Valid
     private List<DetalleFactura> detalles = new ArrayList<>();
 
     @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true)
