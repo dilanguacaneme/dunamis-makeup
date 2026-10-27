@@ -202,6 +202,6 @@ Nivel 6 (Simulación Desacoplada):
 2. **Desincronización de esquemas:** Si se agregan campos al backend (como métodos de pago o borrado lógico), el mock en `demoData.ts` debe mantenerse actualizado para no romper la experiencia offline.
 
 ### Checklist
-- [ ] Opcional: Persistir el almacén `demoStore` en `localStorage`.
-- [ ] Mantener sincronizadas las estructuras del mock con los contratos del backend.
-- [ ] Verificar que las validaciones del modo demo emulen fielmente las reglas del backend.
+- [x] Persistir el almacén `demoStore` y sesión demo en `localStorage`.
+- [x] Mantener sincronizadas las estructuras del mock con los contratos del backend (estados de pago PARCIAL, abonos y borrado lógico).
+- [x] Verificar que las validaciones del modo demo emulen fielmente las reglas del backend (suite de 17 pruebas unitarias automatizadas).

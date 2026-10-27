@@ -53,7 +53,7 @@ Este documento desglosa los requisitos de la [especificación](006-modo-demo-loc
 
 ---
 
-- [ ] **Tarea 4: Suite de Pruebas Automatizadas de `demoStore` y Cierre de Spec 006**
+- [x] **Tarea 4: Suite de Pruebas Automatizadas de `demoStore` y Cierre de Spec 006**
   - **Estimación:** ~15 min
   - **Dependencias:** Tareas 1, 2 y 3.
   - **Requisitos cubiertos:** RF-015 y Checklist SDD Nivel 6.
