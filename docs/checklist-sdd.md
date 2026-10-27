@@ -154,14 +154,14 @@ Nivel 6 (Simulación Desacoplada):
 3. **Sin soporte de anulación de factura:** No existe forma de cancelar una venta ni revertir de forma atómica el stock al inventario.
 
 ### Checklist
-- [ ] Migrar el campo `fecha` de `LocalDate` a `LocalDateTime`.
-- [ ] Implementar el modelo de pagos: enum `EstadoPagoFactura` y entidad `AbonoFactura`.
-- [ ] Agregar a `Factura` los campos calculados: `estadoPago`, `totalAbonado` y `saldoPendiente`.
-- [ ] Crear endpoint `POST /factura/{id}/abonos` para recepción de abonos con validación de no sobrepago.
-- [ ] Implementar flujo de anulación de facturas con restitución atómica de inventario.
-- [ ] Crear tests transaccionales que garanticen rollback completo si algún producto carece de stock o si falla un abono.
-- [ ] Probar descarga de factura en PDF (`pdfGenerator.ts`) reflejando estado de pago y saldo pendiente.
-- [ ] Probar segregación de facturas por rol en UI y API.
+- [x] Migrar el campo `fecha` de `LocalDate` a `LocalDateTime`.
+- [x] Implementar el modelo de pagos: enum `EstadoPagoFactura` y entidad `AbonoFactura`.
+- [x] Agregar a `Factura` los campos calculados: `estadoPago`, `totalAbonado` y `saldoPendiente`.
+- [x] Crear endpoint `POST /factura/{id}/abonos` para recepción de abonos con validación de no sobrepago.
+- [x] Implementar flujo de anulación de facturas con restitución atómica de inventario.
+- [x] Crear tests transaccionales que garanticen rollback completo si algún producto carece de stock o si falla un abono.
+- [x] Probar descarga de factura en PDF (`pdfGenerator.ts`) reflejando estado de pago y saldo pendiente.
+- [x] Probar segregación de facturas por rol en UI y API.
 
 ---
 

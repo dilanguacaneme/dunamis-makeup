@@ -125,7 +125,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ---
 
-- [ ] **Tarea 5: Verificación Integral E2E, Cobertura Transaccional y Cierre de Spec 004**
+- [x] **Tarea 5: Verificación Integral E2E, Cobertura Transaccional y Cierre de Spec 004**
   - **Estimación:** ~15-20 min
   - **Dependencias:** Tareas 1, 2, 3 y 4.
   - **Requisitos cubiertos:** RF-001 a RF-021 (Definition of Done completa).
