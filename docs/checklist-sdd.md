@@ -179,10 +179,10 @@ Nivel 6 (Simulación Desacoplada):
 4. **Ausencia de migraciones de base de datos:** Se depende de Hibernate para crear/modificar tablas, con riesgo de inconsistencias de datos en despliegues.
 
 ### Checklist
-- [ ] Implementar `@RestControllerAdvice` con estructura uniforme de error en JSON (código, mensaje, timestamp, errores por campo).
-- [ ] Diseñar e implementar DTOs para solicitudes y respuestas de productos, marcas y facturas.
-- [ ] Renombrar el paquete `com.dunamis.makeup.Exeption` a `com.dunamis.makeup.exception`.
-- [ ] Evaluar incorporación de Flyway para versionado de base de datos PostgreSQL.
+- [x] Implementar `@RestControllerAdvice` con estructura uniforme de error en JSON (código, mensaje, timestamp, errores por campo).
+- [x] Diseñar e implementar DTOs para solicitudes y respuestas de productos, marcas y facturas.
+- [x] Renombrar el paquete `com.dunamis.makeup.Exeption` a `com.dunamis.makeup.exception`.
+- [x] Evaluar incorporación de Flyway para versionado de base de datos PostgreSQL (mantenido DDL JPA sin dependencias superfluas).
 
 ---
 

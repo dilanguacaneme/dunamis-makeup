@@ -72,7 +72,7 @@ Este documento desglosa los requisitos de la [especificación](005-calidad-api-e
 
 ---
 
-- [ ] **Tarea 4: Verificación Integral MockMvc, Consistencia de API, Frontend y Cierre de Spec 005**
+- [x] **Tarea 4: Verificación Integral MockMvc, Consistencia de API, Frontend y Cierre de Spec 005**
   - **Estimación:** ~15 min
   - **Dependencias:** Tareas 1, 2 y 3.
   - **Requisitos cubiertos:** RF-015 y Definition of Done completa.
