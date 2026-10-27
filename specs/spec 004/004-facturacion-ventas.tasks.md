@@ -49,7 +49,7 @@ Documento de desglose de tareas ordenadas por dependencia técnica (<30 min por 
 
 ---
 
-- [ ] **Tarea 2: Lógica de Servicio Transaccional: Emisión de Venta, Stock Atómico y Abonos**
+- [x] **Tarea 2: Lógica de Servicio Transaccional: Emisión de Venta, Stock Atómico y Abonos**
   - **Estimación:** ~25-30 min
   - **Dependencias:** Tarea 1.
   - **Requisitos cubiertos:** RF-003, RF-004, RF-005, RF-006, RF-007, RF-014, RF-015, RF-016.
