@@ -65,7 +65,6 @@ class ProductoServiceTest {
         productoEjemplo.setNombre("Base Líquida");
         productoEjemplo.setPrecio(30000.0);
         productoEjemplo.setCantidad(10);
-        productoEjemplo.setCantidadInicial(10);
         productoEjemplo.setTotalProducto(300000.0);
         productoEjemplo.setCategoria(CategoriaProducto.ROSTRO);
         productoEjemplo.setMarca(marcaTrendy);
@@ -101,7 +100,6 @@ class ProductoServiceTest {
             assertEquals("Base Líquida Mate", response.nombre(), "Debe normalizar los espacios del nombre");
             assertEquals(35000.0, response.precio());
             assertEquals(8, response.cantidad());
-            assertEquals(8, response.cantidadInicial());
             assertEquals(280000.0, response.totalProducto(), "Debe calcular 35000.0 * 8");
             assertTrue(response.activo(), "El producto creado debe estar activo por defecto");
             assertEquals("Trendy", response.marca().nombre());

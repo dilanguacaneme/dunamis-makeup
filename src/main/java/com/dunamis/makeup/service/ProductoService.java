@@ -48,7 +48,6 @@ public class ProductoService {
         producto.setNombre(nombreNormalizado);
         producto.setPrecio(request.precio());
         producto.setCantidad(request.cantidad());
-        producto.setCantidadInicial(request.cantidad());
         producto.setTotalProducto(request.precio() * request.cantidad());
         producto.setCategoria(request.categoria());
         producto.setMarca(marca);
@@ -166,7 +165,6 @@ public class ProductoService {
         producto.setMarca(marca);
         producto.setNombre(normalizarNombre(producto.getNombre()));
         producto.setTotalProducto(producto.getCantidad() * producto.getPrecio());
-        producto.setCantidadInicial(producto.getCantidad());
         if (producto.getActivo() == null) {
             producto.setActivo(true);
         }

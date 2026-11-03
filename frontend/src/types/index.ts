@@ -16,7 +16,6 @@ export interface Producto {
   nombre: string;
   precio: number;
   cantidad: number;
-  cantidadInicial?: number;
   totalProducto?: number;
   categoria: CategoriaProducto;
   marca?: Marca | null;

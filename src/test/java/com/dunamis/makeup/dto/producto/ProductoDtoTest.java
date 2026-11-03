@@ -41,7 +41,6 @@ class ProductoDtoTest {
                     "Polvo Traslúcido",
                     25000.0,
                     15,
-                    15,
                     375000.0,
                     CategoriaProducto.ROSTRO,
                     marca,
@@ -52,7 +51,6 @@ class ProductoDtoTest {
             assertEquals("Polvo Traslúcido", response.nombre());
             assertEquals(25000.0, response.precio());
             assertEquals(15, response.cantidad());
-            assertEquals(15, response.cantidadInicial());
             assertEquals(375000.0, response.totalProducto());
             assertEquals(CategoriaProducto.ROSTRO, response.categoria());
             assertNotNull(response.marca());
@@ -72,7 +70,6 @@ class ProductoDtoTest {
             producto.setNombre("Labial Matte");
             producto.setPrecio(18000.0);
             producto.setCantidad(5);
-            producto.setCantidadInicial(10);
             producto.setTotalProducto(90000.0);
             producto.setCategoria(CategoriaProducto.LABIOS);
             producto.setMarca(marca);
@@ -84,7 +81,6 @@ class ProductoDtoTest {
             assertEquals("Labial Matte", response.nombre());
             assertEquals(18000.0, response.precio());
             assertEquals(5, response.cantidad());
-            assertEquals(10, response.cantidadInicial());
             assertEquals(90000.0, response.totalProducto());
             assertEquals(CategoriaProducto.LABIOS, response.categoria());
             assertNotNull(response.marca());

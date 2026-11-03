@@ -23,7 +23,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Base Fluida Satinada Glow Foundation',
     precio: 85000,
     cantidad: 2,
-    cantidadInicial: 20,
     totalProducto: 170000,
     categoria: 'ROSTRO',
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
@@ -33,7 +32,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Corrector Cremoso Alta Cobertura Radiant Concealer',
     precio: 48000,
     cantidad: 14,
-    cantidadInicial: 15,
     totalProducto: 672000,
     categoria: 'ROSTRO',
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
@@ -43,7 +41,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Polvo Compacto Traslúcido Mineral Velvet',
     precio: 62000,
     cantidad: 6,
-    cantidadInicial: 18,
     totalProducto: 372000,
     categoria: 'ROSTRO',
     marca: INITIAL_DEMO_BRANDS[3], // Magna
@@ -53,7 +50,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Pomada Esculpidora de Cejas Brow Sculpt 24h',
     precio: 39000,
     cantidad: 0, // Demonstrates "Agotado" state
-    cantidadInicial: 12,
     totalProducto: 0,
     categoria: 'CEJAS',
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
@@ -63,7 +59,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Gel Fijador Transparente Brow Lamination Effect',
     precio: 34000,
     cantidad: 8,
-    cantidadInicial: 10,
     totalProducto: 272000,
     categoria: 'CEJAS',
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
@@ -73,7 +68,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Lápiz Micro-Precisión de Cejas Hair-Like Strokes',
     precio: 32000,
     cantidad: 2,
-    cantidadInicial: 20,
     totalProducto: 64000,
     categoria: 'CEJAS',
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
@@ -83,7 +77,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Labial Velvet Matte Rouge Rubí',
     precio: 45000,
     cantidad: 12,
-    cantidadInicial: 15,
     totalProducto: 540000,
     categoria: 'LABIOS',
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
@@ -93,7 +86,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Tinta Labial Acuosa Nude Rose Long-Wear',
     precio: 38000,
     cantidad: 1,
-    cantidadInicial: 10,
     totalProducto: 38000,
     categoria: 'LABIOS',
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
@@ -103,7 +95,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Brillo Hidratante Plumping Lip Oil Berry',
     precio: 42000,
     cantidad: 9,
-    cantidadInicial: 12,
     totalProducto: 378000,
     categoria: 'LABIOS',
     marca: INITIAL_DEMO_BRANDS[3], // Magna
@@ -113,7 +104,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Paleta de Sombras Nude & Bronze 12 Tonos',
     precio: 110000,
     cantidad: 5,
-    cantidadInicial: 10,
     totalProducto: 550000,
     categoria: 'OJOS',
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
@@ -123,7 +113,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Delineador Líquido Plumón Waterproof Intenso',
     precio: 36000,
     cantidad: 3,
-    cantidadInicial: 30,
     totalProducto: 108000,
     categoria: 'OJOS',
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
@@ -133,7 +122,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Pestañina Máximo Volumen & Curvatura Lash Lift',
     precio: 52000,
     cantidad: 16,
-    cantidadInicial: 20,
     totalProducto: 832000,
     categoria: 'OJOS',
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
@@ -440,7 +428,6 @@ class DemoStore {
       nombre: input.nombre.trim(),
       precio: Number(input.precio),
       cantidad: Math.max(0, Number(input.cantidad)),
-      cantidadInicial: Math.max(0, Number(input.cantidad)),
       totalProducto: Number(input.precio) * Math.max(0, Number(input.cantidad)),
       categoria: input.categoria,
       marca,

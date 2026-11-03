@@ -31,8 +31,6 @@ public class Producto {
     @Min(value = 0, message = "Las existencias no pueden ser negativas")
     private Integer cantidad;
 
-    private Integer cantidadInicial;
-
     private Double totalProducto;
 
     @NotNull(message = "La categoria no puede estar vacia")
