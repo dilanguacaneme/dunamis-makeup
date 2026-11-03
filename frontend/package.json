@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "test": "node --test --experimental-strip-types src/services/__tests__/demoStore.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.58.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

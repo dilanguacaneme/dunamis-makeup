@@ -1,4 +1,14 @@
-import type { Producto, ProductoInput, FacturaInput, Factura, Usuario, Marca, MarcaInput } from '../types';
+import type {
+  Producto,
+  ProductoInput,
+  FacturaInput,
+  Factura,
+  Usuario,
+  Marca,
+  MarcaInput,
+  EstadoPagoFactura,
+  MedioPago,
+} from '../types';
 
 export const INITIAL_DEMO_BRANDS: Marca[] = [
   { id: 1, nombre: 'Trendy', activa: true },
@@ -13,7 +23,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Base Fluida Satinada Glow Foundation',
     precio: 85000,
     cantidad: 2,
-    cantidadInicial: 20,
     totalProducto: 170000,
     categoria: 'ROSTRO',
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
@@ -23,7 +32,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Corrector Cremoso Alta Cobertura Radiant Concealer',
     precio: 48000,
     cantidad: 14,
-    cantidadInicial: 15,
     totalProducto: 672000,
     categoria: 'ROSTRO',
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
@@ -33,7 +41,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Polvo Compacto Traslúcido Mineral Velvet',
     precio: 62000,
     cantidad: 6,
-    cantidadInicial: 18,
     totalProducto: 372000,
     categoria: 'ROSTRO',
     marca: INITIAL_DEMO_BRANDS[3], // Magna
@@ -43,7 +50,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Pomada Esculpidora de Cejas Brow Sculpt 24h',
     precio: 39000,
     cantidad: 0, // Demonstrates "Agotado" state
-    cantidadInicial: 12,
     totalProducto: 0,
     categoria: 'CEJAS',
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
@@ -53,7 +59,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Gel Fijador Transparente Brow Lamination Effect',
     precio: 34000,
     cantidad: 8,
-    cantidadInicial: 10,
     totalProducto: 272000,
     categoria: 'CEJAS',
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
@@ -63,7 +68,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Lápiz Micro-Precisión de Cejas Hair-Like Strokes',
     precio: 32000,
     cantidad: 2,
-    cantidadInicial: 20,
     totalProducto: 64000,
     categoria: 'CEJAS',
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
@@ -73,7 +77,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Labial Velvet Matte Rouge Rubí',
     precio: 45000,
     cantidad: 12,
-    cantidadInicial: 15,
     totalProducto: 540000,
     categoria: 'LABIOS',
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
@@ -83,7 +86,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Tinta Labial Acuosa Nude Rose Long-Wear',
     precio: 38000,
     cantidad: 1,
-    cantidadInicial: 10,
     totalProducto: 38000,
     categoria: 'LABIOS',
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
@@ -93,7 +95,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Brillo Hidratante Plumping Lip Oil Berry',
     precio: 42000,
     cantidad: 9,
-    cantidadInicial: 12,
     totalProducto: 378000,
     categoria: 'LABIOS',
     marca: INITIAL_DEMO_BRANDS[3], // Magna
@@ -103,7 +104,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Paleta de Sombras Nude & Bronze 12 Tonos',
     precio: 110000,
     cantidad: 5,
-    cantidadInicial: 10,
     totalProducto: 550000,
     categoria: 'OJOS',
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
@@ -113,7 +113,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Delineador Líquido Plumón Waterproof Intenso',
     precio: 36000,
     cantidad: 3,
-    cantidadInicial: 30,
     totalProducto: 108000,
     categoria: 'OJOS',
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
@@ -123,7 +122,6 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     nombre: 'Pestañina Máximo Volumen & Curvatura Lash Lift',
     precio: 52000,
     cantidad: 16,
-    cantidadInicial: 20,
     totalProducto: 832000,
     categoria: 'OJOS',
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
@@ -139,6 +137,9 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     vendedorUsuario: 'maryuri',
     fecha: '2026-10-15',
     total: 133000,
+    estadoPago: 'PAGADA',
+    valorAbonado: 133000,
+    saldoPendiente: 0,
     detalles: [
       {
         id: 1,
@@ -162,6 +163,9 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     vendedorUsuario: 'caterin',
     fecha: '2026-10-16',
     total: 90000,
+    estadoPago: 'PARCIAL',
+    valorAbonado: 50000,
+    saldoPendiente: 40000,
     detalles: [
       {
         id: 3,
@@ -177,14 +181,95 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     telefonoCliente: '315 771 9900',
     vendedorNombre: 'Maryuri Andrea Salazar',
     vendedorUsuario: 'maryuri',
-    fecha: '2026-10-16',
+    fecha: '2026-10-18',
     total: 110000,
+    estadoPago: 'PENDIENTE',
+    valorAbonado: 0,
+    saldoPendiente: 110000,
     detalles: [
       {
         id: 4,
         producto: INITIAL_DEMO_PRODUCTS[9],
         cantidad: 1,
         subtotal: 110000,
+      },
+    ],
+  },
+  {
+    id: 1000,
+    cliente: 'Camila Ospina',
+    telefonoCliente: '318 901 2233',
+    vendedorNombre: 'Caterin Rojas Hererra',
+    vendedorUsuario: 'caterin',
+    fecha: '2026-09-28',
+    total: 86000,
+    estadoPago: 'PAGADA',
+    valorAbonado: 86000,
+    saldoPendiente: 0,
+    detalles: [
+      {
+        id: 5,
+        producto: INITIAL_DEMO_PRODUCTS[7],
+        cantidad: 1,
+        subtotal: 38000,
+      },
+      {
+        id: 6,
+        producto: INITIAL_DEMO_PRODUCTS[1],
+        cantidad: 1,
+        subtotal: 48000,
+      },
+    ],
+  },
+  {
+    id: 999,
+    cliente: 'Daniela Toro',
+    telefonoCliente: '320 554 1188',
+    vendedorNombre: 'Maryuri Andrea Salazar',
+    vendedorUsuario: 'maryuri',
+    fecha: '2026-09-14',
+    total: 147000,
+    estadoPago: 'PAGADA',
+    valorAbonado: 147000,
+    saldoPendiente: 0,
+    detalles: [
+      {
+        id: 7,
+        producto: INITIAL_DEMO_PRODUCTS[2],
+        cantidad: 1,
+        subtotal: 62000,
+      },
+      {
+        id: 8,
+        producto: INITIAL_DEMO_PRODUCTS[0],
+        cantidad: 1,
+        subtotal: 85000,
+      },
+    ],
+  },
+  {
+    id: 998,
+    cliente: 'Isabella Gómez',
+    telefonoCliente: '310 443 9922',
+    vendedorNombre: 'Caterin Rojas Hererra',
+    vendedorUsuario: 'caterin',
+    fecha: '2026-08-22',
+    total: 78000,
+    estadoPago: 'PAGADA',
+    valorAbonado: 78000,
+    saldoPendiente: 0,
+    detalles: [
+      {
+        id: 9,
+        producto: INITIAL_DEMO_PRODUCTS[4],
+        cantidad: 1,
+        subtotal: 34000,
+      },
+      {
+        id: 10,
+        producto: INITIAL_DEMO_PRODUCTS[8],
+        cantidad: 1,
+        subtotal: 42000,
       },
     ],
   },
@@ -202,9 +287,9 @@ export const DEMO_SELLER_USER: Usuario = {
   role: 'VENDEDOR',
 };
 
-const STORAGE_PRODUCTS_KEY = 'dunamis_demo_inventory_v2';
-const STORAGE_BRANDS_KEY = 'dunamis_demo_brands_v2';
-const STORAGE_INVOICES_KEY = 'dunamis_demo_invoices_v2';
+const STORAGE_PRODUCTS_KEY = 'dunamis_demo_inventory_v3';
+const STORAGE_BRANDS_KEY = 'dunamis_demo_brands_v3';
+const STORAGE_INVOICES_KEY = 'dunamis_demo_invoices_v3';
 
 class DemoStore {
   private products: Producto[];
@@ -238,16 +323,19 @@ class DemoStore {
     }
   }
 
-  public getBrands(): Marca[] {
-    return this.brands.filter((b) => b.activa !== false);
+    public getBrands(incluirInactivas = false): Marca[] {
+    const list = incluirInactivas
+      ? [...this.brands]
+      : this.brands.filter((b) => b.activa !== false);
+    return list.sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   public getAllBrands(): Marca[] {
-    return [...this.brands];
+    return [...this.brands].sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   public createBrand(input: MarcaInput): Marca {
-    const nombre = input.nombre.trim();
+    const nombre = input.nombre.trim().replace(/\s+/g, ' ');
     if (!nombre) {
       throw new Error('El nombre de la marca es obligatorio');
     }
@@ -272,7 +360,7 @@ class DemoStore {
       throw new Error('Marca no encontrada');
     }
     if (input.nombre !== undefined) {
-      const nombre = input.nombre.trim();
+      const nombre = input.nombre.trim().replace(/\s+/g, ' ');
       if (!nombre) {
         throw new Error('El nombre de la marca es obligatorio');
       }
@@ -312,8 +400,10 @@ class DemoStore {
     }
   }
 
-  public getProducts(): Producto[] {
-    return [...this.products];
+  public getProducts(incluirInactivos = false): Producto[] {
+    return incluirInactivos
+      ? [...this.products]
+      : this.products.filter((p) => p.activo !== false);
   }
 
   public getProductById(id: number): Producto | undefined {
@@ -338,10 +428,10 @@ class DemoStore {
       nombre: input.nombre.trim(),
       precio: Number(input.precio),
       cantidad: Math.max(0, Number(input.cantidad)),
-      cantidadInicial: Math.max(0, Number(input.cantidad)),
       totalProducto: Number(input.precio) * Math.max(0, Number(input.cantidad)),
       categoria: input.categoria,
       marca,
+      activo: true,
     };
     this.products.push(newProduct);
     this.saveProducts();
@@ -374,6 +464,8 @@ class DemoStore {
       updatedMarca = foundMarca;
     }
 
+    const updatedActivo = input.activo !== undefined ? input.activo : current.activo !== false;
+
     const updated: Producto = {
       ...current,
       nombre: updatedNombre,
@@ -382,6 +474,7 @@ class DemoStore {
       categoria: updatedCategoria,
       marca: updatedMarca,
       totalProducto: updatedPrecio * updatedCantidad,
+      activo: updatedActivo,
     };
 
     this.products[index] = updated;
@@ -394,18 +487,34 @@ class DemoStore {
     if (index === -1) {
       throw new Error(`Producto con ID ${id} no encontrado`);
     }
-    const [deleted] = this.products.splice(index, 1);
+    const current = this.products[index];
+    const tieneFacturas = this.invoices.some((inv) =>
+      inv.detalles?.some((d) => d.producto.id === id)
+    );
+
+    if (tieneFacturas) {
+      // Borrado lógico para emular el comportamiento seguro de producción (Principio 5)
+      current.activo = false;
+    } else {
+      // Sin facturas asociadas: borrado físico
+      this.products.splice(index, 1);
+    }
+
     this.saveProducts();
-    return deleted;
+    return current;
   }
 
   public getTotalInventory(): number {
-    return this.products.reduce((acc, p) => acc + (p.totalProducto || p.precio * p.cantidad), 0);
+    return this.products
+      .filter((p) => p.activo !== false)
+      .reduce((acc, p) => acc + (p.totalProducto || p.precio * p.cantidad), 0);
   }
 
-  public getLowStockProducts(): Producto[] {
-    // Backend GET /producto/acabarse returns products where cantidad = 0
-    return this.products.filter((p) => p.cantidad === 0);
+  public getLowStockProducts(umbral = 0): Producto[] {
+    if (umbral < 0) {
+      throw new Error('El umbral no puede ser negativo');
+    }
+    return this.products.filter((p) => p.activo !== false && p.cantidad <= umbral);
   }
 
   // --- INVOICES ---
@@ -461,9 +570,7 @@ class DemoStore {
       throw new Error('La factura debe tener al menos un producto');
     }
 
-    let total = 0;
-    const detallesProcesados = [];
-
+    // FASE 1: Validación previa atómica de existencias y estado activo
     for (const item of input.detalles) {
       if (!item.cantidad || item.cantidad <= 0) {
         throw new Error('La cantidad de cada producto debe ser mayor que cero');
@@ -472,10 +579,20 @@ class DemoStore {
       if (!product) {
         throw new Error(`Producto #${item.producto.id} no encontrado`);
       }
+      if (product.activo !== undefined && !product.activo) {
+        throw new Error(`No se puede facturar el producto "${product.nombre}" porque está inactivo`);
+      }
       if (product.cantidad < item.cantidad) {
         throw new Error(`Stock insuficiente para "${product.nombre}". Disponible: ${product.cantidad} unidades.`);
       }
+    }
 
+    // FASE 2: Descuento atómico de existencias y construcción de líneas
+    let total = 0;
+    const detallesProcesados = [];
+
+    for (const item of input.detalles) {
+      const product = this.products.find((p) => p.id === item.producto.id)!;
       product.cantidad -= item.cantidad;
       product.totalProducto = product.cantidad * product.precio;
       const subtotal = item.cantidad * product.precio;
@@ -489,8 +606,25 @@ class DemoStore {
       });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString();
     const nextId = this.invoices.length > 0 ? Math.max(...this.invoices.map((i) => i.id)) + 1 : 1001;
+
+    // Payment status calculation
+    const estadoPago: EstadoPagoFactura = input.estadoPago || 'PAGADA';
+    let valorAbonado = 0;
+    let saldoPendiente = 0;
+
+    if (estadoPago === 'PAGADA') {
+      valorAbonado = total;
+      saldoPendiente = 0;
+    } else if (estadoPago === 'PENDIENTE') {
+      valorAbonado = 0;
+      saldoPendiente = total;
+    } else if (estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL') {
+      valorAbonado =
+        input.valorAbonado !== undefined ? Number(input.valorAbonado) : Math.round(total / 2);
+      saldoPendiente = Math.max(0, total - valorAbonado);
+    }
 
     const newInvoice: Factura = {
       id: nextId,
@@ -501,12 +635,121 @@ class DemoStore {
       fecha: today,
       total,
       detalles: detallesProcesados,
+      estadoPago,
+      valorAbonado,
+      saldoPendiente,
     };
 
     this.invoices.unshift(newInvoice);
     this.saveInvoices();
     this.saveProducts();
     return newInvoice;
+  }
+
+  public updateInvoicePayment(
+    id: number,
+    additionalPayment: number,
+    medioPago: MedioPago = 'EFECTIVO',
+    notas?: string,
+    currentUser?: Usuario | null
+  ): Factura {
+    const invoice = this.invoices.find((inv) => inv.id === id);
+    if (!invoice) {
+      throw new Error(`Factura #${id} no encontrada`);
+    }
+
+    if (
+      currentUser?.role === 'VENDEDOR' &&
+      invoice.vendedorUsuario &&
+      currentUser.username &&
+      invoice.vendedorUsuario.toLowerCase() !== currentUser.username.toLowerCase()
+    ) {
+      throw new Error('Acceso denegado: no tiene permisos para abonar a una factura de otro vendedor');
+    }
+
+    if (invoice.anulada) {
+      throw new Error('No es posible registrar abonos en una factura anulada');
+    }
+
+    if (additionalPayment <= 0) {
+      throw new Error('El monto del abono debe ser mayor a cero');
+    }
+
+    const currentAbonado =
+      invoice.valorAbonado !== undefined
+        ? invoice.valorAbonado
+        : invoice.estadoPago === 'PAGADA'
+        ? invoice.total
+        : 0;
+
+    const currentSaldo =
+      invoice.saldoPendiente !== undefined
+        ? invoice.saldoPendiente
+        : Math.max(0, invoice.total - currentAbonado);
+
+    if (currentSaldo <= 0 || invoice.estadoPago === 'PAGADA') {
+      throw new Error(`La factura #${id} ya se encuentra totalmente pagada`);
+    }
+
+    if (additionalPayment > currentSaldo) {
+      throw new Error(`El abono ($${additionalPayment}) supera el saldo pendiente ($${currentSaldo})`);
+    }
+
+    const newAbonado = Math.min(invoice.total, currentAbonado + additionalPayment);
+    const newSaldo = Math.max(0, invoice.total - newAbonado);
+    const newEstado: EstadoPagoFactura = newSaldo === 0 ? 'PAGADA' : 'PARCIAL';
+
+    invoice.valorAbonado = newAbonado;
+    invoice.saldoPendiente = newSaldo;
+    invoice.estadoPago = newEstado;
+
+    if (!invoice.abonos) {
+      invoice.abonos = [];
+    }
+    invoice.abonos.push({
+      id: Date.now(),
+      facturaId: invoice.id,
+      monto: additionalPayment,
+      fecha: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      medioPago,
+      notas: notas || null,
+    });
+
+    this.saveInvoices();
+    return invoice;
+  }
+
+  public cancelInvoice(id: number, motivo?: string, currentUser?: Usuario | null): Factura {
+    const invoice = this.invoices.find((inv) => inv.id === id);
+    if (!invoice) {
+      throw new Error(`Factura #${id} no encontrada`);
+    }
+
+    if (currentUser?.role === 'VENDEDOR') {
+      throw new Error('Acceso denegado: solo los administradores pueden anular facturas');
+    }
+
+    if (invoice.anulada) {
+      throw new Error(`La factura #${id} ya se encuentra anulada`);
+    }
+
+    // Restituir inventario de cada producto vendido
+    if (invoice.detalles) {
+      for (const d of invoice.detalles) {
+        const prod = this.products.find((p) => p.id === d.producto.id);
+        if (prod) {
+          prod.cantidad += d.cantidad;
+          prod.totalProducto = prod.cantidad * prod.precio;
+        }
+      }
+      this.saveProducts();
+    }
+
+    invoice.anulada = true;
+    invoice.fechaAnulacion = new Date().toISOString();
+    invoice.motivoAnulacion = motivo || 'Anulada por la administradora';
+    this.saveInvoices();
+    return invoice;
   }
 
   public resetToDefaults(): void {

@@ -16,10 +16,10 @@ export interface Producto {
   nombre: string;
   precio: number;
   cantidad: number;
-  cantidadInicial?: number;
   totalProducto?: number;
   categoria: CategoriaProducto;
   marca?: Marca | null;
+  activo?: boolean;
 }
 
 export interface ProductoInput {
@@ -30,6 +30,7 @@ export interface ProductoInput {
   marca?: {
     id: number;
   };
+  activo?: boolean;
 }
 
 export interface FacturaDetalleInput {
@@ -39,10 +40,28 @@ export interface FacturaDetalleInput {
   cantidad: number;
 }
 
+export type EstadoPagoFactura = 'PAGADA' | 'PARCIAL' | 'PENDIENTE' | 'ABONO_PARCIAL' | 'SIN_REGISTRO';
+
+export type MedioPago = 'EFECTIVO' | 'TRANSFERENCIA' | 'NEQUI' | 'DAVIPLATA' | 'TARJETA' | 'OTRO';
+
+export interface AbonoFactura {
+  id?: number;
+  facturaId?: number;
+  monto: number;
+  fecha?: string;
+  medioPago: MedioPago;
+  notas?: string | null;
+  usuarioRegistro?: string;
+}
+
 export interface FacturaInput {
   cliente: string;
   telefonoCliente?: string;
   detalles: FacturaDetalleInput[];
+  estadoPago?: EstadoPagoFactura;
+  valorAbonado?: number;
+  medioPagoInicial?: MedioPago;
+  notasPago?: string;
 }
 
 export interface DetalleFactura {
@@ -61,6 +80,13 @@ export interface Factura {
   fecha?: string;
   total: number;
   detalles?: DetalleFactura[];
+  estadoPago?: EstadoPagoFactura;
+  valorAbonado?: number;
+  saldoPendiente?: number;
+  anulada?: boolean;
+  fechaAnulacion?: string | null;
+  motivoAnulacion?: string | null;
+  abonos?: AbonoFactura[];
 }
 
 export interface Usuario {
@@ -73,13 +99,25 @@ export type FilterCategory = 'TODAS' | CategoriaProducto;
 
 export type FilterStock = 'TODOS' | 'AGOTADOS' | 'DISPONIBLES';
 
+export type FilterPaymentStatus = 'TODOS' | EstadoPagoFactura | 'ANULADA';
+
 export type ViewMode = 'table' | 'grid';
 
-export type ActiveTab = 'inventory' | 'invoices' | 'brands';
+export type ActiveTab = 'inventory' | 'invoices' | 'monthly-sales' | 'brands';
 
 export interface ToastMessage {
   id: string;
   type: 'success' | 'error' | 'info';
   title: string;
   message: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+  message: string;
+  timestamp: number;
+}
+
+export interface CsrfResponse {
+  ready: boolean;
 }

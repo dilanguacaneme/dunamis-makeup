@@ -6,6 +6,7 @@ import type {
   Usuario,
   Marca,
   MarcaInput,
+  MedioPago,
 } from '../types';
 import { demoStore, DEMO_ADMIN_USER } from './demoData';
 
@@ -92,23 +93,22 @@ export const inventoryApi = {
     const token = getXsrfToken();
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
       Accept: 'application/json',
     };
     if (token) {
       headers['X-XSRF-TOKEN'] = token;
     }
 
-    const body = new URLSearchParams();
-    body.append('username', username.trim());
-    body.append('password', password);
-
     try {
       const res = await fetch(`${BASE_URL}/api/auth/login`, {
         method: 'POST',
         credentials: 'include',
         headers,
-        body: body.toString(),
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+        }),
       });
 
       if (!res.ok) {
@@ -166,12 +166,13 @@ export const inventoryApi = {
   },
 
   // Products: Get all
-  async getProducts(isDemo: boolean): Promise<Producto[]> {
+  async getProducts(isDemo: boolean, incluirInactivos = false): Promise<Producto[]> {
     if (isDemo) {
-      return demoStore.getProducts();
+      return demoStore.getProducts(incluirInactivos);
     }
 
-    const res = await fetch(`${BASE_URL}/producto/obtener-productos`, {
+    const query = incluirInactivos ? '?incluirInactivos=true' : '';
+    const res = await fetch(`${BASE_URL}/producto/obtener-productos${query}`, {
       method: 'GET',
       credentials: 'include',
       headers: { Accept: 'application/json' },
@@ -182,7 +183,14 @@ export const inventoryApi = {
     }
 
     if (!res.ok) {
-      throw new ApiError(`Error al consultar productos (${res.status})`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al consultar productos (${res.status})`, res.status);
     }
 
     return await res.json();
@@ -212,20 +220,28 @@ export const inventoryApi = {
     return typeof data === 'number' ? data : 0;
   },
 
-  // Products: Low stock products (acabarse) - returns items where cantidad = 0
-  async getLowStockProducts(isDemo: boolean): Promise<Producto[]> {
+  // Products: Low stock products (acabarse) - returns items where cantidad <= umbral (default 0)
+  async getLowStockProducts(isDemo: boolean, umbral?: number): Promise<Producto[]> {
     if (isDemo) {
-      return demoStore.getLowStockProducts();
+      return demoStore.getLowStockProducts(umbral);
     }
 
-    const res = await fetch(`${BASE_URL}/producto/acabarse`, {
+    const query = umbral !== undefined ? `?umbral=${umbral}` : '';
+    const res = await fetch(`${BASE_URL}/producto/acabarse${query}`, {
       method: 'GET',
       credentials: 'include',
       headers: { Accept: 'application/json' },
     });
 
     if (!res.ok) {
-      throw new ApiError(`Error al consultar productos agotados (${res.status})`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al consultar productos agotados (${res.status})`, res.status);
     }
 
     return await res.json();
@@ -255,7 +271,7 @@ export const inventoryApi = {
     };
 
     if (input.marca?.id) {
-      bodyPayload.marca = { id: input.marca.id };
+      bodyPayload.marcaId = input.marca.id;
     }
 
     const res = await fetch(`${BASE_URL}/producto/crear`, {
@@ -300,7 +316,8 @@ export const inventoryApi = {
     if (input.precio !== undefined) bodyPayload.precio = Number(input.precio);
     if (input.cantidad !== undefined) bodyPayload.cantidad = Math.max(0, Number(input.cantidad));
     if (input.categoria !== undefined) bodyPayload.categoria = input.categoria;
-    if (input.marca?.id) bodyPayload.marca = { id: input.marca.id };
+    if (input.marca?.id !== undefined) bodyPayload.marcaId = input.marca.id;
+    if (input.activo !== undefined) bodyPayload.activo = input.activo;
 
     const res = await fetch(`${BASE_URL}/producto/actualizar/${id}`, {
       method: 'PATCH',
@@ -358,20 +375,28 @@ export const inventoryApi = {
     return await res.json();
   },
 
-  // --- BRANDS API ---
-  async getBrands(isDemo: boolean): Promise<Marca[]> {
+    // --- BRANDS API ---
+  async getBrands(isDemo: boolean, incluirInactivas = false): Promise<Marca[]> {
     if (isDemo) {
-      return demoStore.getBrands();
+      return demoStore.getBrands(incluirInactivas);
     }
 
-    const res = await fetch(`${BASE_URL}/marcas`, {
+    const query = incluirInactivas ? '?incluirInactivas=true' : '';
+    const res = await fetch(`${BASE_URL}/marcas${query}`, {
       method: 'GET',
       credentials: 'include',
       headers: { Accept: 'application/json' },
     });
 
     if (!res.ok) {
-      throw new ApiError(`Error al consultar marcas (${res.status})`, res.status);
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al consultar marcas (${res.status})`, res.status);
     }
 
     return await res.json();
@@ -501,11 +526,29 @@ export const inventoryApi = {
       headers['X-XSRF-TOKEN'] = token;
     }
 
+    // Map input to match CrearFacturaRequest DTO
+    const estadoPagoNormalizado =
+      input.estadoPago === 'PARCIAL' ? 'ABONO_PARCIAL' : input.estadoPago;
+    const bodyPayload: any = {
+      cliente: input.cliente.trim(),
+      detalles: input.detalles.map((d) => ({
+        productoId: d.producto.id,
+        cantidad: d.cantidad,
+      })),
+      estadoPago: estadoPagoNormalizado,
+      valorAbonado: input.valorAbonado,
+      medioPagoInicial: input.medioPagoInicial || 'EFECTIVO',
+      notasPago: input.notasPago || null,
+    };
+    if (input.telefonoCliente) {
+      bodyPayload.telefonoCliente = input.telefonoCliente.trim();
+    }
+
     const res = await fetch(`${BASE_URL}/factura/crear`, {
       method: 'POST',
       credentials: 'include',
       headers,
-      body: JSON.stringify(input),
+      body: JSON.stringify(bodyPayload),
     });
 
     if (!res.ok) {
@@ -517,6 +560,103 @@ export const inventoryApi = {
         // ignore
       }
       throw new ApiError(errorText || `Error al registrar factura (${res.status})`, res.status);
+    }
+
+    return await res.json();
+  },
+
+  async recordInvoicePayment(
+    id: number,
+    additionalPayment: number,
+    isDemo: boolean,
+    medioPago: MedioPago = 'EFECTIVO',
+    notas?: string,
+    currentUser?: Usuario | null
+  ): Promise<Factura> {
+    if (isDemo) {
+      return demoStore.updateInvoicePayment(id, additionalPayment, medioPago, notas, currentUser);
+    }
+
+    await this.ensureCsrf();
+    const token = getXsrfToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['X-XSRF-TOKEN'] = token;
+    }
+
+    const res = await fetch(`${BASE_URL}/factura/${id}/abonos`, {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify({
+        monto: additionalPayment,
+        medioPago,
+        notas: notas || null,
+      }),
+    });
+
+    if (!res.ok) {
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al registrar abono (${res.status})`, res.status);
+    }
+
+    // Recuperar la factura actualizada
+    const updatedRes = await fetch(`${BASE_URL}/factura/obtener-factura-por-id/${id}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (updatedRes.ok) {
+      return await updatedRes.json();
+    }
+    throw new ApiError('Error al recuperar factura actualizada tras registrar abono', updatedRes.status);
+  },
+
+  async cancelInvoice(
+    id: number,
+    motivo: string,
+    isDemo: boolean = false,
+    currentUser?: Usuario | null
+  ): Promise<Factura> {
+    if (isDemo) {
+      return demoStore.cancelInvoice(id, motivo, currentUser);
+    }
+
+    await this.ensureCsrf();
+    const token = getXsrfToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['X-XSRF-TOKEN'] = token;
+    }
+
+    const res = await fetch(`${BASE_URL}/factura/${id}/anular`, {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify({ motivo: motivo || null }),
+    });
+
+    if (!res.ok) {
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al anular factura (${res.status})`, res.status);
     }
 
     return await res.json();

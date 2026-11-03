@@ -61,8 +61,16 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
   const [categoria, setCategoria] = useState<CategoriaProducto>(
     editingProduct ? editingProduct.categoria : 'ROSTRO'
   );
+  const activeBrands = brands.filter(
+    (b) => b.activa !== false || (editingProduct?.marca?.id === b.id)
+  );
+
   const [marcaId, setMarcaId] = useState<number | ''>(
-    editingProduct?.marca?.id ? editingProduct.marca.id : brands.length > 0 ? brands[0].id : ''
+    editingProduct?.marca?.id
+      ? editingProduct.marca.id
+      : activeBrands.length > 0
+        ? activeBrands[0].id
+        : ''
   );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -240,9 +248,9 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
               <option value="" disabled>
                 Seleccionar marca...
               </option>
-              {brands.map((b) => (
+              {activeBrands.map((b) => (
                 <option key={b.id} value={b.id}>
-                  {b.nombre}
+                  {b.nombre}{b.activa === false ? ' (Inactiva)' : ''}
                 </option>
               ))}
             </select>

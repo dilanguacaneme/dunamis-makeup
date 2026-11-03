@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, AlertCircle, CheckCircle, Minus, Plus } from 'lucide-react';
+import { Edit2, Trash2, AlertCircle, CheckCircle, Minus, Plus, RotateCcw } from 'lucide-react';
 import type { Producto, CategoriaProducto } from '../types';
 
 interface ProductGridProps {
@@ -9,6 +9,7 @@ interface ProductGridProps {
   onQuickAdjustStock: (id: number, newCantidad: number) => void;
   updatingStockId: number | null;
   isAdmin?: boolean;
+  onReactivate?: (product: Producto) => void;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -18,6 +19,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   onQuickAdjustStock,
   updatingStockId,
   isAdmin = true,
+  onReactivate,
 }) => {
   const formatCOP = (val: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -85,6 +87,11 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                     }}
                   >
                     {product.marca.nombre}
+                  </span>
+                )}
+                {product.activo === false && (
+                  <span className="badge-status badge-inactive" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem' }}>
+                    Inactivo
                   </span>
                 )}
               </div>
@@ -177,29 +184,48 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                   paddingTop: '0.75rem',
                 }}
               >
-                <div className="stock-stepper">
+                {product.activo === false ? (
                   <button
                     type="button"
-                    className="stock-stepper-btn"
-                    disabled={product.cantidad <= 0 || isUpdating}
-                    onClick={() => onQuickAdjustStock(product.id, Math.max(0, product.cantidad - 1))}
-                    title="Restar 1 unidad (no permite valores negativos)"
+                    className="btn-outline"
+                    onClick={() => onReactivate && onReactivate(product)}
+                    style={{
+                      padding: '0.25rem 0.55rem',
+                      fontSize: '0.75rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                    }}
+                    title="Reactivar producto en inventario activo"
                   >
-                    <Minus size={12} />
+                    <RotateCcw size={13} />
+                    <span>Reactivar</span>
                   </button>
-                  <span className="stock-stepper-value tabular-numbers">
-                    {product.cantidad}
-                  </span>
-                  <button
-                    type="button"
-                    className="stock-stepper-btn"
-                    disabled={isUpdating}
-                    onClick={() => onQuickAdjustStock(product.id, product.cantidad + 1)}
-                    title="Sumar 1 unidad"
-                  >
-                    <Plus size={12} />
-                  </button>
-                </div>
+                ) : (
+                  <div className="stock-stepper">
+                    <button
+                      type="button"
+                      className="stock-stepper-btn"
+                      disabled={product.cantidad <= 0 || isUpdating}
+                      onClick={() => onQuickAdjustStock(product.id, Math.max(0, product.cantidad - 1))}
+                      title="Restar 1 unidad (no permite valores negativos)"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="stock-stepper-value tabular-numbers">
+                      {product.cantidad}
+                    </span>
+                    <button
+                      type="button"
+                      className="stock-stepper-btn"
+                      disabled={isUpdating}
+                      onClick={() => onQuickAdjustStock(product.id, product.cantidad + 1)}
+                      title="Sumar 1 unidad"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <button
@@ -211,15 +237,17 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                   >
                     <Edit2 size={15} />
                   </button>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={() => onDelete(product)}
-                    title="Eliminar producto"
-                    style={{ padding: '0.35rem', color: 'var(--color-crimson)' }}
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  {product.activo !== false && (
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      onClick={() => onDelete(product)}
+                      title="Eliminar o desactivar producto"
+                      style={{ padding: '0.35rem', color: 'var(--color-crimson)' }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
                 </div>
               </div>
             )}
