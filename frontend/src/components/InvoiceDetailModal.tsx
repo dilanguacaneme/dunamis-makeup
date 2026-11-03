@@ -338,7 +338,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                 Dunamis Makeup
               </h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                Atelier Privado · Comprobante Oficial de Venta
+                Comprobante Oficial de Venta
               </p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
                 <span
@@ -467,7 +467,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                   {invoice.fecha || 'Hoy'}
                 </div>
                 <div style={{ color: 'var(--color-text-muted)', marginTop: '0.15rem' }}>
-                  Por: {invoice.vendedorNombre || invoice.vendedorUsuario || 'Personal Atelier'}
+                  Por: {invoice.vendedorNombre || invoice.vendedorUsuario || 'Dunamis Makeup'}
                 </div>
               </div>
             </div>

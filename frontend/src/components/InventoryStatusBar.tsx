@@ -1,12 +1,12 @@
 import React from 'react';
 import { TrendingUp, Sparkles } from 'lucide-react';
 
-interface AtelierStatusBarProps {
+interface InventoryStatusBarProps {
   totalInventory: number;
   totalSKUs: number;
 }
 
-export const AtelierStatusBar: React.FC<AtelierStatusBarProps> = ({
+export const InventoryStatusBar: React.FC<InventoryStatusBarProps> = ({
   totalInventory,
   totalSKUs,
 }) => {

@@ -56,7 +56,7 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
     },
     brands: {
       title: 'Marcas Cosméticas',
-      subtitle: 'Catálogo oficial de marcas activas del Atelier',
+      subtitle: 'Catálogo oficial de marcas activas',
       icon: <Tag size={18} color="var(--color-rosewood)" />,
     },
   };
@@ -73,9 +73,7 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)', fontWeight: 500 }}>
-                Atelier
-              </span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)', fontWeight: 500 }}>Dunamis</span>
               <span style={{ fontSize: '0.7rem', color: 'var(--color-border)' }}>/</span>
               <h2 className="desktop-topbar-title">{current.title}</h2>
             </div>
@@ -106,8 +104,8 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
                 isDemo
                   ? 'Navegando con catálogo local ficticio (localStorage)'
                   : backendOnline
-                  ? 'Conectado a Spring Boot en http://localhost:8080'
-                  : 'Servidor Spring Boot no detectado'
+                  ? 'Conectado al servidor'
+                  : 'Sin conexión con el servidor'
               }
             >
               {isDemo ? <Database size={12} /> : <Server size={12} />}
@@ -115,7 +113,7 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
                 {isDemo
                   ? 'Modo Demo'
                   : backendOnline
-                  ? 'Spring Boot En línea'
+                  ? 'En línea'
                   : 'Desconectado'}
               </span>
             </div>
@@ -138,11 +136,11 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
               }}
               title={
                 isDemo
-                  ? 'Cambiar a conexión con backend Spring Boot'
+                  ? 'Conectar con el servidor'
                   : 'Cambiar a modo demostración con datos locales'
               }
             >
-              <span>{isDemo ? 'Cambiar a Backend' : 'Cambiar a Demo'}</span>
+              <span>{isDemo ? 'Usar Servidor' : 'Modo Demo'}</span>
             </button>
 
             {isDemo && onToggleDemoRole && (
@@ -175,7 +173,7 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
             className="btn-ghost"
             onClick={onRefresh}
             disabled={isLoading}
-            title="Recargar datos del Atelier"
+            title="Recargar datos"
             aria-label="Recargar datos"
             style={{ padding: '0.45rem', borderRadius: 'var(--radius-md)' }}
           >

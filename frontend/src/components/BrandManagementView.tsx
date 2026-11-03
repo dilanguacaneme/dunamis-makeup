@@ -191,7 +191,7 @@ export const BrandManagementView: React.FC<BrandManagementViewProps> = ({
               </span>
             </div>
             <p style={{ fontSize: '0.825rem', color: 'var(--color-text-muted)' }}>
-              Catálogo de marcas activas e históricas para referencias del Atelier Dunamis Makeup.
+              Catálogo de marcas activas e históricas para referencias de Dunamis Makeup.
             </p>
           </div>
         </div>
