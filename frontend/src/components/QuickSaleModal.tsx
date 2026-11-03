@@ -58,7 +58,7 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
   products,
   onClose,
   onSaleSuccess,
-  isDemo,
+  isDemo: _isDemo,
 }) => {
   const availableProducts = products.filter((p) => p.activo !== false && p.cantidad > 0);
 
@@ -163,8 +163,8 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
       }
     }
 
-    // Validate partial payment amount if chosen (Demo mode only)
-    if (isDemo && (estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL')) {
+    // Validate partial payment amount if chosen
+    if (estadoPago === 'PARCIAL' || estadoPago === 'ABONO_PARCIAL') {
       if (valorAbonadoCalculado <= 0) {
         setError('El valor abonado debe ser mayor a cero. Para ventas sin anticipo elige "Pendiente".');
         return;
@@ -184,12 +184,9 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
           producto: { id: item.productId },
           cantidad: item.cantidad,
         })),
-        ...(isDemo
-          ? {
-              estadoPago,
-              valorAbonado: valorAbonadoCalculado,
-            }
-          : {}),
+        estadoPago,
+        valorAbonado: valorAbonadoCalculado,
+        medioPagoInicial: 'EFECTIVO',
       };
 
       await onSaleSuccess(facturaPayload);
@@ -431,43 +428,17 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
           </div>
         </div>
 
-        {/* Payment Status Selector (Only in Demo Mode; in Connected Mode, show backend notice) */}
-        {!isDemo ? (
-          <div
-            style={{
-              backgroundColor: 'var(--color-accent-gold-light)',
-              border: '1px solid var(--color-accent-gold-border)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '1rem',
-              marginBottom: '1.5rem',
-              fontSize: '0.825rem',
-              color: 'var(--color-rosewood-deep)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '0.65rem',
-            }}
-          >
-            <AlertCircle size={18} color="var(--color-accent-gold)" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <strong style={{ display: 'block', marginBottom: '0.2rem' }}>
-                Registro de Pagos en Modo Conectado
-              </strong>
-              <span>
-                El servidor Spring Boot actual registra la venta y descuenta el stock, pero aún no dispone de columnas para almacenar estados de pago ni abonos. Esta factura se guardará como <strong>"Sin registro de pago"</strong> hasta que el backend incorpore persistencia de cobros. Para probar estados y abonos interactivos, utiliza el Modo Demostración.
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '1.1rem',
-              marginBottom: '1.5rem',
-              boxShadow: 'var(--shadow-subtle)',
-            }}
-          >
+        {/* Payment Status Selector */}
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.1rem',
+            marginBottom: '1.5rem',
+            boxShadow: 'var(--shadow-subtle)',
+          }}
+        >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.75rem' }}>
               <CreditCard size={16} color="var(--color-rosewood)" />
               <label className="form-label" style={{ marginBottom: 0 }}>
@@ -614,7 +585,6 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
               </div>
             )}
           </div>
-        )}
 
         {/* Total calculation banner */}
         <div

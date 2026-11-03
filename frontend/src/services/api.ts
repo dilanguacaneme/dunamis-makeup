@@ -527,13 +527,15 @@ export const inventoryApi = {
     }
 
     // Map input to match CrearFacturaRequest DTO
+    const estadoPagoNormalizado =
+      input.estadoPago === 'PARCIAL' ? 'ABONO_PARCIAL' : input.estadoPago;
     const bodyPayload: any = {
       cliente: input.cliente.trim(),
       detalles: input.detalles.map((d) => ({
         productoId: d.producto.id,
         cantidad: d.cantidad,
       })),
-      estadoPago: input.estadoPago,
+      estadoPago: estadoPagoNormalizado,
       valorAbonado: input.valorAbonado,
       medioPagoInicial: input.medioPagoInicial || 'EFECTIVO',
       notasPago: input.notasPago || null,

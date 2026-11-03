@@ -240,4 +240,41 @@ class FacturaDtoTest {
             assertTrue(response.abonos().isEmpty());
         }
     }
+
+    @Nested
+    @DisplayName("EstadoPagoFactura Deserialización y Tolerancia Dual (Spec 007 - RF-005)")
+    class EstadoPagoFacturaDeserializationTests {
+
+        @Test
+        @DisplayName("Debe resolver PARCIAL y ABONO_PARCIAL hacia EstadoPagoFactura.ABONO_PARCIAL")
+        void testMapeoParcial() {
+            assertEquals(EstadoPagoFactura.ABONO_PARCIAL, EstadoPagoFactura.fromString("PARCIAL"));
+            assertEquals(EstadoPagoFactura.ABONO_PARCIAL, EstadoPagoFactura.fromString("parcial"));
+            assertEquals(EstadoPagoFactura.ABONO_PARCIAL, EstadoPagoFactura.fromString("ABONO_PARCIAL"));
+            assertEquals(EstadoPagoFactura.ABONO_PARCIAL, EstadoPagoFactura.fromString("abono_parcial"));
+        }
+
+        @Test
+        @DisplayName("Debe resolver PAGADA y PENDIENTE correctamente")
+        void testMapeoPagadaYPendiente() {
+            assertEquals(EstadoPagoFactura.PAGADA, EstadoPagoFactura.fromString("PAGADA"));
+            assertEquals(EstadoPagoFactura.PAGADA, EstadoPagoFactura.fromString("pagada"));
+            assertEquals(EstadoPagoFactura.PENDIENTE, EstadoPagoFactura.fromString("PENDIENTE"));
+            assertEquals(EstadoPagoFactura.PENDIENTE, EstadoPagoFactura.fromString("pendiente"));
+        }
+
+        @Test
+        @DisplayName("Debe predeterminar PAGADA ante valores nulos o vacíos")
+        void testMapeoNuloOVacio() {
+            assertEquals(EstadoPagoFactura.PAGADA, EstadoPagoFactura.fromString(null));
+            assertEquals(EstadoPagoFactura.PAGADA, EstadoPagoFactura.fromString(""));
+            assertEquals(EstadoPagoFactura.PAGADA, EstadoPagoFactura.fromString("   "));
+        }
+
+        @Test
+        @DisplayName("Debe arrojar IllegalArgumentException ante valores no reconocidos")
+        void testMapeoInvalido() {
+            assertThrows(IllegalArgumentException.class, () -> EstadoPagoFactura.fromString("DESCONOCIDO"));
+        }
+    }
 }

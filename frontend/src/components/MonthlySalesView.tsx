@@ -339,7 +339,7 @@ export const MonthlySalesView: React.FC<MonthlySalesViewProps> = ({
         >
           <Info size={16} color="var(--color-accent-gold)" style={{ flexShrink: 0 }} />
           <span>
-            <strong>Modo Conectado:</strong> Los totales de ventas y facturas se calculan directamente a partir de los datos registrados en el servidor Spring Boot. El registro de abonos y saldos pendientes permanece activo localmente hasta que el backend incorpore las columnas de pago en base de datos.
+            <strong>Modo Conectado:</strong> Los totales de ventas, estados de pago (pagadas, abonos parciales, pendientes) y saldos se sincronizan directamente con el servidor Spring Boot y la base de datos PostgreSQL.
           </span>
         </div>
       )}
