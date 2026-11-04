@@ -132,13 +132,13 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
         <AlertCircle size={22} color="var(--color-crimson)" style={{ flexShrink: 0, marginTop: '0.1rem' }} />
         <div>
           <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-crimson)', marginBottom: '0.2rem' }}>
-            Aviso de conexión con el backend
+            Aviso de conexión
           </h4>
           <p style={{ fontSize: '0.85rem', color: '#6A191A', maxWidth: '640px', lineHeight: 1.4 }}>
             {message}
           </p>
           <div style={{ fontSize: '0.78rem', color: '#7E2021', marginTop: '0.35rem' }}>
-            Si el servidor Spring Boot local no está corriendo en http://localhost:8080, puedes explorar la aplicación usando datos de demostración aislados.
+            No se logró establecer contacto con el servidor. Puedes reintentar o explorar la aplicación en modo demostración.
           </div>
         </div>
       </div>

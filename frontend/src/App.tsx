@@ -17,7 +17,7 @@ import type {
 import { Sidebar } from './components/Sidebar';
 import { MobileHeader } from './components/MobileHeader';
 import { DesktopTopBar } from './components/DesktopTopBar';
-import { AtelierStatusBar } from './components/AtelierStatusBar';
+import { InventoryStatusBar } from './components/InventoryStatusBar';
 import { ProductToolbar } from './components/ProductToolbar';
 import { ProductTable } from './components/ProductTable';
 import { ProductGrid } from './components/ProductGrid';
@@ -126,7 +126,7 @@ export const App: React.FC = () => {
 
         if (!health.online) {
           setError(
-            'No se logró establecer conexión con el backend Spring Boot en http://localhost:8080. Puedes reintentar o activar el modo de demostración para gestionar datos locales de prueba.'
+            'No se logró establecer conexión con el servidor. Puedes reintentar o activar el modo de demostración para explorar los datos locales.'
           );
           setIsLoading(false);
           return;
@@ -155,7 +155,7 @@ export const App: React.FC = () => {
       console.error('Error fetching data:', err);
       if (err instanceof ApiError && err.status === 401) {
         setUser(null);
-        setError('Tu sesión en el Atelier ha expirado. Por favor inicia sesión nuevamente.');
+        setError('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
       } else {
         setError(err.message || 'Error al comunicarse con el servidor.');
       }
@@ -244,7 +244,7 @@ export const App: React.FC = () => {
       newDemoMode ? 'Modo Demostración Activo' : 'Conectando con Backend',
       newDemoMode
         ? 'Utilizando catálogo local de pruebas con marcas y facturas precargadas.'
-        : 'Intentando comunicarse con el backend Spring Boot en http://localhost:8080.'
+        : 'Conectando con el servidor...'
     );
     void loadData(newDemoMode, user);
   };
@@ -273,7 +273,7 @@ export const App: React.FC = () => {
     addToast(
       'success',
       'Sesión Iniciada',
-      `Bienvenida al Atelier, ${loggedUser.fullName || loggedUser.username}. (${loggedUser.role === 'ADMIN' ? 'Administradora' : 'Vendedora'})`
+      `Bienvenida, ${loggedUser.fullName || loggedUser.username}. (${loggedUser.role === 'ADMIN' ? 'Administradora' : 'Vendedora'})`
     );
     await loadData(isDemo, loggedUser);
   };
@@ -297,7 +297,7 @@ export const App: React.FC = () => {
     addToast(
       'info',
       'Modo Demostración Activo',
-      'Has ingresado al Atelier con datos ficticios locales. No se requiere conexión con el backend.'
+      'Has ingresado en modo demostración con datos de prueba locales.'
     );
   };
 
@@ -517,7 +517,7 @@ export const App: React.FC = () => {
             Dunamis Makeup
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-            Verificando sesión en el Atelier...
+            Verificando sesión...
           </p>
         </div>
       </div>
@@ -603,8 +603,8 @@ export const App: React.FC = () => {
           {/* TAB 1: Inventory Management */}
           {activeTab === 'inventory' && (
             <>
-              {/* Atelier Status Bar: single valuation metric */}
-              <AtelierStatusBar
+              {/* Inventory Status Bar: single valuation metric */}
+              <InventoryStatusBar
                 totalInventory={totalInventory}
                 totalSKUs={products.length}
               />
@@ -644,7 +644,7 @@ export const App: React.FC = () => {
                     products.length === 0
                       ? isAdmin
                         ? 'Aún no se han registrado productos cosméticos en este catálogo. Comienza añadiendo el primero.'
-                        : 'El inventario está vacío actualmente. Consulta con la administración del Atelier.'
+                        : 'El inventario está vacío actualmente. Consulta con la administración.'
                       : 'No hay productos que coincidan con los filtros seleccionados o el término de búsqueda.'
                   }
                   actionText={

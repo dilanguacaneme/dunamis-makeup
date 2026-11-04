@@ -1,24 +1,21 @@
 import React, { useState } from 'react';
-import { Sparkles, Lock, AlertCircle, RefreshCw } from 'lucide-react';
+import { Sparkles, Lock, AlertCircle } from 'lucide-react';
 
 interface LoginScreenProps {
   onLogin: (username: string, password: string) => Promise<void>;
   onEnterDemo: () => void;
-  isBackendOnline: boolean | null;
+  isBackendOnline?: boolean | null;
   onRefreshHealth?: () => Promise<void>;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
   onLogin,
   onEnterDemo,
-  isBackendOnline,
-  onRefreshHealth,
 }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCheckingBackend, setIsCheckingBackend] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,86 +40,23 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   };
 
-  const handleRefreshConnection = async () => {
-    if (!onRefreshHealth || isCheckingBackend) return;
-    try {
-      setIsCheckingBackend(true);
-      await onRefreshHealth();
-    } finally {
-      setIsCheckingBackend(false);
-    }
-  };
-
   return (
     <div className="login-screen-wrapper">
       <div className="login-card">
         {/* Brand Header */}
         <div className="login-brand-header">
           <div className="login-brand-crest">
-            <Sparkles size={24} />
+            <img
+              src="/logo-dunamis.webp"
+              alt="Dunamis Makeup"
+              className="login-brand-logo-img"
+            />
           </div>
           <h1 className="login-brand-title">Dunamis Makeup</h1>
           <p className="login-brand-subtitle">
-            Atelier · Gestión y Control de Inventario
+            Gestión y Control de Inventario
           </p>
         </div>
-
-        {/* Backend Connectivity Status */}
-        <div
-          className={`login-connection-badge ${
-            isBackendOnline ? 'online' : 'offline'
-          }`}
-        >
-          <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>
-            {isBackendOnline ? '●' : '○'}
-          </span>
-          <span style={{ flex: 1 }}>
-            {isBackendOnline
-              ? 'Backend Spring Boot en línea (http://localhost:8080)'
-              : 'Servidor Spring Boot no detectado en http://localhost:8080'}
-          </span>
-          {onRefreshHealth && (
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={handleRefreshConnection}
-              disabled={isCheckingBackend}
-              title="Comprobar conexión nuevamente"
-              style={{ padding: '0.2rem', color: 'inherit' }}
-            >
-              <RefreshCw
-                size={13}
-                style={{
-                  animation: isCheckingBackend ? 'spin 1s linear infinite' : 'none',
-                }}
-              />
-            </button>
-          )}
-        </div>
-
-        {/* Offline Demo Recommendation Banner */}
-        {isBackendOnline === false && (
-          <div
-            style={{
-              backgroundColor: 'var(--color-rose-subtle)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              padding: '0.65rem 0.85rem',
-              marginBottom: '1.25rem',
-              fontSize: '0.78rem',
-              color: 'var(--color-text-muted)',
-              lineHeight: 1.45,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.55rem',
-            }}
-          >
-            <Sparkles size={16} color="var(--color-rosewood)" style={{ flexShrink: 0 }} />
-            <span>
-              Servidor Spring Boot no detectado. Puedes ingresar de inmediato con <strong>Explorar con datos ficticios</strong> para utilizar el catálogo de demostración sin credenciales.
-            </span>
-          </div>
-        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit}>
@@ -180,9 +114,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               autoComplete="current-password"
               required
             />
-            <span className="form-hint">
-              Autenticación oficial Spring Security (/api/auth/login).
-            </span>
           </div>
 
           {/* Submit Action */}
@@ -200,7 +131,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             >
               <Lock size={15} />
               <span>
-                {isSubmitting ? 'Verificando credenciales...' : 'Ingresar al Atelier'}
+                {isSubmitting ? 'Verificando credenciales...' : 'Iniciar Sesión'}
               </span>
             </button>
           </div>

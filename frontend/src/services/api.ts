@@ -135,7 +135,7 @@ export const inventoryApi = {
         throw err;
       }
       throw new ApiError(
-        'No se logró conectar con el backend Spring Boot en http://localhost:8080. Verifique que el servidor esté en ejecución.',
+        'No se logró conectar con el servidor. Verifique su conexión e intente nuevamente.',
         0
       );
     }
@@ -670,13 +670,13 @@ export const inventoryApi = {
         credentials: 'include',
       });
       if (res.ok) {
-        return { online: true, message: 'Backend Spring Boot conectado en http://localhost:8080' };
+        return { online: true, message: 'Servidor en línea' };
       }
       return { online: false, message: `El backend respondió con estado ${res.status}` };
     } catch {
       return {
         online: false,
-        message: 'No hay conexión con el backend Spring Boot en http://localhost:8080.',
+        message: 'Sin conexión con el servidor.',
       };
     }
   },

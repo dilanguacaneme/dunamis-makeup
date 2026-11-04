@@ -33,7 +33,7 @@ export const downloadInvoicePDF = (invoice: Factura): void => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(242, 223, 229); // #F2DFE5 (Rose soft)
-  doc.text('Atelier Cosmético & Control de Inventario', margin, 20);
+  doc.text('Cosmética & Control de Inventario', margin, 20);
 
   // Invoice Number Badge in Header
   doc.setFont('helvetica', 'bold');
@@ -83,7 +83,7 @@ export const downloadInvoicePDF = (invoice: Factura): void => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(58, 27, 40);
-  const vendedor = invoice.vendedorNombre || invoice.vendedorUsuario || 'Personal Atelier';
+  const vendedor = invoice.vendedorNombre || invoice.vendedorUsuario || 'Dunamis Makeup';
   doc.text(`Atendido por: ${vendedor}`, midX, currentY + 14);
 
   // Payment status label
@@ -273,7 +273,7 @@ export const downloadInvoicePDF = (invoice: Factura): void => {
   doc.setFontSize(7);
   doc.setTextColor(180, 160, 170);
   doc.text(
-    `Documento generado electrónicamente · Dunamis Makeup Atelier · Factura #${invoice.id}`,
+    `Documento generado electrónicamente · Dunamis Makeup · Factura #${invoice.id}`,
     pageWidth / 2,
     285,
     { align: 'center' }

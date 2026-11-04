@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import {
-  Sparkles,
   Package,
   Receipt,
   Tag,
@@ -60,18 +59,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Main Sidebar Element (Strictly Pure Navigation) */}
       <aside
         className={`sidebar ${isMobileOpen ? 'open' : ''}`}
-        aria-label="Navegación principal del Atelier"
+        aria-label="Navegación principal"
       >
         {/* 1. Brand Header */}
         <div className="sidebar-brand-section">
           <div className="sidebar-brand-identity">
             <div className="sidebar-brand-crest">
-              <Sparkles size={20} />
+              <img
+              src="/logo-dunamis.webp"
+              alt="Dunamis Makeup"
+              className="sidebar-brand-logo-img"
+            />
             </div>
             <div className="sidebar-brand-info">
               <div className="sidebar-brand-title-row">
                 <h1 className="sidebar-brand-title">Dunamis Makeup</h1>
-                <span className="sidebar-brand-badge">Atelier</span>
+                <span className="sidebar-brand-badge">Cosmética</span>
               </div>
               <p className="sidebar-brand-subtitle">Gestión cosmética & ventas</p>
             </div>

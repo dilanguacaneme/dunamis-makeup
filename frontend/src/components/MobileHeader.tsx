@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Sparkles, RefreshCw, LogOut, Database, Server } from 'lucide-react';
+import { Menu, RefreshCw, LogOut, Database, Server } from 'lucide-react';
 import type { Usuario } from '../types';
 
 interface MobileHeaderProps {
@@ -26,7 +26,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   const isAdmin = user.role === 'ADMIN';
 
   return (
-    <header className="mobile-header" aria-label="Cabecera móvil del Atelier">
+    <header className="mobile-header" aria-label="Cabecera móvil">
       {/* Left: Hamburger menu toggle button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
         <button
@@ -41,11 +41,15 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
         {/* Brand identity */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div className="mobile-brand-crest">
-            <Sparkles size={16} />
+            <img
+              src="/logo-dunamis.webp"
+              alt="Dunamis Makeup"
+              className="mobile-brand-logo-img"
+            />
           </div>
           <div style={{ lineHeight: 1.15 }}>
             <span className="mobile-brand-title">Dunamis Makeup</span>
-            <span className="mobile-brand-subtitle">Atelier Cosmético</span>
+            <span className="mobile-brand-subtitle">Cosmética & Belleza</span>
           </div>
         </div>
       </div>
@@ -85,10 +89,10 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           }}
           title={
             isDemo
-              ? 'Modo Demo (toca para cambiar a backend)'
+              ? 'Modo Demo (toca para cambiar a servidor)'
               : backendOnline
-              ? 'Servidor Spring Boot en línea (toca para cambiar a demo)'
-              : 'Servidor desconectado (toca para cambiar a demo)'
+              ? 'En línea (toca para cambiar a demo)'
+              : 'Desconectado (toca para cambiar a demo)'
           }
         >
           {isDemo ? <Database size={11} /> : <Server size={11} />}

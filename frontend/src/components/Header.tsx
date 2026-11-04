@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Sparkles,
   LogOut,
   RefreshCw,
   Database,
@@ -72,15 +71,22 @@ export const Header: React.FC<HeaderProps> = ({
                 width: '2.5rem',
                 height: '2.5rem',
                 borderRadius: 'var(--radius-md)',
-                background: 'linear-gradient(135deg, var(--color-rosewood) 0%, var(--color-rosewood-deep) 100%)',
-                color: '#FFFFFF',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid var(--color-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(148, 73, 96, 0.25)',
+                boxShadow: '0 2px 6px rgba(148, 73, 96, 0.1)',
+                padding: '0.2rem',
+                overflow: 'hidden',
+                flexShrink: 0,
               }}
             >
-              <Sparkles size={20} />
+              <img
+                src="/logo-dunamis.webp"
+                alt="Dunamis Makeup"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -105,9 +111,7 @@ export const Header: React.FC<HeaderProps> = ({
                     padding: '0.15rem 0.55rem',
                     borderRadius: 'var(--radius-full)',
                   }}
-                >
-                  Atelier
-                </span>
+                >Cosmética</span>
               </div>
               <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                 Gestión cosmética & facturación
@@ -125,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
               border: '1px solid var(--color-border)',
               gap: '0.2rem',
             }}
-            aria-label="Navegación principal del Atelier"
+            aria-label="Navegación principal"
           >
             <button
               type="button"
@@ -202,7 +206,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onToggleDemo}
             title={
               isDemo
-                ? 'Cambiar a conexión en tiempo real con backend Spring Boot'
+                ? 'Conectar con el servidor'
                 : 'Cambiar a datos de demostración locales'
             }
             style={{
@@ -225,8 +229,8 @@ export const Header: React.FC<HeaderProps> = ({
               {isDemo
                 ? 'Modo Demostración'
                 : backendOnline
-                ? 'Backend Spring Boot (En línea)'
-                : 'Backend Spring Boot'}
+                ? 'En línea'
+                : 'Servidor'}
             </span>
             <span
               style={{
@@ -236,7 +240,7 @@ export const Header: React.FC<HeaderProps> = ({
                 marginLeft: '0.2rem',
               }}
             >
-              {isDemo ? 'Usar backend' : 'Ver demo'}
+              {isDemo ? 'Usar servidor' : 'Ver demo'}
             </span>
           </button>
 
@@ -264,7 +268,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="btn-ghost"
             onClick={onRefresh}
             disabled={isLoading}
-            title="Recargar datos del Atelier"
+            title="Recargar datos"
             style={{ padding: '0.45rem', borderRadius: 'var(--radius-md)' }}
           >
             <RefreshCw
