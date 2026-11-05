@@ -42,7 +42,7 @@ export const App: React.FC = () => {
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
   const [isDemo, setIsDemo] = useState<boolean>(() => {
-    return localStorage.getItem('dunamis_mode') === 'demo';
+    return sessionStorage.getItem('dunamis_mode') === 'demo';
   });
 
   // Navigation tab
@@ -170,6 +170,11 @@ export const App: React.FC = () => {
 
     const checkInitialSession = async () => {
       setIsAuthChecking(true);
+      // Clean legacy localStorage demo session keys so users are not trapped in demo mode
+      localStorage.removeItem('dunamis_demo_active');
+      localStorage.removeItem('dunamis_demo_user');
+      localStorage.removeItem('dunamis_mode');
+
       try {
         const health = await inventoryApi.checkBackendHealth();
         if (isMounted) setBackendOnline(health.online);
@@ -178,13 +183,13 @@ export const App: React.FC = () => {
         const existingUser = await inventoryApi.getCurrentUser(false);
         if (existingUser && isMounted) {
           setUser(existingUser);
-          const savedDemoMode = localStorage.getItem('dunamis_mode') === 'demo';
+          const savedDemoMode = sessionStorage.getItem('dunamis_mode') === 'demo';
           setIsDemo(savedDemoMode);
           await loadData(savedDemoMode, existingUser);
         } else if (isMounted) {
-          const savedDemoActive = localStorage.getItem('dunamis_demo_active') === 'true';
+          const savedDemoActive = sessionStorage.getItem('dunamis_demo_active') === 'true';
           if (savedDemoActive) {
-            const savedUserStr = localStorage.getItem('dunamis_demo_user');
+            const savedUserStr = sessionStorage.getItem('dunamis_demo_user');
             let demoUser = DEMO_ADMIN_USER;
             if (savedUserStr) {
               try {
@@ -202,9 +207,9 @@ export const App: React.FC = () => {
         }
       } catch {
         if (isMounted) {
-          const savedDemoActive = localStorage.getItem('dunamis_demo_active') === 'true';
+          const savedDemoActive = sessionStorage.getItem('dunamis_demo_active') === 'true';
           if (savedDemoActive) {
-            const savedUserStr = localStorage.getItem('dunamis_demo_user');
+            const savedUserStr = sessionStorage.getItem('dunamis_demo_user');
             let demoUser = DEMO_ADMIN_USER;
             if (savedUserStr) {
               try {
@@ -238,7 +243,7 @@ export const App: React.FC = () => {
     if (!user) return;
     const newDemoMode = !isDemo;
     setIsDemo(newDemoMode);
-    localStorage.setItem('dunamis_mode', newDemoMode ? 'demo' : 'live');
+    sessionStorage.setItem('dunamis_mode', newDemoMode ? 'demo' : 'live');
     addToast(
       'info',
       newDemoMode ? 'Modo Demostración Activo' : 'Conectando con Backend',
@@ -254,7 +259,7 @@ export const App: React.FC = () => {
     if (!isDemo || !user) return;
     const nextUser = user.role === 'ADMIN' ? DEMO_SELLER_USER : DEMO_ADMIN_USER;
     setUser(nextUser);
-    localStorage.setItem('dunamis_demo_user', JSON.stringify(nextUser));
+    sessionStorage.setItem('dunamis_demo_user', JSON.stringify(nextUser));
     addToast(
       'info',
       'Rol de Demostración Cambiado',
@@ -266,6 +271,8 @@ export const App: React.FC = () => {
   // Auth Handlers
   const handleLogin = async (username: string, pass: string) => {
     const loggedUser = await inventoryApi.login(username, pass, false);
+    sessionStorage.removeItem('dunamis_demo_active');
+    sessionStorage.removeItem('dunamis_demo_user');
     localStorage.removeItem('dunamis_demo_active');
     localStorage.removeItem('dunamis_demo_user');
     setUser(loggedUser);
@@ -281,9 +288,9 @@ export const App: React.FC = () => {
   // Demo Entry Handler
   const handleEnterDemo = () => {
     setIsDemo(true);
-    localStorage.setItem('dunamis_mode', 'demo');
-    localStorage.setItem('dunamis_demo_active', 'true');
-    const savedUserStr = localStorage.getItem('dunamis_demo_user');
+    sessionStorage.setItem('dunamis_mode', 'demo');
+    sessionStorage.setItem('dunamis_demo_active', 'true');
+    const savedUserStr = sessionStorage.getItem('dunamis_demo_user');
     let demoUser = DEMO_ADMIN_USER;
     if (savedUserStr) {
       try {
@@ -304,6 +311,7 @@ export const App: React.FC = () => {
   // Reset Demo Catalog
   const handleResetDemoData = async () => {
     demoStore.resetToDefaults();
+    sessionStorage.removeItem('dunamis_demo_user');
     localStorage.removeItem('dunamis_demo_user');
     setUser(DEMO_ADMIN_USER);
     await loadData(true, DEMO_ADMIN_USER);
@@ -319,6 +327,9 @@ export const App: React.FC = () => {
       await inventoryApi.logout(isDemo);
     } finally {
       setUser(null);
+      sessionStorage.removeItem('dunamis_mode');
+      sessionStorage.removeItem('dunamis_demo_active');
+      sessionStorage.removeItem('dunamis_demo_user');
       localStorage.removeItem('dunamis_mode');
       localStorage.removeItem('dunamis_demo_active');
       localStorage.removeItem('dunamis_demo_user');
@@ -594,7 +605,8 @@ export const App: React.FC = () => {
               onRetry={() => loadData(false, user)}
               onUseDemo={() => {
                 setIsDemo(true);
-                localStorage.setItem('dunamis_mode', 'demo');
+                sessionStorage.setItem('dunamis_mode', 'demo');
+                sessionStorage.setItem('dunamis_demo_active', 'true');
                 void loadData(true, user);
               }}
             />
