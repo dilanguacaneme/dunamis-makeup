@@ -43,19 +43,9 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
   mostrarInactivos = false,
   onToggleMostrarInactivos,
 }) => {
-  const categoryFilters: { key: FilterCategory; label: string }[] = [
-    { key: 'TODAS', label: 'Todas las zonas' },
-    ...(categories && categories.length > 0
-      ? categories
-          .filter((c) => c.activa !== false)
-          .map((c) => ({ key: c.nombre, label: c.nombre }))
-      : [
-          { key: 'ROSTRO', label: 'Rostro' },
-          { key: 'CEJAS', label: 'Cejas' },
-          { key: 'LABIOS', label: 'Labios' },
-          { key: 'OJOS', label: 'Ojos' },
-        ]),
-  ];
+  const activeCategories = (categories && categories.length > 0 ? categories : []).filter(
+    (c) => c.activa !== false
+  );
 
   const hasActiveFilters =
     searchQuery.trim() !== '' ||
@@ -81,11 +71,11 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
         marginBottom: '1.5rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1rem',
+        gap: '0.95rem',
       }}
       aria-label="Controles y filtros de inventario"
     >
-      {/* Row 1: Search + Combined Select Filters + Actions */}
+      {/* Fila 1: Búsqueda y Acciones Rápidas */}
       <div
         style={{
           display: 'flex',
@@ -95,13 +85,13 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
           gap: '0.85rem',
         }}
       >
-        {/* 1. Search input */}
+        {/* Input de Búsqueda */}
         <div
           style={{
             position: 'relative',
-            flex: '1 1 240px',
-            minWidth: '220px',
-            maxWidth: '380px',
+            flex: '1 1 280px',
+            minWidth: '240px',
+            maxWidth: '460px',
           }}
         >
           <Search
@@ -149,152 +139,85 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
           )}
         </div>
 
-        {/* 2. Brand Filter Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flex: '0 1 auto' }}>
-          <label htmlFor="filter-brand-select" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-            Marca:
-          </label>
-          <select
-            id="filter-brand-select"
-            className="form-select"
-            value={selectedBrand}
-            onChange={(e) => {
-              const val = e.target.value;
-              onSelectBrand(val === 'TODAS' ? 'TODAS' : Number(val));
-            }}
-            style={{
-              padding: '0.35rem 0.65rem',
-              height: '2.45rem',
-              fontSize: '0.825rem',
-              minWidth: '150px',
-              backgroundColor: selectedBrand !== 'TODAS' ? 'var(--color-rose-soft)' : '#FFFFFF',
-              borderColor: selectedBrand !== 'TODAS' ? 'var(--color-rosewood)' : 'var(--color-border)',
-              color: selectedBrand !== 'TODAS' ? 'var(--color-rosewood-deep)' : 'var(--color-text-main)',
-              fontWeight: selectedBrand !== 'TODAS' ? 600 : 500,
-            }}
-          >
-            <option value="TODAS">Todas las marcas ({brands.length})</option>
-            {brands.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Acciones del lado derecho: Alertas + Vistas + Botón Registrar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+          {/* Alerta de Críticos / Agotados */}
+          {criticalCount > 0 && (
+            <button
+              type="button"
+              onClick={onOpenLowStockDrawer}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.4rem 0.75rem',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--color-crimson-light)',
+                border: '1px solid var(--color-crimson-border)',
+                color: 'var(--color-crimson)',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all var(--transition-fast)',
+              }}
+              title="Abrir panel de reposición urgente para productos agotados"
+            >
+              <AlertTriangle size={14} />
+              <span>{criticalCount} agotado(s)</span>
+            </button>
+          )}
 
-        {/* 3. Stock Status Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flex: '0 1 auto' }}>
-          <label htmlFor="filter-stock-select" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-            Existencias:
-          </label>
-          <select
-            id="filter-stock-select"
-            value={selectedStockFilter}
-            onChange={(e) => onSelectStockFilter(e.target.value as FilterStock)}
-            className="form-select"
-            style={{
-              padding: '0.35rem 0.65rem',
-              height: '2.45rem',
-              fontSize: '0.825rem',
-              minWidth: '140px',
-              backgroundColor: selectedStockFilter !== 'TODOS' ? 'var(--color-rose-soft)' : '#FFFFFF',
-              borderColor: selectedStockFilter !== 'TODOS' ? 'var(--color-rosewood)' : 'var(--color-border)',
-              color: selectedStockFilter !== 'TODOS' ? 'var(--color-rosewood-deep)' : 'var(--color-text-main)',
-              fontWeight: selectedStockFilter !== 'TODOS' ? 600 : 500,
-            }}
-          >
-            <option value="TODOS">Todos los estados</option>
-            <option value="DISPONIBLES">Disponibles (&gt;0 uds.)</option>
-            <option value="AGOTADOS">
-              Agotados (0 uds.{criticalCount > 0 ? ` · ${criticalCount}` : ''})
-            </option>
-          </select>
-        </div>
+          {/* Toggle Activos / Inactivos (Admin) */}
+          {isAdmin && onToggleMostrarInactivos && (
+            <div
+              style={{
+                display: 'inline-flex',
+                backgroundColor: 'var(--color-rose-subtle)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.15rem',
+                gap: '0.15rem',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => onToggleMostrarInactivos(false)}
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: !mostrarInactivos ? '#FFFFFF' : 'transparent',
+                  color: !mostrarInactivos ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  boxShadow: !mostrarInactivos ? 'var(--shadow-subtle)' : 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Activos
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleMostrarInactivos(true)}
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: mostrarInactivos ? '#FFFFFF' : 'transparent',
+                  color: mostrarInactivos ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  boxShadow: mostrarInactivos ? 'var(--shadow-subtle)' : 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Todos (con inactivos)
+              </button>
+            </div>
+          )}
 
-        {/* View Mode Toggle (Table vs Grid) */}
-        <div
-          style={{
-            display: 'inline-flex',
-            backgroundColor: 'var(--color-rose-subtle)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '0.15rem',
-            gap: '0.15rem',
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => onToggleViewMode('table')}
-            title="Vista de tabla"
-            style={{
-              padding: '0.35rem 0.65rem',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: viewMode === 'table' ? '#FFFFFF' : 'transparent',
-              color: viewMode === 'table' ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              boxShadow: viewMode === 'table' ? 'var(--shadow-subtle)' : 'none',
-              transition: 'all var(--transition-fast)',
-            }}
-          >
-            <Table size={14} />
-            <span className="hidden sm:inline">Tabla</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onToggleViewMode('grid')}
-            title="Vista de fichas"
-            style={{
-              padding: '0.35rem 0.65rem',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: viewMode === 'grid' ? '#FFFFFF' : 'transparent',
-              color: viewMode === 'grid' ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              boxShadow: viewMode === 'grid' ? 'var(--shadow-subtle)' : 'none',
-              transition: 'all var(--transition-fast)',
-            }}
-          >
-            <LayoutGrid size={14} />
-            <span className="hidden sm:inline">Fichas</span>
-          </button>
-        </div>
-
-        {/* Critical Alert Quick Trigger (if any agotados) */}
-        {criticalCount > 0 && (
-          <button
-            type="button"
-            onClick={onOpenLowStockDrawer}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.4rem 0.75rem',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--color-crimson-light)',
-              border: '1px solid var(--color-crimson-border)',
-              color: 'var(--color-crimson)',
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              transition: 'all var(--transition-fast)',
-            }}
-            title="Abrir panel de reposición urgente para productos agotados"
-          >
-            <AlertTriangle size={14} />
-            <span>{criticalCount} agotado(s)</span>
-          </button>
-        )}
-
-        {/* Admin Inactive Products Filter */}
-        {isAdmin && onToggleMostrarInactivos && (
+          {/* Selector de Vista: Tabla vs Fichas */}
           <div
             style={{
               display: 'inline-flex',
@@ -307,109 +230,201 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
           >
             <button
               type="button"
-              onClick={() => onToggleMostrarInactivos(false)}
+              onClick={() => onToggleViewMode('table')}
+              title="Vista de tabla"
               style={{
                 padding: '0.35rem 0.65rem',
                 borderRadius: 'var(--radius-sm)',
-                backgroundColor: !mostrarInactivos ? '#FFFFFF' : 'transparent',
-                color: !mostrarInactivos ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                backgroundColor: viewMode === 'table' ? '#FFFFFF' : 'transparent',
+                color: viewMode === 'table' ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
                 fontSize: '0.78rem',
                 fontWeight: 600,
-                boxShadow: !mostrarInactivos ? 'var(--shadow-subtle)' : 'none',
+                boxShadow: viewMode === 'table' ? 'var(--shadow-subtle)' : 'none',
                 border: 'none',
                 cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
               }}
             >
-              Activos
+              <Table size={14} />
+              <span className="hidden sm:inline">Tabla</span>
             </button>
             <button
               type="button"
-              onClick={() => onToggleMostrarInactivos(true)}
+              onClick={() => onToggleViewMode('grid')}
+              title="Vista de fichas"
               style={{
                 padding: '0.35rem 0.65rem',
                 borderRadius: 'var(--radius-sm)',
-                backgroundColor: mostrarInactivos ? '#FFFFFF' : 'transparent',
-                color: mostrarInactivos ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                backgroundColor: viewMode === 'grid' ? '#FFFFFF' : 'transparent',
+                color: viewMode === 'grid' ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
                 fontSize: '0.78rem',
                 fontWeight: 600,
-                boxShadow: mostrarInactivos ? 'var(--shadow-subtle)' : 'none',
+                boxShadow: viewMode === 'grid' ? 'var(--shadow-subtle)' : 'none',
                 border: 'none',
                 cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
               }}
             >
-              Todos (con inactivos)
+              <LayoutGrid size={14} />
+              <span className="hidden sm:inline">Fichas</span>
             </button>
           </div>
-        )}
 
-        {/* New Product CTA (Contextual to inventory, Admin only) */}
-        {isAdmin && onOpenCreateModal && (
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={onOpenCreateModal}
-            title="Registrar nueva referencia cosmética"
-            style={{ padding: '0.45rem 0.95rem', fontSize: '0.825rem' }}
-          >
-            <Plus size={15} />
-            <span>Registrar producto</span>
-          </button>
-        )}
+          {/* Botón Principal: Registrar Producto */}
+          {isAdmin && onOpenCreateModal && (
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={onOpenCreateModal}
+              title="Registrar nueva referencia cosmética"
+              style={{
+                padding: '0.45rem 1rem',
+                fontSize: '0.825rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <Plus size={16} />
+              <span>Registrar producto</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Row 2: Unified Cosmetic Zone Filter Chips (Filtered once in the whole view) */}
+      {/* Fila 2: Filtros Desplegables Unificados (Categoría, Marca, Existencias) */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '0.65rem',
+          gap: '0.85rem',
           borderTop: '1px solid var(--color-border-subtle)',
-          paddingTop: '0.75rem',
+          paddingTop: '0.85rem',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-muted)', marginRight: '0.2rem' }}>
-            Zona cosmética:
-          </span>
-          {categoryFilters.map((cat) => {
-            const isSelected = selectedCategory.toUpperCase() === cat.key.toUpperCase();
-            return (
-              <button
-                key={cat.key}
-                type="button"
-                onClick={() => onSelectCategory(cat.key)}
-                style={{
-                  fontSize: '0.78rem',
-                  fontWeight: isSelected ? 700 : 500,
-                  padding: '0.25rem 0.75rem',
-                  borderRadius: 'var(--radius-full)',
-                  border: '1px solid',
-                  backgroundColor: isSelected ? 'var(--color-rosewood)' : 'var(--color-surface)',
-                  borderColor: isSelected ? 'var(--color-rosewood)' : 'var(--color-border)',
-                  color: isSelected ? '#FFFFFF' : 'var(--color-text-main)',
-                  transition: 'all var(--transition-fast)',
-                  cursor: 'pointer',
-                }}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          {/* 1. Categoría (Escalable a 200+ categorías) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <label htmlFor="filter-cat-select" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+              Categoría:
+            </label>
+            <select
+              id="filter-cat-select"
+              className="form-select"
+              value={selectedCategory}
+              onChange={(e) => onSelectCategory(e.target.value)}
+              style={{
+                padding: '0.35rem 0.65rem',
+                height: '2.35rem',
+                fontSize: '0.825rem',
+                minWidth: '170px',
+                backgroundColor: selectedCategory !== 'TODAS' ? 'var(--color-rose-soft)' : '#FFFFFF',
+                borderColor: selectedCategory !== 'TODAS' ? 'var(--color-rosewood)' : 'var(--color-border)',
+                color: selectedCategory !== 'TODAS' ? 'var(--color-rosewood-deep)' : 'var(--color-text-main)',
+                fontWeight: selectedCategory !== 'TODAS' ? 600 : 500,
+              }}
+            >
+              <option value="TODAS">
+                Todas las categorías ({activeCategories.length})
+              </option>
+              {activeCategories.map((c) => (
+                <option key={c.id} value={c.nombre}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 2. Marca */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <label htmlFor="filter-brand-select" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+              Marca:
+            </label>
+            <select
+              id="filter-brand-select"
+              className="form-select"
+              value={selectedBrand}
+              onChange={(e) => {
+                const val = e.target.value;
+                onSelectBrand(val === 'TODAS' ? 'TODAS' : Number(val));
+              }}
+              style={{
+                padding: '0.35rem 0.65rem',
+                height: '2.35rem',
+                fontSize: '0.825rem',
+                minWidth: '150px',
+                backgroundColor: selectedBrand !== 'TODAS' ? 'var(--color-rose-soft)' : '#FFFFFF',
+                borderColor: selectedBrand !== 'TODAS' ? 'var(--color-rosewood)' : 'var(--color-border)',
+                color: selectedBrand !== 'TODAS' ? 'var(--color-rosewood-deep)' : 'var(--color-text-main)',
+                fontWeight: selectedBrand !== 'TODAS' ? 600 : 500,
+              }}
+            >
+              <option value="TODAS">Todas las marcas ({brands.length})</option>
+              {brands.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 3. Existencias */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <label htmlFor="filter-stock-select" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+              Existencias:
+            </label>
+            <select
+              id="filter-stock-select"
+              value={selectedStockFilter}
+              onChange={(e) => onSelectStockFilter(e.target.value as FilterStock)}
+              className="form-select"
+              style={{
+                padding: '0.35rem 0.65rem',
+                height: '2.35rem',
+                fontSize: '0.825rem',
+                minWidth: '145px',
+                backgroundColor: selectedStockFilter !== 'TODOS' ? 'var(--color-rose-soft)' : '#FFFFFF',
+                borderColor: selectedStockFilter !== 'TODOS' ? 'var(--color-rosewood)' : 'var(--color-border)',
+                color: selectedStockFilter !== 'TODOS' ? 'var(--color-rosewood-deep)' : 'var(--color-text-main)',
+                fontWeight: selectedStockFilter !== 'TODOS' ? 600 : 500,
+              }}
+            >
+              <option value="TODOS">Todos los estados</option>
+              <option value="DISPONIBLES">Disponibles (&gt;0 uds.)</option>
+              <option value="AGOTADOS">
+                Agotados (0 uds.{criticalCount > 0 ? ` · ${criticalCount}` : ''})
+              </option>
+            </select>
+          </div>
         </div>
 
-        {/* Reset filters shortcut button if any filter is active */}
+        {/* Botón para Limpiar filtros activos */}
         {hasActiveFilters && (
           <button
             type="button"
             onClick={handleResetAllFilters}
             className="btn-ghost"
-            style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', color: 'var(--color-rosewood)' }}
+            style={{
+              fontSize: '0.78rem',
+              padding: '0.25rem 0.65rem',
+              color: 'var(--color-rosewood)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+            }}
             title="Restablecer búsqueda y todos los filtros"
           >
-            <Sparkles size={12} />
-            <span>Limpiar todos los filtros</span>
+            <Sparkles size={13} />
+            <span>Limpiar filtros</span>
           </button>
         )}
       </div>
