@@ -116,7 +116,7 @@ export type FilterPaymentStatus = 'TODOS' | EstadoPagoFactura | 'ANULADA';
 
 export type ViewMode = 'table' | 'grid';
 
-export type ActiveTab = 'inventory' | 'invoices' | 'monthly-sales' | 'brands';
+export type ActiveTab = 'inventory' | 'categories' | 'brands' | 'invoices' | 'monthly-sales';
 
 export interface ToastMessage {
   id: string;

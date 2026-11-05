@@ -33,6 +33,7 @@ import { MonthlySalesView } from './components/MonthlySalesView';
 import { BrandManagementModal } from './components/BrandManagementModal';
 import { CategoryManagementModal } from './components/CategoryManagementModal';
 import { BrandManagementView } from './components/BrandManagementView';
+import { CategoryManagementView } from './components/CategoryManagementView';
 import { TableSkeleton, EmptyState, ErrorBanner, DeleteConfirmModal, DemoNoticeBanner } from './components/StateViews';
 import { ToastContainer } from './components/ToastContainer';
 import { DEMO_ADMIN_USER, DEMO_SELLER_USER, demoStore } from './services/demoData';
@@ -144,7 +145,10 @@ export const App: React.FC = () => {
         inventoryApi.getTotalInventory(currentDemoState),
         inventoryApi.getLowStockProducts(currentDemoState),
         inventoryApi.getBrands(currentDemoState),
-        inventoryApi.getCategories(currentDemoState),
+        inventoryApi.getCategories(currentDemoState).catch((catErr) => {
+          console.warn('Categorías no disponibles en el backend remoto aún, usando catálogo base:', catErr);
+          return demoStore.getCategories();
+        }),
         inventoryApi.getInvoices(currentDemoState, activeUser.role, activeUser.username),
       ]);
 
@@ -599,6 +603,7 @@ export const App: React.FC = () => {
         productsCount={products.length}
         invoicesCount={invoices.length}
         brandsCount={brands.length}
+        categoriesCount={categories.length}
         isAdmin={isAdmin}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
@@ -629,7 +634,6 @@ export const App: React.FC = () => {
           onToggleDemo={handleToggleDemo}
           onToggleDemoRole={isDemo ? handleToggleDemoRole : undefined}
           onLogout={handleLogout}
-          onOpenCategoryModal={isAdmin ? () => setIsCategoryModalOpen(true) : undefined}
         />
 
         <main className="main-content">
@@ -744,28 +748,27 @@ export const App: React.FC = () => {
             </>
           )}
 
-          {/* TAB 2: Invoice History & Sales View */}
-          {activeTab === 'invoices' && (
-            <InvoiceHistoryView
-              invoices={invoices}
-              isLoading={isLoading}
-              user={user}
-              onOpenSaleModal={() => setIsSaleModalOpen(true)}
-              onViewInvoiceDetails={(invoiceId) => setViewingInvoiceId(invoiceId)}
-            />
+          {/* TAB 2: Categories Management View */}
+          {activeTab === 'categories' && (
+            isAdmin ? (
+              <CategoryManagementView
+                categories={categories}
+                onCreateCategory={handleCreateCategory}
+                onUpdateCategory={handleUpdateCategory}
+                onRefreshCategories={handleRefreshCategories}
+                isAdmin={isAdmin}
+              />
+            ) : (
+              <EmptyState
+                title="Acceso Restringido"
+                description="La gestión de categorías cosméticas está reservada exclusivamente para usuarias con rol de Administradora."
+                actionText="Volver al Inventario"
+                onAction={() => setActiveTab('inventory')}
+              />
+            )
           )}
 
-          {/* TAB 3: Monthly Sales Report View */}
-          {activeTab === 'monthly-sales' && (
-            <MonthlySalesView
-              invoices={invoices}
-              isLoading={isLoading}
-              isDemo={isDemo}
-              onViewInvoiceDetails={(invoiceId) => setViewingInvoiceId(invoiceId)}
-            />
-          )}
-
-          {/* TAB 4: Brand Management View */}
+          {/* TAB 3: Brand Management View */}
           {activeTab === 'brands' && (
             isAdmin ? (
               <BrandManagementView
@@ -783,6 +786,27 @@ export const App: React.FC = () => {
                 onAction={() => setActiveTab('inventory')}
               />
             )
+          )}
+
+          {/* TAB 4: Invoice History & Sales View */}
+          {activeTab === 'invoices' && (
+            <InvoiceHistoryView
+              invoices={invoices}
+              isLoading={isLoading}
+              user={user}
+              onOpenSaleModal={() => setIsSaleModalOpen(true)}
+              onViewInvoiceDetails={(invoiceId) => setViewingInvoiceId(invoiceId)}
+            />
+          )}
+
+          {/* TAB 5: Monthly Sales Report View */}
+          {activeTab === 'monthly-sales' && (
+            <MonthlySalesView
+              invoices={invoices}
+              isLoading={isLoading}
+              isDemo={isDemo}
+              onViewInvoiceDetails={(invoiceId) => setViewingInvoiceId(invoiceId)}
+            />
           )}
         </main>
       </div>

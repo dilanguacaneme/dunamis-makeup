@@ -24,7 +24,6 @@ interface DesktopTopBarProps {
   onToggleDemo: () => void;
   onToggleDemoRole?: () => void;
   onLogout: () => void;
-  onOpenCategoryModal?: () => void;
 }
 
 export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
@@ -37,7 +36,6 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
   onToggleDemo,
   onToggleDemoRole,
   onLogout,
-  onOpenCategoryModal,
 }) => {
   const isAdmin = user.role === 'ADMIN';
 
@@ -56,6 +54,11 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
       title: 'Reporte de Ventas por Mes',
       subtitle: 'Cálculo de ingresos mensuales, recaudo efectivo y saldos pendientes',
       icon: <BarChart3 size={18} color="var(--color-rosewood)" />,
+    },
+    categories: {
+      title: 'Categorías Cosméticas',
+      subtitle: 'Zonas y categorías para clasificación de cosméticos Dunamis',
+      icon: <Layers size={18} color="var(--color-rosewood)" />,
     },
     brands: {
       title: 'Marcas Cosméticas',
@@ -169,31 +172,6 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
               </button>
             )}
           </div>
-
-          {/* Admin Categories quick action */}
-          {isAdmin && onOpenCategoryModal && (
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={onOpenCategoryModal}
-              title="Gestión de Categorías Cosméticas"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                padding: '0.35rem 0.65rem',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-rosewood)',
-              }}
-            >
-              <Layers size={14} />
-              <span>Categorías</span>
-            </button>
-          )}
 
           {/* Refresh button */}
           <button
