@@ -5,13 +5,13 @@
   - [x] Crear DTOs: `CategoriaResponse`, `CrearCategoriaRequest`, `ActualizarCategoriaRequest`
   - [x] Crear repositorio `CategoriaRepository` con consultas por nombre y estado
 
-- [ ] **Fase 2: Lógica de Negocio y Endpoints Backend**
-  - [ ] Implementar `CategoriaService` con validación de duplicados y borrado lógico
-  - [ ] Implementar sembrado inicial `CategoriasIniciales` (6 categorías históricas)
-  - [ ] Implementar controlador `CategoriaController` en `/categorias`
-  - [ ] Actualizar reglas de autorización y CSRF en `SecurityConfig`
-  - [ ] Crear pruebas unitarias para `CategoriaService`
-  - [ ] Crear pruebas de integración para `CategoriaController`
+- [x] **Fase 2: Lógica de Negocio y Endpoints Backend**
+  - [x] Implementar `CategoriaService` con validación de duplicados y borrado lógico
+  - [x] Implementar sembrado inicial `CategoriasIniciales` (6 categorías históricas)
+  - [x] Implementar controlador `CategoriaController` en `/categorias`
+  - [x] Actualizar reglas de autorización y CSRF en `SecurityConfig`
+  - [x] Crear pruebas unitarias para `CategoriaService`
+  - [x] Crear pruebas de integración para `CategoriaController`
 
 - [ ] **Fase 3: Integración con Producto en Backend**
   - [ ] Modificar relación en `Producto` hacia entidad `Categoria`
