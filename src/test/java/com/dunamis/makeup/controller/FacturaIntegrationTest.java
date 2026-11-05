@@ -2,6 +2,7 @@ package com.dunamis.makeup.controller;
 
 import com.dunamis.makeup.entity.*;
 import com.dunamis.makeup.repository.AbonoFacturaRepository;
+import com.dunamis.makeup.repository.CategoriaRepository;
 import com.dunamis.makeup.repository.DetalleFacturaRepository;
 import com.dunamis.makeup.repository.FacturaRepository;
 import com.dunamis.makeup.repository.MarcaRepository;
@@ -53,6 +54,9 @@ class FacturaIntegrationTest {
     private MarcaRepository marcaRepository;
 
     @Autowired
+    private CategoriaRepository categoriaRepository;
+
+    @Autowired
     private UsuarioRepository usuarioRepository;
 
     @Autowired
@@ -97,12 +101,17 @@ class FacturaIntegrationTest {
         Marca marca = marcaRepository.findByNombreIgnoreCase("Trendy")
                 .orElseGet(() -> marcaRepository.save(new Marca("Trendy")));
 
+        Categoria rostro = categoriaRepository.findByNombreIgnoreCase("Rostro")
+                .orElseGet(() -> categoriaRepository.save(new Categoria("Rostro")));
+        Categoria labios = categoriaRepository.findByNombreIgnoreCase("Labios")
+                .orElseGet(() -> categoriaRepository.save(new Categoria("Labios")));
+
         productoBase = new Producto();
         productoBase.setNombre("Base Cushion");
         productoBase.setPrecio(45000.0);
         productoBase.setCantidad(20);
         productoBase.setTotalProducto(900000.0);
-        productoBase.setCategoria(CategoriaProducto.ROSTRO);
+        productoBase.setCategoria(rostro);
         productoBase.setMarca(marca);
         productoBase.setActivo(true);
         productoBase = productoRepository.save(productoBase);
@@ -112,7 +121,7 @@ class FacturaIntegrationTest {
         productoLabial.setPrecio(15000.0);
         productoLabial.setCantidad(10);
         productoLabial.setTotalProducto(150000.0);
-        productoLabial.setCategoria(CategoriaProducto.LABIOS);
+        productoLabial.setCategoria(labios);
         productoLabial.setMarca(marca);
         productoLabial.setActivo(true);
         productoLabial = productoRepository.save(productoLabial);
@@ -270,7 +279,9 @@ class FacturaIntegrationTest {
         labialParaAnular.setPrecio(10000.0);
         labialParaAnular.setCantidad(10);
         labialParaAnular.setTotalProducto(100000.0);
-        labialParaAnular.setCategoria(CategoriaProducto.LABIOS);
+        Categoria labios = categoriaRepository.findByNombreIgnoreCase("Labios")
+                .orElseGet(() -> categoriaRepository.save(new Categoria("Labios")));
+        labialParaAnular.setCategoria(labios);
         labialParaAnular.setActivo(true);
         labialParaAnular = productoRepository.save(labialParaAnular);
 

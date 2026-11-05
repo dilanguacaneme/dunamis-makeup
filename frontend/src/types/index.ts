@@ -1,4 +1,15 @@
-export type CategoriaProducto = 'ROSTRO' | 'CEJAS' | 'LABIOS' | 'OJOS';
+export type CategoriaProducto = 'ROSTRO' | 'CEJAS' | 'LABIOS' | 'OJOS' | string;
+
+export interface Categoria {
+  id: number;
+  nombre: string;
+  activa?: boolean;
+}
+
+export interface CategoriaInput {
+  nombre: string;
+  activa?: boolean;
+}
 
 export interface Marca {
   id: number;
@@ -17,7 +28,8 @@ export interface Producto {
   precio: number;
   cantidad: number;
   totalProducto?: number;
-  categoria: CategoriaProducto;
+  categoria: Categoria | CategoriaProducto;
+  categoriaId?: number;
   marca?: Marca | null;
   activo?: boolean;
 }
@@ -26,7 +38,8 @@ export interface ProductoInput {
   nombre: string;
   precio: number;
   cantidad: number;
-  categoria: CategoriaProducto;
+  categoria?: Categoria | CategoriaProducto;
+  categoriaId?: number;
   marca?: {
     id: number;
   };
@@ -103,7 +116,7 @@ export type FilterPaymentStatus = 'TODOS' | EstadoPagoFactura | 'ANULADA';
 
 export type ViewMode = 'table' | 'grid';
 
-export type ActiveTab = 'inventory' | 'invoices' | 'monthly-sales' | 'brands';
+export type ActiveTab = 'inventory' | 'categories' | 'brands' | 'invoices' | 'monthly-sales';
 
 export interface ToastMessage {
   id: string;

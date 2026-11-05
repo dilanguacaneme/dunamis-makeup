@@ -1,6 +1,7 @@
 package com.dunamis.makeup.controller;
 
 import com.dunamis.makeup.entity.*;
+import com.dunamis.makeup.repository.CategoriaRepository;
 import com.dunamis.makeup.repository.DetalleFacturaRepository;
 import com.dunamis.makeup.repository.FacturaRepository;
 import com.dunamis.makeup.repository.MarcaRepository;
@@ -43,6 +44,9 @@ class ProductoIntegrationTest {
     private MarcaRepository marcaRepository;
 
     @Autowired
+    private CategoriaRepository categoriaRepository;
+
+    @Autowired
     private FacturaRepository facturaRepository;
 
     @Autowired
@@ -58,6 +62,10 @@ class ProductoIntegrationTest {
     private MockHttpSession vendedorSession;
     private Cookie csrfCookie;
     private Marca marcaTrendy;
+    private Categoria categoriaRostro;
+    private Categoria categoriaOjos;
+    private Categoria categoriaLabios;
+    private Categoria categoriaCejas;
 
     private Cookie obtainCsrfCookie() throws Exception {
         MvcResult result = mockMvc.perform(get("/api/auth/csrf"))
@@ -102,6 +110,23 @@ class ProductoIntegrationTest {
             m.setActiva(true);
             return marcaRepository.save(m);
         });
+
+        categoriaRostro = categoriaRepository.findByNombreIgnoreCase("Rostro").orElseGet(() -> {
+            Categoria c = new Categoria("Rostro");
+            return categoriaRepository.save(c);
+        });
+        categoriaOjos = categoriaRepository.findByNombreIgnoreCase("Ojos").orElseGet(() -> {
+            Categoria c = new Categoria("Ojos");
+            return categoriaRepository.save(c);
+        });
+        categoriaLabios = categoriaRepository.findByNombreIgnoreCase("Labios").orElseGet(() -> {
+            Categoria c = new Categoria("Labios");
+            return categoriaRepository.save(c);
+        });
+        categoriaCejas = categoriaRepository.findByNombreIgnoreCase("Cejas").orElseGet(() -> {
+            Categoria c = new Categoria("Cejas");
+            return categoriaRepository.save(c);
+        });
     }
 
     @Test
@@ -119,7 +144,7 @@ class ProductoIntegrationTest {
         activo.setNombre("Producto Activo Test");
         activo.setPrecio(20000.0);
         activo.setCantidad(5);
-        activo.setCategoria(CategoriaProducto.ROSTRO);
+        activo.setCategoria(categoriaRostro);
         activo.setMarca(marcaTrendy);
         activo.setActivo(true);
         productoRepository.save(activo);
@@ -128,7 +153,7 @@ class ProductoIntegrationTest {
         inactivo.setNombre("Producto Inactivo Test");
         inactivo.setPrecio(15000.0);
         inactivo.setCantidad(2);
-        inactivo.setCategoria(CategoriaProducto.OJOS);
+        inactivo.setCategoria(categoriaOjos);
         inactivo.setMarca(marcaTrendy);
         inactivo.setActivo(false);
         productoRepository.save(inactivo);
@@ -170,7 +195,7 @@ class ProductoIntegrationTest {
         p.setNombre("Producto Para Consulta ID");
         p.setPrecio(25000.0);
         p.setCantidad(10);
-        p.setCategoria(CategoriaProducto.LABIOS);
+        p.setCategoria(categoriaLabios);
         p.setMarca(marcaTrendy);
         p.setActivo(true);
         Producto guardado = productoRepository.save(p);
@@ -248,7 +273,7 @@ class ProductoIntegrationTest {
         p.setNombre("Producto Para Actualizar");
         p.setPrecio(10000.0);
         p.setCantidad(5);
-        p.setCategoria(CategoriaProducto.CEJAS);
+        p.setCategoria(categoriaCejas);
         p.setMarca(marcaTrendy);
         p.setActivo(true);
         Producto guardado = productoRepository.save(p);
@@ -279,7 +304,7 @@ class ProductoIntegrationTest {
         p.setNombre("Producto Para Test Vacio");
         p.setPrecio(15000.0);
         p.setCantidad(3);
-        p.setCategoria(CategoriaProducto.LABIOS);
+        p.setCategoria(categoriaLabios);
         p.setMarca(marcaTrendy);
         Producto guardado = productoRepository.save(p);
 
@@ -300,7 +325,7 @@ class ProductoIntegrationTest {
         p.setNombre("Producto Con Historial Venta");
         p.setPrecio(20000.0);
         p.setCantidad(8);
-        p.setCategoria(CategoriaProducto.ROSTRO);
+        p.setCategoria(categoriaRostro);
         p.setMarca(marcaTrendy);
         p.setActivo(true);
         Producto productoFacturado = productoRepository.save(p);

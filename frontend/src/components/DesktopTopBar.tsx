@@ -3,6 +3,7 @@ import {
   Package,
   Receipt,
   Tag,
+  Layers,
   BarChart3,
   RefreshCw,
   Server,
@@ -53,6 +54,11 @@ export const DesktopTopBar: React.FC<DesktopTopBarProps> = ({
       title: 'Reporte de Ventas por Mes',
       subtitle: 'Cálculo de ingresos mensuales, recaudo efectivo y saldos pendientes',
       icon: <BarChart3 size={18} color="var(--color-rosewood)" />,
+    },
+    categories: {
+      title: 'Categorías Cosméticas',
+      subtitle: 'Zonas y categorías para clasificación de cosméticos Dunamis',
+      icon: <Layers size={18} color="var(--color-rosewood)" />,
     },
     brands: {
       title: 'Marcas Cosméticas',

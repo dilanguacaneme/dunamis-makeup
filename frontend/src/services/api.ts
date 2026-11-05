@@ -6,6 +6,8 @@ import type {
   Usuario,
   Marca,
   MarcaInput,
+  Categoria,
+  CategoriaInput,
   MedioPago,
 } from '../types';
 import { demoStore, DEMO_ADMIN_USER } from './demoData';
@@ -267,8 +269,17 @@ export const inventoryApi = {
       nombre: input.nombre.trim(),
       precio: Number(input.precio),
       cantidad: Math.max(0, Number(input.cantidad)),
-      categoria: input.categoria,
     };
+
+    if (input.categoriaId !== undefined) {
+      bodyPayload.categoriaId = input.categoriaId;
+    } else if (input.categoria !== undefined) {
+      if (typeof input.categoria === 'object' && input.categoria?.id) {
+        bodyPayload.categoriaId = input.categoria.id;
+      } else {
+        bodyPayload.categoria = input.categoria;
+      }
+    }
 
     if (input.marca?.id) {
       bodyPayload.marcaId = input.marca.id;
@@ -315,7 +326,15 @@ export const inventoryApi = {
     if (input.nombre !== undefined) bodyPayload.nombre = input.nombre.trim();
     if (input.precio !== undefined) bodyPayload.precio = Number(input.precio);
     if (input.cantidad !== undefined) bodyPayload.cantidad = Math.max(0, Number(input.cantidad));
-    if (input.categoria !== undefined) bodyPayload.categoria = input.categoria;
+    if (input.categoriaId !== undefined) {
+      bodyPayload.categoriaId = input.categoriaId;
+    } else if (input.categoria !== undefined) {
+      if (typeof input.categoria === 'object' && input.categoria?.id) {
+        bodyPayload.categoriaId = input.categoria.id;
+      } else {
+        bodyPayload.categoria = input.categoria;
+      }
+    }
     if (input.marca?.id !== undefined) bodyPayload.marcaId = input.marca.id;
     if (input.activo !== undefined) bodyPayload.activo = input.activo;
 
@@ -474,6 +493,110 @@ export const inventoryApi = {
         // ignore
       }
       throw new ApiError(errorText || `Error al actualizar marca (${res.status})`, res.status);
+    }
+
+    return await res.json();
+  },
+
+  // --- CATEGORIES API ---
+  async getCategories(isDemo: boolean, incluirInactivas = false): Promise<Categoria[]> {
+    if (isDemo) {
+      return demoStore.getCategories(incluirInactivas);
+    }
+
+    const query = incluirInactivas ? '?incluirInactivas=true' : '';
+    const res = await fetch(`${BASE_URL}/categorias${query}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!res.ok) {
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al consultar categorías (${res.status})`, res.status);
+    }
+
+    const contentType = res.headers.get('content-type');
+    if (contentType && !contentType.includes('application/json')) {
+      throw new ApiError('El servidor devolvió una respuesta no válida (HTML en lugar de JSON). Verifique el proxy del backend.', res.status);
+    }
+
+    return await res.json();
+  },
+
+  async createCategory(input: CategoriaInput, isDemo: boolean): Promise<Categoria> {
+    if (isDemo) {
+      return demoStore.createCategory(input);
+    }
+
+    await this.ensureCsrf();
+    const token = getXsrfToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['X-XSRF-TOKEN'] = token;
+    }
+
+    const res = await fetch(`${BASE_URL}/categorias`, {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify({ nombre: input.nombre.trim() }),
+    });
+
+    if (!res.ok) {
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al crear categoría (${res.status})`, res.status);
+    }
+
+    return await res.json();
+  },
+
+  async updateCategory(id: number, input: Partial<CategoriaInput>, isDemo: boolean): Promise<Categoria> {
+    if (isDemo) {
+      return demoStore.updateCategory(id, input);
+    }
+
+    await this.ensureCsrf();
+    const token = getXsrfToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['X-XSRF-TOKEN'] = token;
+    }
+
+    const res = await fetch(`${BASE_URL}/categorias/${id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify(input),
+    });
+
+    if (!res.ok) {
+      let errorText = await res.text();
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorText = parsed.message;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(errorText || `Error al actualizar categoría (${res.status})`, res.status);
     }
 
     return await res.json();

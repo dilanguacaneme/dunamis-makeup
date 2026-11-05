@@ -1,10 +1,11 @@
 package com.dunamis.makeup.controller;
 
-import com.dunamis.makeup.entity.CategoriaProducto;
+import com.dunamis.makeup.entity.Categoria;
 import com.dunamis.makeup.entity.Marca;
 import com.dunamis.makeup.entity.Producto;
 import com.dunamis.makeup.entity.RolUsuario;
 import com.dunamis.makeup.entity.Usuario;
+import com.dunamis.makeup.repository.CategoriaRepository;
 import com.dunamis.makeup.repository.MarcaRepository;
 import com.dunamis.makeup.repository.ProductoRepository;
 import com.dunamis.makeup.repository.UsuarioRepository;
@@ -38,6 +39,9 @@ class MarcaIntegrationTest {
 
     @Autowired
     private ProductoRepository productoRepository;
+
+    @Autowired
+    private CategoriaRepository categoriaRepository;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -288,7 +292,9 @@ class MarcaIntegrationTest {
         producto.setNombre("Labial Velvet");
         producto.setPrecio(25000.0);
         producto.setCantidad(10);
-        producto.setCategoria(CategoriaProducto.LABIOS);
+        Categoria labios = categoriaRepository.findByNombreIgnoreCase("Labios")
+                .orElseGet(() -> categoriaRepository.save(new Categoria("Labios")));
+        producto.setCategoria(labios);
         producto.setMarca(marca);
         producto = productoRepository.save(producto);
 

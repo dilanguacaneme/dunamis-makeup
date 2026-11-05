@@ -7,6 +7,7 @@ import {
   Package,
   Receipt,
   Tag,
+  Layers,
   ShieldCheck,
   UserCheck,
 } from 'lucide-react';
@@ -22,7 +23,6 @@ interface HeaderProps {
   onToggleDemo: () => void;
   onLogout: () => void;
   onRefresh: () => void;
-  onOpenBrandModal?: () => void;
   onToggleDemoRole?: () => void;
 }
 
@@ -36,7 +36,6 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDemo,
   onLogout,
   onRefresh,
-  onOpenBrandModal,
   onToggleDemoRole,
 }) => {
   const isAdmin = user.role === 'ADMIN';
@@ -131,6 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             aria-label="Navegación principal"
           >
+            {/* 1. Inventario */}
             <button
               type="button"
               onClick={() => onTabChange('inventory')}
@@ -152,6 +152,55 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Inventario</span>
             </button>
 
+            {/* 2. Categorías (Admin) */}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => onTabChange('categories')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.825rem',
+                  fontWeight: activeTab === 'categories' ? 700 : 500,
+                  backgroundColor: activeTab === 'categories' ? '#FFFFFF' : 'transparent',
+                  color: activeTab === 'categories' ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                  boxShadow: activeTab === 'categories' ? 'var(--shadow-subtle)' : 'none',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                <Layers size={14} />
+                <span>Categorías</span>
+              </button>
+            )}
+
+            {/* 3. Marcas (Admin) */}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => onTabChange('brands')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.825rem',
+                  fontWeight: activeTab === 'brands' ? 700 : 500,
+                  backgroundColor: activeTab === 'brands' ? '#FFFFFF' : 'transparent',
+                  color: activeTab === 'brands' ? 'var(--color-rosewood-deep)' : 'var(--color-text-muted)',
+                  boxShadow: activeTab === 'brands' ? 'var(--shadow-subtle)' : 'none',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                <Tag size={14} />
+                <span>Marcas</span>
+              </button>
+            )}
+
+            {/* 4. Facturas & Ventas */}
             <button
               type="button"
               onClick={() => onTabChange('invoices')}
@@ -172,29 +221,6 @@ export const Header: React.FC<HeaderProps> = ({
               <Receipt size={14} />
               <span>Facturas & Ventas</span>
             </button>
-
-            {isAdmin && onOpenBrandModal && (
-              <button
-                type="button"
-                onClick={onOpenBrandModal}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.4rem 0.85rem',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.825rem',
-                  fontWeight: 500,
-                  backgroundColor: 'transparent',
-                  color: 'var(--color-text-muted)',
-                  transition: 'all var(--transition-fast)',
-                }}
-                title="Gestión de marcas cosméticas (Admin)"
-              >
-                <Tag size={14} />
-                <span>Marcas</span>
-              </button>
-            )}
           </nav>
         </div>
 

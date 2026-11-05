@@ -1,10 +1,12 @@
 package com.dunamis.makeup.service;
 
+import com.dunamis.makeup.entity.Categoria;
 import com.dunamis.makeup.entity.CategoriaProducto;
 import com.dunamis.makeup.entity.Marca;
 import com.dunamis.makeup.entity.Producto;
 import com.dunamis.makeup.exception.ProductoNoEncontradoException;
 import com.dunamis.makeup.exception.ReglaNegocioException;
+import com.dunamis.makeup.repository.CategoriaRepository;
 import com.dunamis.makeup.repository.DetalleFacturaRepository;
 import com.dunamis.makeup.repository.MarcaRepository;
 import com.dunamis.makeup.repository.ProductoRepository;
@@ -41,6 +43,9 @@ class ProductoServiceTest {
     private MarcaRepository marcaRepository;
 
     @Mock
+    private CategoriaRepository categoriaRepository;
+
+    @Mock
     private DetalleFacturaRepository detalleFacturaRepository;
 
     @InjectMocks
@@ -48,6 +53,8 @@ class ProductoServiceTest {
 
     private Marca marcaTrendy;
     private Marca marcaInactiva;
+    private Categoria categoriaRostro;
+    private Categoria categoriaLabios;
     private Producto productoEjemplo;
 
     @BeforeEach
@@ -60,13 +67,24 @@ class ProductoServiceTest {
         marcaInactiva.setId(2L);
         marcaInactiva.setActiva(false);
 
+        categoriaRostro = new Categoria("Rostro");
+        categoriaRostro.setId(1L);
+        categoriaRostro.setActiva(true);
+
+        categoriaLabios = new Categoria("Labios");
+        categoriaLabios.setId(2L);
+        categoriaLabios.setActiva(true);
+
+        lenient().when(categoriaRepository.findByNombreIgnoreCase("Rostro")).thenReturn(Optional.of(categoriaRostro));
+        lenient().when(categoriaRepository.findByNombreIgnoreCase("Labios")).thenReturn(Optional.of(categoriaLabios));
+
         productoEjemplo = new Producto();
         productoEjemplo.setId(100L);
         productoEjemplo.setNombre("Base Líquida");
         productoEjemplo.setPrecio(30000.0);
         productoEjemplo.setCantidad(10);
         productoEjemplo.setTotalProducto(300000.0);
-        productoEjemplo.setCategoria(CategoriaProducto.ROSTRO);
+        productoEjemplo.setCategoria(categoriaRostro);
         productoEjemplo.setMarca(marcaTrendy);
         productoEjemplo.setActivo(true);
     }
@@ -151,7 +169,7 @@ class ProductoServiceTest {
                     "  Base Líquida HD  ",
                     32000.0,
                     12,
-                    null,
+                    (CategoriaProducto) null,
                     null,
                     null
             );
@@ -172,7 +190,7 @@ class ProductoServiceTest {
         @DisplayName("Debe permitir alternar estado activo con toggle lógico")
         void testActualizarToggleActivo() {
             ActualizarProductoRequest request = new ActualizarProductoRequest(
-                    null, null, null, null, null, false
+                    null, null, null, (CategoriaProducto) null, null, false
             );
 
             when(productoRepository.findById(100L)).thenReturn(Optional.of(productoEjemplo));
@@ -188,7 +206,7 @@ class ProductoServiceTest {
         @DisplayName("Debe lanzar ProductoNoEncontradoException cuando el ID no existe")
         void testActualizarProductoNoExiste() {
             ActualizarProductoRequest request = new ActualizarProductoRequest(
-                    "Nombre", null, null, null, null, null
+                    "Nombre", null, null, (CategoriaProducto) null, null, null
             );
 
             when(productoRepository.findById(999L)).thenReturn(Optional.empty());
@@ -201,7 +219,7 @@ class ProductoServiceTest {
         @DisplayName("Debe rechazar actualización si se intenta asignar una marca inactiva")
         void testActualizarMarcaInactiva() {
             ActualizarProductoRequest request = new ActualizarProductoRequest(
-                    null, null, null, null, 2L, null
+                    null, null, null, (CategoriaProducto) null, 2L, null
             );
 
             when(productoRepository.findById(100L)).thenReturn(Optional.of(productoEjemplo));

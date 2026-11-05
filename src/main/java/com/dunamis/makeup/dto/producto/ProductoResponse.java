@@ -1,8 +1,8 @@
 package com.dunamis.makeup.dto.producto;
 
-import com.dunamis.makeup.entity.CategoriaProducto;
-import com.dunamis.makeup.entity.Producto;
+import com.dunamis.makeup.dto.categoria.CategoriaResponse;
 import com.dunamis.makeup.dto.marca.MarcaResponse;
+import com.dunamis.makeup.entity.Producto;
 
 public record ProductoResponse(
         Long id,
@@ -10,7 +10,7 @@ public record ProductoResponse(
         Double precio,
         Integer cantidad,
         Double totalProducto,
-        CategoriaProducto categoria,
+        CategoriaResponse categoria,
         MarcaResponse marca,
         Boolean activo
 ) {
@@ -21,6 +21,10 @@ public record ProductoResponse(
 
         MarcaResponse marcaResponse = producto.getMarca() != null
                 ? MarcaResponse.fromEntity(producto.getMarca())
+                : null;
+
+        CategoriaResponse categoriaResponse = producto.getCategoria() != null
+                ? CategoriaResponse.fromEntity(producto.getCategoria())
                 : null;
 
         Double precio = producto.getPrecio();
@@ -38,7 +42,7 @@ public record ProductoResponse(
                 precio,
                 cantidad,
                 total,
-                producto.getCategoria(),
+                categoriaResponse,
                 marcaResponse,
                 activo
         );
