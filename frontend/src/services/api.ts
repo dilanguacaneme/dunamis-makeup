@@ -399,6 +399,11 @@ export const inventoryApi = {
       throw new ApiError(errorText || `Error al consultar marcas (${res.status})`, res.status);
     }
 
+    const contentType = res.headers.get('content-type');
+    if (contentType && !contentType.includes('application/json')) {
+      throw new ApiError('El servidor devolvió una respuesta no válida (HTML en lugar de JSON). Verifique el proxy del backend.', res.status);
+    }
+
     return await res.json();
   },
 

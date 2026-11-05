@@ -273,8 +273,11 @@ export const App: React.FC = () => {
     const loggedUser = await inventoryApi.login(username, pass, false);
     sessionStorage.removeItem('dunamis_demo_active');
     sessionStorage.removeItem('dunamis_demo_user');
+    sessionStorage.setItem('dunamis_mode', 'live');
     localStorage.removeItem('dunamis_demo_active');
     localStorage.removeItem('dunamis_demo_user');
+    localStorage.removeItem('dunamis_mode');
+    setIsDemo(false);
     setUser(loggedUser);
     setBackendOnline(true);
     addToast(
@@ -282,7 +285,7 @@ export const App: React.FC = () => {
       'Sesión Iniciada',
       `Bienvenida, ${loggedUser.fullName || loggedUser.username}. (${loggedUser.role === 'ADMIN' ? 'Administradora' : 'Vendedora'})`
     );
-    await loadData(isDemo, loggedUser);
+    await loadData(false, loggedUser);
   };
 
   // Demo Entry Handler
