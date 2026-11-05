@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://dunamis-backend-vyy0.onrender.com/api/:path*"
+    },
+    {
+      "source": "/producto/:path*",
+      "destination": "https://dunamis-backend-vyy0.onrender.com/producto/:path*"
+    },
+    {
+      "source": "/factura/:path*",
+      "destination": "https://dunamis-backend-vyy0.onrender.com/factura/:path*"
+    },
+    {
+      "source": "/marcas/:path*",
+      "destination": "https://dunamis-backend-vyy0.onrender.com/marcas/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
