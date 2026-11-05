@@ -7,6 +7,8 @@ import type {
   Factura,
   Marca,
   MarcaInput,
+  Categoria,
+  CategoriaInput,
   FilterCategory,
   FilterStock,
   ViewMode,
@@ -29,6 +31,7 @@ import { InvoiceHistoryView } from './components/InvoiceHistoryView';
 import { InvoiceDetailModal } from './components/InvoiceDetailModal';
 import { MonthlySalesView } from './components/MonthlySalesView';
 import { BrandManagementModal } from './components/BrandManagementModal';
+import { CategoryManagementModal } from './components/CategoryManagementModal';
 import { BrandManagementView } from './components/BrandManagementView';
 import { TableSkeleton, EmptyState, ErrorBanner, DeleteConfirmModal, DemoNoticeBanner } from './components/StateViews';
 import { ToastContainer } from './components/ToastContainer';
@@ -56,6 +59,7 @@ export const App: React.FC = () => {
   const [totalInventory, setTotalInventory] = useState<number>(0);
   const [lowStockProducts, setLowStockProducts] = useState<Producto[]>([]);
   const [brands, setBrands] = useState<Marca[]>([]);
+  const [categories, setCategories] = useState<Categoria[]>([]);
   const [invoices, setInvoices] = useState<Factura[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +78,7 @@ export const App: React.FC = () => {
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const [isLowStockDrawerOpen, setIsLowStockDrawerOpen] = useState(false);
   const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<Producto | null>(null);
   const [viewingInvoiceId, setViewingInvoiceId] = useState<number | null>(null);
 
@@ -134,11 +139,12 @@ export const App: React.FC = () => {
       }
 
       // Fetch datasets in parallel
-      const [prods, total, lowStock, brandsList, invoicesList] = await Promise.all([
+      const [prods, total, lowStock, brandsList, categoriesList, invoicesList] = await Promise.all([
         inventoryApi.getProducts(currentDemoState, wantInactivos),
         inventoryApi.getTotalInventory(currentDemoState),
         inventoryApi.getLowStockProducts(currentDemoState),
         inventoryApi.getBrands(currentDemoState),
+        inventoryApi.getCategories(currentDemoState),
         inventoryApi.getInvoices(currentDemoState, activeUser.role, activeUser.username),
       ]);
 
@@ -146,6 +152,7 @@ export const App: React.FC = () => {
       setTotalInventory(total);
       setLowStockProducts(lowStock);
       setBrands(brandsList);
+      setCategories(categoriesList);
       setInvoices(invoicesList);
 
       if (!currentDemoState) {
@@ -370,6 +377,30 @@ export const App: React.FC = () => {
     setBrands(list);
   };
 
+  // Category Action Handlers
+  const handleCreateCategory = async (input: CategoriaInput) => {
+    await inventoryApi.createCategory(input, isDemo);
+    addToast('success', 'Categoría Creada', `Se registró la categoría "${input.nombre}".`);
+    await loadData(isDemo, user);
+  };
+
+  const handleUpdateCategory = async (id: number, input: Partial<CategoriaInput>) => {
+    await inventoryApi.updateCategory(id, input, isDemo);
+    addToast(
+      'success',
+      'Categoría Actualizada',
+      input.activa === false
+        ? 'Se ha desactivado la categoría del catálogo.'
+        : `Se actualizaron los datos de la categoría #${id}.`
+    );
+    await loadData(isDemo, user);
+  };
+
+  const handleRefreshCategories = async (incluirInactivas = false) => {
+    const list = await inventoryApi.getCategories(isDemo, incluirInactivas);
+    setCategories(list);
+  };
+
   // Product CRUD Handlers
   const handleOpenCreateModal = () => {
     setEditingProduct(null);
@@ -475,8 +506,13 @@ export const App: React.FC = () => {
       }
 
       // 2. Category filter
-      if (selectedCategory !== 'TODAS' && prod.categoria !== selectedCategory) {
-        return false;
+      if (selectedCategory !== 'TODAS') {
+        const prodCatName = typeof prod.categoria === 'object' && prod.categoria !== null
+          ? prod.categoria.nombre
+          : String(prod.categoria);
+        if (prodCatName.toUpperCase() !== selectedCategory.toUpperCase()) {
+          return false;
+        }
       }
 
       // 3. Brand filter
@@ -593,6 +629,7 @@ export const App: React.FC = () => {
           onToggleDemo={handleToggleDemo}
           onToggleDemoRole={isDemo ? handleToggleDemoRole : undefined}
           onLogout={handleLogout}
+          onOpenCategoryModal={isAdmin ? () => setIsCategoryModalOpen(true) : undefined}
         />
 
         <main className="main-content">
@@ -631,6 +668,7 @@ export const App: React.FC = () => {
                 selectedBrand={selectedBrand}
                 onSelectBrand={setSelectedBrand}
                 brands={brands}
+                categories={categories}
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
                 selectedStockFilter={selectedStockFilter}
@@ -765,7 +803,9 @@ export const App: React.FC = () => {
         onSubmit={handleSaveProduct}
         editingProduct={editingProduct}
         brands={brands}
+        categories={categories}
         onOpenBrandManagement={isAdmin ? () => setIsBrandModalOpen(true) : undefined}
+        onOpenCategoryManagement={isAdmin ? () => setIsCategoryModalOpen(true) : undefined}
         isAdmin={isAdmin}
       />
 
@@ -796,6 +836,18 @@ export const App: React.FC = () => {
           onCreateBrand={handleCreateBrand}
           onUpdateBrand={handleUpdateBrand}
           onRefreshBrands={handleRefreshBrands}
+        />
+      )}
+
+      {/* Admin-only Category Management Modal */}
+      {isAdmin && (
+        <CategoryManagementModal
+          isOpen={isCategoryModalOpen}
+          onClose={() => setIsCategoryModalOpen(false)}
+          categories={categories}
+          onCreateCategory={handleCreateCategory}
+          onUpdateCategory={handleUpdateCategory}
+          onRefreshCategories={handleRefreshCategories}
         />
       )}
 

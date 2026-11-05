@@ -25,13 +25,13 @@
   - [x] Implementar funciones `getCategories`, `createCategory`, `updateCategory` en `api.ts`
   - [x] Implementar soporte completo de categorías en `demoStore.ts`
 
-- [ ] **Fase 5: Interfaz de Usuario y Despliegue**
-  - [ ] Diseñar componente `CategoryModal.tsx` con estilos consistentes a `BrandModal`
-  - [ ] Agregar disparador del modal en la barra superior o cabecera
-  - [ ] Hacer dinámico el selector de categoría en `ProductModal.tsx`
-  - [ ] Hacer dinámicos los filtros de categorías en las vistas de catálogo e inventario
-  - [ ] Agregar rewrites para `/categorias` en `frontend/vercel.json`
+- [x] **Fase 5: Interfaz de Usuario y Despliegue**
+  - [x] Diseñar componente `CategoryModal.tsx` con estilos consistentes a `BrandModal`
+  - [x] Agregar disparador del modal en la barra superior o cabecera
+  - [x] Hacer dinámico el selector de categoría en `ProductModal.tsx`
+  - [x] Hacer dinámicos los filtros de categorías en las vistas de catálogo e inventario
+  - [x] Agregar rewrites para `/categorias` en `frontend/vercel.json`
 
-- [ ] **Fase 6: Verificación Final**
-  - [ ] Ejecutar `npm --prefix frontend run lint` y `npm --prefix frontend run build`
-  - [ ] Ejecutar `.\mvnw.cmd test-compile` y `.\mvnw.cmd test`
+- [x] **Fase 6: Verificación Final**
+  - [x] Ejecutar `npm --prefix frontend run lint` y `npm --prefix frontend run build`
+  - [x] Ejecutar `.\mvnw.cmd test-compile` y `.\mvnw.cmd test`

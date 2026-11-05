@@ -7,6 +7,7 @@ import {
   Package,
   Receipt,
   Tag,
+  Layers,
   ShieldCheck,
   UserCheck,
 } from 'lucide-react';
@@ -23,6 +24,7 @@ interface HeaderProps {
   onLogout: () => void;
   onRefresh: () => void;
   onOpenBrandModal?: () => void;
+  onOpenCategoryModal?: () => void;
   onToggleDemoRole?: () => void;
 }
 
@@ -37,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onRefresh,
   onOpenBrandModal,
+  onOpenCategoryModal,
   onToggleDemoRole,
 }) => {
   const isAdmin = user.role === 'ADMIN';
@@ -193,6 +196,29 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Tag size={14} />
                 <span>Marcas</span>
+              </button>
+            )}
+
+            {isAdmin && onOpenCategoryModal && (
+              <button
+                type="button"
+                onClick={onOpenCategoryModal}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.825rem',
+                  fontWeight: 500,
+                  backgroundColor: 'transparent',
+                  color: 'var(--color-text-muted)',
+                  transition: 'all var(--transition-fast)',
+                }}
+                title="Gestión de categorías cosméticas (Admin)"
+              >
+                <Layers size={14} />
+                <span>Categorías</span>
               </button>
             )}
           </nav>

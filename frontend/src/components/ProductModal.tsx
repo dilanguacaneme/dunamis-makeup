@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Tag } from 'lucide-react';
-import type { Producto, ProductoInput, CategoriaProducto, Marca } from '../types';
+import { X, Sparkles, Tag, Layers } from 'lucide-react';
+import type { Producto, ProductoInput, Marca, Categoria } from '../types';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -8,7 +8,9 @@ interface ProductModalProps {
   onSubmit: (input: ProductoInput, editingId?: number) => Promise<void>;
   editingProduct: Producto | null;
   brands: Marca[];
+  categories?: Categoria[];
   onOpenBrandManagement?: () => void;
+  onOpenCategoryManagement?: () => void;
   isAdmin?: boolean;
 }
 
@@ -18,7 +20,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   onSubmit,
   editingProduct,
   brands,
+  categories = [],
   onOpenBrandManagement,
+  onOpenCategoryManagement,
   isAdmin,
 }) => {
   if (!isOpen) return null;
@@ -31,7 +35,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         onClose={onClose}
         onSubmit={onSubmit}
         brands={brands}
+        categories={categories}
         onOpenBrandManagement={onOpenBrandManagement}
+        onOpenCategoryManagement={onOpenCategoryManagement}
         isAdmin={isAdmin}
       />
     </div>
@@ -43,7 +49,9 @@ interface ProductModalContentProps {
   onClose: () => void;
   onSubmit: (input: ProductoInput, editingId?: number) => Promise<void>;
   brands: Marca[];
+  categories: Categoria[];
   onOpenBrandManagement?: () => void;
+  onOpenCategoryManagement?: () => void;
   isAdmin?: boolean;
 }
 
@@ -52,19 +60,32 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
   onClose,
   onSubmit,
   brands,
+  categories,
   onOpenBrandManagement,
+  onOpenCategoryManagement,
   isAdmin,
 }) => {
   const [nombre, setNombre] = useState(editingProduct ? editingProduct.nombre : '');
   const [precio, setPrecio] = useState<number | ''>(editingProduct ? editingProduct.precio : '');
   const [cantidad, setCantidad] = useState<number | ''>(editingProduct ? editingProduct.cantidad : '');
-  const [categoria, setCategoria] = useState<string>(
-    editingProduct
-      ? typeof editingProduct.categoria === 'object' && editingProduct.categoria !== null
-        ? editingProduct.categoria.nombre
-        : String(editingProduct.categoria)
-      : 'ROSTRO'
+
+  const activeCategories = categories.filter(
+    (c) => c.activa !== false || (editingProduct && typeof editingProduct.categoria === 'object' && editingProduct.categoria?.id === c.id)
   );
+
+  const [categoriaId, setCategoriaId] = useState<number | ''>(() => {
+    if (editingProduct) {
+      if (typeof editingProduct.categoria === 'object' && editingProduct.categoria !== null) {
+        return editingProduct.categoria.id;
+      }
+      const found = categories.find(
+        (c) => c.nombre.toLowerCase() === String(editingProduct.categoria).toLowerCase()
+      );
+      if (found) return found.id;
+    }
+    return activeCategories.length > 0 ? activeCategories[0].id : '';
+  });
+
   const activeBrands = brands.filter(
     (b) => b.activa !== false || (editingProduct?.marca?.id === b.id)
   );
@@ -93,6 +114,11 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
       return;
     }
 
+    if (!categoriaId) {
+      setError('Debes seleccionar una categoría para el producto.');
+      return;
+    }
+
     if (precio === '' || Number(precio) < 0) {
       setError('El precio unitario no puede ser negativo.');
       return;
@@ -105,12 +131,14 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
 
     try {
       setIsSubmitting(true);
+      const selectedCat = categories.find((c) => c.id === Number(categoriaId));
       await onSubmit(
         {
           nombre: nombre.trim(),
           precio: Math.round(Number(precio)),
           cantidad: Math.round(Number(cantidad)),
-          categoria,
+          categoriaId: Number(categoriaId),
+          categoria: selectedCat?.nombre,
           marca: {
             id: Number(marcaId),
           },
@@ -265,23 +293,41 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
 
           {/* Categoría */}
           <div className="form-group">
-            <label className="form-label" htmlFor="product-cat">
-              Zona cosmética / Categoría
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <label className="form-label" htmlFor="product-cat">
+                Zona cosmética / Categoría
+              </label>
+              {isAdmin && onOpenCategoryManagement && (
+                <button
+                  type="button"
+                  onClick={onOpenCategoryManagement}
+                  className="btn-ghost"
+                  style={{ fontSize: '0.75rem', padding: '0.1rem 0.35rem', color: 'var(--color-rosewood)' }}
+                  title="Gestionar categorías cosméticas"
+                >
+                  <Layers size={12} />
+                  <span>Gestionar</span>
+                </button>
+              )}
+            </div>
             <select
               id="product-cat"
               className="form-select"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value as CategoriaProducto)}
+              value={categoriaId}
+              onChange={(e) => setCategoriaId(Number(e.target.value))}
               required
             >
-              <option value="ROSTRO">Rostro</option>
-              <option value="CEJAS">Cejas</option>
-              <option value="LABIOS">Labios</option>
-              <option value="OJOS">Ojos</option>
+              <option value="" disabled>
+                Seleccionar categoría...
+              </option>
+              {activeCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}{c.activa === false ? ' (Inactiva)' : ''}
+                </option>
+              ))}
             </select>
             <span className="form-hint">
-              Categorías oficiales Dunamis.
+              Categorías activas (GET /categorias).
             </span>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, X, Plus, AlertTriangle, LayoutGrid, Table, Sparkles } from 'lucide-react';
-import type { FilterCategory, FilterStock, ViewMode, Marca } from '../types';
+import type { FilterCategory, FilterStock, ViewMode, Marca, Categoria } from '../types';
 
 interface ProductToolbarProps {
   searchQuery: string;
@@ -8,6 +8,7 @@ interface ProductToolbarProps {
   selectedBrand: number | 'TODAS';
   onSelectBrand: (brandId: number | 'TODAS') => void;
   brands: Marca[];
+  categories?: Categoria[];
   selectedCategory: FilterCategory;
   onSelectCategory: (cat: FilterCategory) => void;
   selectedStockFilter: FilterStock;
@@ -28,6 +29,7 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
   selectedBrand,
   onSelectBrand,
   brands,
+  categories = [],
   selectedCategory,
   onSelectCategory,
   selectedStockFilter,
@@ -41,12 +43,18 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
   mostrarInactivos = false,
   onToggleMostrarInactivos,
 }) => {
-  const categories: { key: FilterCategory; label: string }[] = [
+  const categoryFilters: { key: FilterCategory; label: string }[] = [
     { key: 'TODAS', label: 'Todas las zonas' },
-    { key: 'ROSTRO', label: 'Rostro' },
-    { key: 'CEJAS', label: 'Cejas' },
-    { key: 'LABIOS', label: 'Labios' },
-    { key: 'OJOS', label: 'Ojos' },
+    ...(categories && categories.length > 0
+      ? categories
+          .filter((c) => c.activa !== false)
+          .map((c) => ({ key: c.nombre, label: c.nombre }))
+      : [
+          { key: 'ROSTRO', label: 'Rostro' },
+          { key: 'CEJAS', label: 'Cejas' },
+          { key: 'LABIOS', label: 'Labios' },
+          { key: 'OJOS', label: 'Ojos' },
+        ]),
   ];
 
   const hasActiveFilters =
@@ -365,8 +373,8 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
           <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-muted)', marginRight: '0.2rem' }}>
             Zona cosmética:
           </span>
-          {categories.map((cat) => {
-            const isSelected = selectedCategory === cat.key;
+          {categoryFilters.map((cat) => {
+            const isSelected = selectedCategory.toUpperCase() === cat.key.toUpperCase();
             return (
               <button
                 key={cat.key}

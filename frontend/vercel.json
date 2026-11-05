@@ -29,6 +29,14 @@
       "destination": "https://dunamis-backend-vyy0.onrender.com/marcas/:path*"
     },
     {
+      "source": "/categorias",
+      "destination": "https://dunamis-backend-vyy0.onrender.com/categorias"
+    },
+    {
+      "source": "/categorias/:path*",
+      "destination": "https://dunamis-backend-vyy0.onrender.com/categorias/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
