@@ -1,9 +1,9 @@
 # Tareas de Implementación 008: Catálogo y Gestión Dinámica de Categorías
 
-- [ ] **Fase 1: Infraestructura y DTOs Backend**
-  - [ ] Crear entidad `Categoria` (`com.dunamis.makeup.entity.Categoria`)
-  - [ ] Crear DTOs: `CategoriaResponse`, `CrearCategoriaRequest`, `ActualizarCategoriaRequest`
-  - [ ] Crear repositorio `CategoriaRepository` con consultas por nombre y estado
+- [x] **Fase 1: Infraestructura y DTOs Backend**
+  - [x] Crear entidad `Categoria` (`com.dunamis.makeup.entity.Categoria`)
+  - [x] Crear DTOs: `CategoriaResponse`, `CrearCategoriaRequest`, `ActualizarCategoriaRequest`
+  - [x] Crear repositorio `CategoriaRepository` con consultas por nombre y estado
 
 - [ ] **Fase 2: Lógica de Negocio y Endpoints Backend**
   - [ ] Implementar `CategoriaService` con validación de duplicados y borrado lógico
