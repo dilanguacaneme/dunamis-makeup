@@ -19,11 +19,11 @@
   - [x] Actualizar `ProductoService` para validar `categoriaId` y asignar la entidad
   - [x] Actualizar y verificar pruebas de integración de `Producto`
 
-- [ ] **Fase 4: Tipos, API y DemoStore en Frontend**
-  - [ ] Crear interfaces `Categoria` y `CategoriaInput` en `types/index.ts`
-  - [ ] Actualizar interfaces `Producto` y `ProductoInput`
-  - [ ] Implementar funciones `getCategories`, `createCategory`, `updateCategory` en `api.ts`
-  - [ ] Implementar soporte completo de categorías en `demoStore.ts`
+- [x] **Fase 4: Tipos, API y DemoStore en Frontend**
+  - [x] Crear interfaces `Categoria` y `CategoriaInput` en `types/index.ts`
+  - [x] Actualizar interfaces `Producto` y `ProductoInput`
+  - [x] Implementar funciones `getCategories`, `createCategory`, `updateCategory` en `api.ts`
+  - [x] Implementar soporte completo de categorías en `demoStore.ts`
 
 - [ ] **Fase 5: Interfaz de Usuario y Despliegue**
   - [ ] Diseñar componente `CategoryModal.tsx` con estilos consistentes a `BrandModal`

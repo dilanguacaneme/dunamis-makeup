@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle, PackagePlus, CheckCircle2 } from 'lucide-react';
-import type { Producto, CategoriaProducto } from '../types';
+import type { Producto, Categoria, CategoriaProducto } from '../types';
 
 interface LowStockDrawerProps {
   isOpen: boolean;
@@ -21,17 +21,14 @@ export const LowStockDrawer: React.FC<LowStockDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const getCategoryBadge = (cat: CategoriaProducto) => {
-    switch (cat) {
-      case 'ROSTRO':
-        return <span className="badge-category badge-rostro">Rostro</span>;
-      case 'CEJAS':
-        return <span className="badge-category badge-cejas">Cejas</span>;
-      case 'LABIOS':
-        return <span className="badge-category badge-labios">Labios</span>;
-      case 'OJOS':
-        return <span className="badge-category badge-ojos">Ojos</span>;
-    }
+  const getCategoryBadge = (cat: Categoria | CategoriaProducto) => {
+    const name = typeof cat === 'object' && cat !== null ? cat.nombre : String(cat || '');
+    const normalized = name.toUpperCase().trim();
+    if (normalized.includes('ROSTRO')) return <span className="badge-category badge-rostro">{name}</span>;
+    if (normalized.includes('CEJAS')) return <span className="badge-category badge-cejas">{name}</span>;
+    if (normalized.includes('LABIOS')) return <span className="badge-category badge-labios">{name}</span>;
+    if (normalized.includes('OJOS')) return <span className="badge-category badge-ojos">{name}</span>;
+    return <span className="badge-category badge-generic">{name}</span>;
   };
 
   const handleCustomRestock = (product: Producto) => {

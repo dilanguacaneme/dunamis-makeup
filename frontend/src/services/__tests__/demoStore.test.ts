@@ -56,6 +56,68 @@ describe('Pruebas Unitarias - demoStore (Modo Demostración Local - Spec 006)', 
     });
   });
 
+  describe('1.1. Gestión de Categorías (Spec 008)', () => {
+    it('debe listar solo categorías activas por defecto y todas con incluirInactivas=true', () => {
+      const activas = demoStore.getCategories(false);
+      assert.ok(activas.length >= 6);
+
+      // Desactivar una categoría
+      demoStore.updateCategory(1, { activa: false });
+      const activasDespues = demoStore.getCategories(false);
+      const todas = demoStore.getCategories(true);
+
+      assert.equal(activasDespues.length, activas.length - 1);
+      assert.equal(todas.length, activas.length);
+    });
+
+    it('debe crear categoría normalizando espacios múltiples y validando unicidad case-insensitive', () => {
+      const nueva = demoStore.createCategory({ nombre: '   Skin   Care   Premium   ' });
+      assert.equal(nueva.nombre, 'Skin Care Premium');
+      assert.equal(nueva.activa, true);
+
+      // Duplicado case-insensitive
+      assert.throws(
+        () => demoStore.createCategory({ nombre: 'skin care premium' }),
+        /Ya existe una categoría con ese nombre/
+      );
+    });
+
+    it('debe rechazar crear categoría con nombre vacío o solo espacios', () => {
+      assert.throws(
+        () => demoStore.createCategory({ nombre: '    ' }),
+        /El nombre de la categoría es obligatorio/
+      );
+    });
+
+    it('debe actualizar categoría y rechazar duplicados en edición', () => {
+      const cat = demoStore.createCategory({ nombre: 'Uñas' });
+      demoStore.updateCategory(cat.id, { nombre: 'Uñas y Manicure', activa: true });
+      const actualizada = demoStore.getCategories(true).find((c) => c.id === cat.id);
+      assert.equal(actualizada?.nombre, 'Uñas y Manicure');
+
+      assert.throws(
+        () => demoStore.updateCategory(cat.id, { nombre: 'Ojos' }),
+        /Ya existe una categoría con ese nombre/
+      );
+    });
+
+    it('debe rechazar crear producto si la categoría está inactiva', () => {
+      demoStore.updateCategory(2, { activa: false }); // Ojos inactiva
+
+      assert.throws(
+        () =>
+          demoStore.createProduct({
+            nombre: 'Sombra Test',
+            precio: 20000,
+            cantidad: 5,
+            categoriaId: 2,
+            marca: { id: 1 },
+          }),
+        /La categoría seleccionada no existe o está inactiva/
+      );
+    });
+  });
+
   describe('2. Gestión de Productos e Inventario (RF-007, RF-008, RF-009)', () => {
     it('debe crear producto asociado a una marca activa y recalcular totalProducto', () => {
       const prod = demoStore.createProduct({

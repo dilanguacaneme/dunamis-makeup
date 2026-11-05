@@ -1,4 +1,15 @@
-export type CategoriaProducto = 'ROSTRO' | 'CEJAS' | 'LABIOS' | 'OJOS';
+export type CategoriaProducto = 'ROSTRO' | 'CEJAS' | 'LABIOS' | 'OJOS' | string;
+
+export interface Categoria {
+  id: number;
+  nombre: string;
+  activa?: boolean;
+}
+
+export interface CategoriaInput {
+  nombre: string;
+  activa?: boolean;
+}
 
 export interface Marca {
   id: number;
@@ -17,7 +28,8 @@ export interface Producto {
   precio: number;
   cantidad: number;
   totalProducto?: number;
-  categoria: CategoriaProducto;
+  categoria: Categoria | CategoriaProducto;
+  categoriaId?: number;
   marca?: Marca | null;
   activo?: boolean;
 }
@@ -26,7 +38,8 @@ export interface ProductoInput {
   nombre: string;
   precio: number;
   cantidad: number;
-  categoria: CategoriaProducto;
+  categoria?: Categoria | CategoriaProducto;
+  categoriaId?: number;
   marca?: {
     id: number;
   };

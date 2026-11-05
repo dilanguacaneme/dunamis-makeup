@@ -58,8 +58,12 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
   const [nombre, setNombre] = useState(editingProduct ? editingProduct.nombre : '');
   const [precio, setPrecio] = useState<number | ''>(editingProduct ? editingProduct.precio : '');
   const [cantidad, setCantidad] = useState<number | ''>(editingProduct ? editingProduct.cantidad : '');
-  const [categoria, setCategoria] = useState<CategoriaProducto>(
-    editingProduct ? editingProduct.categoria : 'ROSTRO'
+  const [categoria, setCategoria] = useState<string>(
+    editingProduct
+      ? typeof editingProduct.categoria === 'object' && editingProduct.categoria !== null
+        ? editingProduct.categoria.nombre
+        : String(editingProduct.categoria)
+      : 'ROSTRO'
   );
   const activeBrands = brands.filter(
     (b) => b.activa !== false || (editingProduct?.marca?.id === b.id)

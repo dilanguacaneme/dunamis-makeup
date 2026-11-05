@@ -6,9 +6,20 @@ import type {
   Usuario,
   Marca,
   MarcaInput,
+  Categoria,
+  CategoriaInput,
   EstadoPagoFactura,
   MedioPago,
 } from '../types';
+
+export const INITIAL_DEMO_CATEGORIES: Categoria[] = [
+  { id: 1, nombre: 'Rostro', activa: true },
+  { id: 2, nombre: 'Ojos', activa: true },
+  { id: 3, nombre: 'Labios', activa: true },
+  { id: 4, nombre: 'Cejas', activa: true },
+  { id: 5, nombre: 'Cuidado Facial', activa: true },
+  { id: 6, nombre: 'Accesorios', activa: true },
+];
 
 export const INITIAL_DEMO_BRANDS: Marca[] = [
   { id: 1, nombre: 'Trendy', activa: true },
@@ -24,7 +35,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 85000,
     cantidad: 2,
     totalProducto: 170000,
-    categoria: 'ROSTRO',
+    categoria: INITIAL_DEMO_CATEGORIES[0], // Rostro
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
   },
   {
@@ -33,7 +44,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 48000,
     cantidad: 14,
     totalProducto: 672000,
-    categoria: 'ROSTRO',
+    categoria: INITIAL_DEMO_CATEGORIES[0], // Rostro
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
   },
   {
@@ -42,7 +53,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 62000,
     cantidad: 6,
     totalProducto: 372000,
-    categoria: 'ROSTRO',
+    categoria: INITIAL_DEMO_CATEGORIES[0], // Rostro
     marca: INITIAL_DEMO_BRANDS[3], // Magna
   },
   {
@@ -51,7 +62,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 39000,
     cantidad: 0, // Demonstrates "Agotado" state
     totalProducto: 0,
-    categoria: 'CEJAS',
+    categoria: INITIAL_DEMO_CATEGORIES[3], // Cejas
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
   },
   {
@@ -60,7 +71,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 34000,
     cantidad: 8,
     totalProducto: 272000,
-    categoria: 'CEJAS',
+    categoria: INITIAL_DEMO_CATEGORIES[3], // Cejas
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
   },
   {
@@ -69,7 +80,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 32000,
     cantidad: 2,
     totalProducto: 64000,
-    categoria: 'CEJAS',
+    categoria: INITIAL_DEMO_CATEGORIES[3], // Cejas
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
   },
   {
@@ -78,7 +89,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 45000,
     cantidad: 12,
     totalProducto: 540000,
-    categoria: 'LABIOS',
+    categoria: INITIAL_DEMO_CATEGORIES[2], // Labios
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
   },
   {
@@ -87,7 +98,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 38000,
     cantidad: 1,
     totalProducto: 38000,
-    categoria: 'LABIOS',
+    categoria: INITIAL_DEMO_CATEGORIES[2], // Labios
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
   },
   {
@@ -96,7 +107,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 42000,
     cantidad: 9,
     totalProducto: 378000,
-    categoria: 'LABIOS',
+    categoria: INITIAL_DEMO_CATEGORIES[2], // Labios
     marca: INITIAL_DEMO_BRANDS[3], // Magna
   },
   {
@@ -105,7 +116,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 110000,
     cantidad: 5,
     totalProducto: 550000,
-    categoria: 'OJOS',
+    categoria: INITIAL_DEMO_CATEGORIES[1], // Ojos
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
   },
   {
@@ -114,7 +125,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 36000,
     cantidad: 3,
     totalProducto: 108000,
-    categoria: 'OJOS',
+    categoria: INITIAL_DEMO_CATEGORIES[1], // Ojos
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
   },
   {
@@ -123,7 +134,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     precio: 52000,
     cantidad: 16,
     totalProducto: 832000,
-    categoria: 'OJOS',
+    categoria: INITIAL_DEMO_CATEGORIES[1], // Ojos
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
   },
 ];
@@ -288,18 +299,98 @@ export const DEMO_SELLER_USER: Usuario = {
 };
 
 const STORAGE_PRODUCTS_KEY = 'dunamis_demo_inventory_v3';
+const STORAGE_CATEGORIES_KEY = 'dunamis_demo_categories_v3';
 const STORAGE_BRANDS_KEY = 'dunamis_demo_brands_v3';
 const STORAGE_INVOICES_KEY = 'dunamis_demo_invoices_v3';
 
 class DemoStore {
+  private categories: Categoria[];
   private products: Producto[];
   private brands: Marca[];
   private invoices: Factura[];
 
   constructor() {
+    this.categories = this.loadCategories();
     this.brands = this.loadBrands();
     this.products = this.loadProducts();
     this.invoices = this.loadInvoices();
+  }
+
+  // --- CATEGORIES ---
+  private loadCategories(): Categoria[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_CATEGORIES_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_DEMO_CATEGORIES.map((c) => ({ ...c }));
+  }
+
+  private saveCategories(): void {
+    try {
+      localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(this.categories));
+    } catch {
+      // ignore
+    }
+  }
+
+  public getCategories(incluirInactivas = false): Categoria[] {
+    const list = incluirInactivas
+      ? [...this.categories]
+      : this.categories.filter((c) => c.activa !== false);
+    return list.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  public getAllCategories(): Categoria[] {
+    return [...this.categories].sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  public createCategory(input: CategoriaInput): Categoria {
+    const nombre = input.nombre.trim().replace(/\s+/g, ' ');
+    if (!nombre) {
+      throw new Error('El nombre de la categoría es obligatorio');
+    }
+    const exists = this.categories.some((c) => c.nombre.toLowerCase() === nombre.toLowerCase());
+    if (exists) {
+      throw new Error('Ya existe una categoría con ese nombre');
+    }
+    const nextId = this.categories.length > 0 ? Math.max(...this.categories.map((c) => c.id)) + 1 : 1;
+    const newCategory: Categoria = {
+      id: nextId,
+      nombre,
+      activa: true,
+    };
+    this.categories.push(newCategory);
+    this.saveCategories();
+    return newCategory;
+  }
+
+  public updateCategory(id: number, input: Partial<CategoriaInput>): Categoria {
+    const cat = this.categories.find((c) => c.id === id);
+    if (!cat) {
+      throw new Error('Categoría no encontrada');
+    }
+    if (input.nombre !== undefined) {
+      const nombre = input.nombre.trim().replace(/\s+/g, ' ');
+      if (!nombre) {
+        throw new Error('El nombre de la categoría es obligatorio');
+      }
+      const duplicate = this.categories.some(
+        (c) => c.id !== id && c.nombre.toLowerCase() === nombre.toLowerCase()
+      );
+      if (duplicate) {
+        throw new Error('Ya existe una categoría con ese nombre');
+      }
+      cat.nombre = nombre;
+    }
+    if (input.activa !== undefined) {
+      cat.activa = input.activa;
+    }
+    this.saveCategories();
+    return cat;
   }
 
   // --- BRANDS ---
@@ -384,7 +475,19 @@ class DemoStore {
     try {
       const stored = localStorage.getItem(STORAGE_PRODUCTS_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed: Producto[] = JSON.parse(stored);
+        return parsed.map((p) => {
+          if (typeof p.categoria === 'string') {
+            const matched = this.categories.find(
+              (c) => c.nombre.toLowerCase() === (p.categoria as string).toLowerCase()
+            );
+            return {
+              ...p,
+              categoria: matched || { id: 1, nombre: p.categoria, activa: true },
+            };
+          }
+          return p;
+        });
       }
     } catch {
       // ignore
@@ -422,6 +525,23 @@ class DemoStore {
       throw new Error('La marca seleccionada no existe o está inactiva');
     }
 
+    let categoria: Categoria | undefined;
+    if (input.categoriaId !== undefined) {
+      categoria = this.categories.find((c) => c.id === input.categoriaId && c.activa !== false);
+    } else if (input.categoria !== undefined) {
+      if (typeof input.categoria === 'object' && (input.categoria as Categoria).id) {
+        categoria = this.categories.find((c) => c.id === (input.categoria as Categoria).id && c.activa !== false);
+      } else if (typeof input.categoria === 'string') {
+        categoria = this.categories.find(
+          (c) => c.nombre.toLowerCase() === (input.categoria as string).toLowerCase() && c.activa !== false
+        );
+      }
+    }
+
+    if (!categoria) {
+      throw new Error('La categoría seleccionada no existe o está inactiva');
+    }
+
     const nextId = this.products.length > 0 ? Math.max(...this.products.map((p) => p.id)) + 1 : 1;
     const newProduct: Producto = {
       id: nextId,
@@ -429,7 +549,7 @@ class DemoStore {
       precio: Number(input.precio),
       cantidad: Math.max(0, Number(input.cantidad)),
       totalProducto: Number(input.precio) * Math.max(0, Number(input.cantidad)),
-      categoria: input.categoria,
+      categoria,
       marca,
       activo: true,
     };
@@ -453,7 +573,31 @@ class DemoStore {
       }
       updatedCantidad = Number(input.cantidad);
     }
-    const updatedCategoria = input.categoria !== undefined ? input.categoria : current.categoria;
+
+    let updatedCategoria = current.categoria;
+    if (input.categoriaId !== undefined) {
+      const foundCat = this.categories.find((c) => c.id === input.categoriaId && c.activa !== false);
+      if (!foundCat) {
+        throw new Error('La categoría seleccionada no existe o está inactiva');
+      }
+      updatedCategoria = foundCat;
+    } else if (input.categoria !== undefined) {
+      if (typeof input.categoria === 'object' && (input.categoria as Categoria).id) {
+        const foundCat = this.categories.find((c) => c.id === (input.categoria as Categoria).id && c.activa !== false);
+        if (!foundCat) {
+          throw new Error('La categoría seleccionada no existe o está inactiva');
+        }
+        updatedCategoria = foundCat;
+      } else if (typeof input.categoria === 'string') {
+        const foundCat = this.categories.find(
+          (c) => c.nombre.toLowerCase() === (input.categoria as string).toLowerCase() && c.activa !== false
+        );
+        if (!foundCat) {
+          throw new Error('La categoría seleccionada no existe o está inactiva');
+        }
+        updatedCategoria = foundCat;
+      }
+    }
 
     let updatedMarca = current.marca;
     if (input.marca?.id) {
@@ -753,9 +897,11 @@ class DemoStore {
   }
 
   public resetToDefaults(): void {
+    this.categories = INITIAL_DEMO_CATEGORIES.map((c) => ({ ...c }));
     this.brands = INITIAL_DEMO_BRANDS.map((b) => ({ ...b }));
     this.products = INITIAL_DEMO_PRODUCTS.map((p) => ({ ...p }));
     this.invoices = INITIAL_DEMO_INVOICES.map((i) => ({ ...i }));
+    this.saveCategories();
     this.saveBrands();
     this.saveProducts();
     this.saveInvoices();
