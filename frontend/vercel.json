@@ -5,12 +5,24 @@
       "destination": "https://dunamis-backend-vyy0.onrender.com/api/:path*"
     },
     {
+      "source": "/producto",
+      "destination": "https://dunamis-backend-vyy0.onrender.com/producto"
+    },
+    {
       "source": "/producto/:path*",
       "destination": "https://dunamis-backend-vyy0.onrender.com/producto/:path*"
     },
     {
+      "source": "/factura",
+      "destination": "https://dunamis-backend-vyy0.onrender.com/factura"
+    },
+    {
       "source": "/factura/:path*",
       "destination": "https://dunamis-backend-vyy0.onrender.com/factura/:path*"
+    },
+    {
+      "source": "/marcas",
+      "destination": "https://dunamis-backend-vyy0.onrender.com/marcas"
     },
     {
       "source": "/marcas/:path*",
