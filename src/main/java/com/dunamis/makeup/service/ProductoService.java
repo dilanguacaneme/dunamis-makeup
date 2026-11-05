@@ -1,9 +1,12 @@
 package com.dunamis.makeup.service;
 
+import com.dunamis.makeup.entity.Categoria;
+import com.dunamis.makeup.entity.CategoriaProducto;
 import com.dunamis.makeup.entity.Marca;
 import com.dunamis.makeup.entity.Producto;
 import com.dunamis.makeup.exception.ProductoNoEncontradoException;
 import com.dunamis.makeup.exception.ReglaNegocioException;
+import com.dunamis.makeup.repository.CategoriaRepository;
 import com.dunamis.makeup.repository.DetalleFacturaRepository;
 import com.dunamis.makeup.repository.MarcaRepository;
 import com.dunamis.makeup.repository.ProductoRepository;
@@ -26,6 +29,9 @@ public class ProductoService {
     private MarcaRepository marcaRepository;
 
     @Autowired
+    private CategoriaRepository categoriaRepository;
+
+    @Autowired
     private DetalleFacturaRepository detalleFacturaRepository;
 
     public String normalizarNombre(String nombre) {
@@ -33,6 +39,31 @@ public class ProductoService {
             return null;
         }
         return nombre.trim().replaceAll("\\s+", " ");
+    }
+
+    private String formatearNombreEnum(CategoriaProducto cat) {
+        if (cat == null) return null;
+        return switch (cat) {
+            case ROSTRO -> "Rostro";
+            case OJOS -> "Ojos";
+            case LABIOS -> "Labios";
+            case CEJAS -> "Cejas";
+        };
+    }
+
+    private Categoria resolverCategoria(Long categoriaId, CategoriaProducto categoriaEnum) {
+        if (categoriaId != null) {
+            return categoriaRepository.findById(categoriaId)
+                    .filter(c -> Boolean.TRUE.equals(c.getActiva()))
+                    .orElseThrow(() -> new ReglaNegocioException("La categoría seleccionada no existe o está inactiva"));
+        }
+        if (categoriaEnum != null) {
+            String nombre = formatearNombreEnum(categoriaEnum);
+            return categoriaRepository.findByNombreIgnoreCase(nombre)
+                    .filter(c -> Boolean.TRUE.equals(c.getActiva()))
+                    .orElseGet(() -> categoriaRepository.save(new Categoria(nombre)));
+        }
+        throw new ReglaNegocioException("La categoría es obligatoria");
     }
 
     // --- NUEVA API BASADA EN DTOS (Spec 003) ---
@@ -44,12 +75,14 @@ public class ProductoService {
                 .filter(m -> Boolean.TRUE.equals(m.getActiva()))
                 .orElseThrow(() -> new ReglaNegocioException("La marca seleccionada no existe o está inactiva"));
 
+        Categoria categoria = resolverCategoria(request.categoriaId(), request.categoria());
+
         Producto producto = new Producto();
         producto.setNombre(nombreNormalizado);
         producto.setPrecio(request.precio());
         producto.setCantidad(request.cantidad());
         producto.setTotalProducto(request.precio() * request.cantidad());
-        producto.setCategoria(request.categoria());
+        producto.setCategoria(categoria);
         producto.setMarca(marca);
         producto.setActivo(true);
 
@@ -94,8 +127,9 @@ public class ProductoService {
             producto.setCantidad(request.cantidad());
         }
 
-        if (request.categoria() != null) {
-            producto.setCategoria(request.categoria());
+        if (request.categoriaId() != null || request.categoria() != null) {
+            Categoria categoria = resolverCategoria(request.categoriaId(), request.categoria());
+            producto.setCategoria(categoria);
         }
 
         if (request.marcaId() != null) {

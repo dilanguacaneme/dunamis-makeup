@@ -1,5 +1,7 @@
 package com.dunamis.makeup.dto.producto;
 
+import com.dunamis.makeup.dto.categoria.CategoriaResponse;
+import com.dunamis.makeup.entity.Categoria;
 import com.dunamis.makeup.entity.CategoriaProducto;
 import com.dunamis.makeup.entity.Marca;
 import com.dunamis.makeup.entity.Producto;
@@ -36,13 +38,14 @@ class ProductoDtoTest {
         @DisplayName("Debe instanciar y exponer atributos inmutables correctamente")
         void testCreacionProductoResponse() {
             MarcaResponse marca = new MarcaResponse(1L, "Trendy", true);
+            CategoriaResponse categoria = new CategoriaResponse(1L, "Rostro", true);
             ProductoResponse response = new ProductoResponse(
                     10L,
                     "Polvo Traslúcido",
                     25000.0,
                     15,
                     375000.0,
-                    CategoriaProducto.ROSTRO,
+                    categoria,
                     marca,
                     true
             );
@@ -52,7 +55,7 @@ class ProductoDtoTest {
             assertEquals(25000.0, response.precio());
             assertEquals(15, response.cantidad());
             assertEquals(375000.0, response.totalProducto());
-            assertEquals(CategoriaProducto.ROSTRO, response.categoria());
+            assertEquals("Rostro", response.categoria().nombre());
             assertNotNull(response.marca());
             assertEquals("Trendy", response.marca().nombre());
             assertTrue(response.activo());
@@ -71,7 +74,7 @@ class ProductoDtoTest {
             producto.setPrecio(18000.0);
             producto.setCantidad(5);
             producto.setTotalProducto(90000.0);
-            producto.setCategoria(CategoriaProducto.LABIOS);
+            producto.setCategoria(new Categoria("Labios"));
             producto.setMarca(marca);
             producto.setActivo(true);
 
@@ -82,7 +85,7 @@ class ProductoDtoTest {
             assertEquals(18000.0, response.precio());
             assertEquals(5, response.cantidad());
             assertEquals(90000.0, response.totalProducto());
-            assertEquals(CategoriaProducto.LABIOS, response.categoria());
+            assertEquals("Labios", response.categoria().nombre());
             assertNotNull(response.marca());
             assertEquals("Purpure", response.marca().nombre());
             assertTrue(response.activo());
@@ -96,7 +99,7 @@ class ProductoDtoTest {
             producto.setNombre("Sombra Individual");
             producto.setPrecio(12000.0);
             producto.setCantidad(4);
-            producto.setCategoria(CategoriaProducto.OJOS);
+            producto.setCategoria(new Categoria("Ojos"));
             producto.setActivo(null); // Caso retrospectivo brownfield
 
             ProductoResponse response = ProductoResponse.fromEntity(producto);
@@ -201,7 +204,7 @@ class ProductoDtoTest {
         @DisplayName("Debe aceptar payload con solo cantidad para ajuste rápido de existencias")
         void testPayloadSoloCantidadValido() {
             ActualizarProductoRequest request = new ActualizarProductoRequest(
-                    null, null, 25, null, null, null
+                    null, null, 25, (CategoriaProducto) null, null, null
             );
 
             Set<ConstraintViolation<ActualizarProductoRequest>> violations = validator.validate(request);
@@ -212,10 +215,10 @@ class ProductoDtoTest {
         @DisplayName("Debe rechazar precio negativo o cantidad negativa")
         void testValoresNegativosRechazados() {
             ActualizarProductoRequest reqPrecioNeg = new ActualizarProductoRequest(
-                    null, -500.0, null, null, null, null
+                    null, -500.0, null, (CategoriaProducto) null, null, null
             );
             ActualizarProductoRequest reqCantidadNeg = new ActualizarProductoRequest(
-                    null, null, -10, null, null, null
+                    null, null, -10, (CategoriaProducto) null, null, null
             );
 
             assertFalse(validator.validate(reqPrecioNeg).isEmpty());

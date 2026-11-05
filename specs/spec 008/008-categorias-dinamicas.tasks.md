@@ -13,11 +13,11 @@
   - [x] Crear pruebas unitarias para `CategoriaService`
   - [x] Crear pruebas de integración para `CategoriaController`
 
-- [ ] **Fase 3: Integración con Producto en Backend**
-  - [ ] Modificar relación en `Producto` hacia entidad `Categoria`
-  - [ ] Adaptar DTOs de producto (`CrearProductoRequest`, `ActualizarProductoRequest`, `ProductoResponse`)
-  - [ ] Actualizar `ProductoService` para validar `categoriaId` y asignar la entidad
-  - [ ] Actualizar y verificar pruebas de integración de `Producto`
+- [x] **Fase 3: Integración con Producto en Backend**
+  - [x] Modificar relación en `Producto` hacia entidad `Categoria`
+  - [x] Adaptar DTOs de producto (`CrearProductoRequest`, `ActualizarProductoRequest`, `ProductoResponse`)
+  - [x] Actualizar `ProductoService` para validar `categoriaId` y asignar la entidad
+  - [x] Actualizar y verificar pruebas de integración de `Producto`
 
 - [ ] **Fase 4: Tipos, API y DemoStore en Frontend**
   - [ ] Crear interfaces `Categoria` y `CategoriaInput` en `types/index.ts`

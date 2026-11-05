@@ -33,10 +33,9 @@ public class Producto {
 
     private Double totalProducto;
 
-    @NotNull(message = "La categoria no puede estar vacia")
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private CategoriaProducto categoria;
+    @ManyToOne
+    @JoinColumn(name = "categoria_id")
+    private Categoria categoria;
 
     // Nullable for existing catalog rows; new products must select a brand in the service.
     @ManyToOne

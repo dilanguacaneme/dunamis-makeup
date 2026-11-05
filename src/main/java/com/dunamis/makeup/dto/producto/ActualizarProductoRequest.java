@@ -16,6 +16,8 @@ public record ActualizarProductoRequest(
         @Min(value = 0, message = "Las existencias no pueden ser negativas")
         Integer cantidad,
 
+        Long categoriaId,
+
         CategoriaProducto categoria,
 
         Long marcaId,
@@ -27,8 +29,13 @@ public record ActualizarProductoRequest(
         return (nombre != null && !nombre.isBlank()) ||
                 precio != null ||
                 cantidad != null ||
+                categoriaId != null ||
                 categoria != null ||
                 marcaId != null ||
                 activo != null;
+    }
+
+    public ActualizarProductoRequest(String nombre, Double precio, Integer cantidad, CategoriaProducto categoria, Long marcaId, Boolean activo) {
+        this(nombre, precio, cantidad, null, categoria, marcaId, activo);
     }
 }

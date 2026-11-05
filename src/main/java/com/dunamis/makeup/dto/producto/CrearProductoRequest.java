@@ -1,6 +1,7 @@
 package com.dunamis.makeup.dto.producto;
 
 import com.dunamis.makeup.entity.CategoriaProducto;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -20,9 +21,19 @@ public record CrearProductoRequest(
         @Min(value = 0, message = "Las existencias no pueden ser negativas")
         Integer cantidad,
 
-        @NotNull(message = "La categoría no puede estar vacía")
+        Long categoriaId,
+
         CategoriaProducto categoria,
 
         @NotNull(message = "Seleccione una marca para el producto")
         Long marcaId
-) {}
+) {
+    @AssertTrue(message = "Seleccione una categoría para el producto")
+    public boolean isCategoriaValida() {
+        return categoriaId != null || categoria != null;
+    }
+
+    public CrearProductoRequest(String nombre, Double precio, Integer cantidad, CategoriaProducto categoria, Long marcaId) {
+        this(nombre, precio, cantidad, null, categoria, marcaId);
+    }
+}
