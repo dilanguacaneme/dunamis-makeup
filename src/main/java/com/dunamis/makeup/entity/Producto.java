@@ -45,7 +45,7 @@ public class Producto {
     @Column(nullable = false)
     private Boolean activo = Boolean.TRUE;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20) default 'NO_APLICA'")
     private String tono = "NO_APLICA";
 
     @PrePersist
