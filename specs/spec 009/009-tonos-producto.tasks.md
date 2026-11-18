@@ -10,11 +10,11 @@
   - [x] Agregar campo `tono` con `@Pattern` a `ActualizarProductoRequest`
   - [x] Agregar campo `tono: String` a `ProductoResponse`
 
-- [ ] **Fase 3: Servicio, Controlador y Pruebas Backend**
-  - [ ] Actualizar `ProductoService.crearProducto()` para mapear `tono` con default `"NO_APLICA"`
-  - [ ] Actualizar `ProductoService.actualizarProducto()` para actualizar `tono` solo si viene en el request (semántica PATCH)
-  - [ ] Escribir tests unitarios de `ProductoService` para los casos: tono válido, tono ausente (default), tono inválido (`400`)
-  - [ ] Escribir tests de integración de `ProductoController`: `POST` con y sin tono, `PATCH` con y sin tono, `VENDEDOR` → `403`
+- [x] **Fase 3: Servicio, Controlador y Pruebas Backend**
+  - [x] Actualizar `ProductoService.crearProducto()` para mapear `tono` con default `"NO_APLICA"`
+  - [x] Actualizar `ProductoService.actualizarProducto()` para actualizar `tono` solo si viene en el request (semántica PATCH)
+  - [x] Escribir tests unitarios de `ProductoService` para los casos: tono válido, tono ausente (default), tono inválido (`400`)
+  - [x] Escribir tests de integración de `ProductoController`: `POST` con y sin tono, `PATCH` con y sin tono, `VENDEDOR` → `403`
 
 - [ ] **Fase 4: Tipos, API y DemoStore Frontend**
   - [ ] Agregar campo `tono?: string` a `Producto` en `types/index.ts`

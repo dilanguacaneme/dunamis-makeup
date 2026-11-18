@@ -119,10 +119,31 @@ class ProductoServiceTest {
             assertEquals(35000.0, response.precio());
             assertEquals(8, response.cantidad());
             assertEquals(280000.0, response.totalProducto(), "Debe calcular 35000.0 * 8");
+            assertEquals("NO_APLICA", response.tono(), "Sin tono especificado debe asignar NO_APLICA por defecto");
             assertTrue(response.activo(), "El producto creado debe estar activo por defecto");
             assertEquals("Trendy", response.marca().nombre());
 
             verify(productoRepository).save(any(Producto.class));
+        }
+
+        @Test
+        @DisplayName("Debe crear producto asignando el tono especificado (Spec 009 - RF-005)")
+        void testCrearProductoConTonoExplicito() {
+            CrearProductoRequest request = new CrearProductoRequest(
+                    "Base Líquida", 35000.0, 8, null, CategoriaProducto.ROSTRO, 1L, "2"
+            );
+
+            when(marcaRepository.findById(1L)).thenReturn(Optional.of(marcaTrendy));
+            when(productoRepository.save(any(Producto.class))).thenAnswer(invocation -> {
+                Producto p = invocation.getArgument(0);
+                p.setId(102L);
+                return p;
+            });
+
+            ProductoResponse response = productoService.crearProducto(request);
+
+            assertNotNull(response);
+            assertEquals("2", response.tono(), "Debe asignar el tono especificado");
         }
 
         @Test
@@ -200,6 +221,30 @@ class ProductoServiceTest {
 
             assertFalse(response.activo());
             assertFalse(productoEjemplo.getActivo());
+        }
+
+        @Test
+        @DisplayName("Debe actualizar solo tono cuando está presente y preservar si es null (Spec 009 - RF-008, RF-009)")
+        void testActualizarSoloTono() {
+            productoEjemplo.setTono("NO_APLICA");
+            ActualizarProductoRequest request = new ActualizarProductoRequest(
+                    null, null, null, null, null, null, null, "4"
+            );
+
+            when(productoRepository.findById(100L)).thenReturn(Optional.of(productoEjemplo));
+            when(productoRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            ProductoResponse response = productoService.actualizarProducto(100L, request);
+
+            assertEquals("4", response.tono(), "Debe haber actualizado el tono a 4");
+            assertEquals("4", productoEjemplo.getTono());
+
+            // Actualización posterior sin tono (semántica PATCH - RF-009)
+            ActualizarProductoRequest reqSinTono = new ActualizarProductoRequest(
+                    "Nuevo Nombre", null, null, null, null, null, null, null
+            );
+            ProductoResponse respSinTono = productoService.actualizarProducto(100L, reqSinTono);
+            assertEquals("4", respSinTono.tono(), "Debe preservar el tono previo cuando no se especifica en PATCH");
         }
 
         @Test
