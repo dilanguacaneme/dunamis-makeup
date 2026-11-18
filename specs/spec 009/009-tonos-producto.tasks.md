@@ -16,11 +16,11 @@
   - [x] Escribir tests unitarios de `ProductoService` para los casos: tono válido, tono ausente (default), tono inválido (`400`)
   - [x] Escribir tests de integración de `ProductoController`: `POST` con y sin tono, `PATCH` con y sin tono, `VENDEDOR` → `403`
 
-- [ ] **Fase 4: Tipos, API y DemoStore Frontend**
-  - [ ] Agregar campo `tono?: string` a `Producto` en `types/index.ts`
-  - [ ] Agregar campo `tono?: string` a `ProductoInput` en `types/index.ts`
-  - [ ] Incluir campo `tono` en los payloads de creación y actualización en `api.ts`
-  - [ ] Inicializar `tono` con valores representativos en los productos de ejemplo de `demoStore.ts`
+- [x] **Fase 4: Tipos, API y DemoStore Frontend**
+  - [x] Agregar campo `tono?: string` a `Producto` en `types/index.ts`
+  - [x] Agregar campo `tono?: string` a `ProductoInput` en `types/index.ts`
+  - [x] Incluir campo `tono` en los payloads de creación y actualización en `api.ts`
+  - [x] Inicializar `tono` con valores representativos en los productos de ejemplo de `demoStore.ts`
 
 - [ ] **Fase 5: Interfaz de Usuario Frontend**
   - [ ] Agregar selector `<select>` de tono en `ProductModal.tsx` (11 opciones: No aplica + Tono 1 al 10)

@@ -132,6 +132,22 @@ describe('Pruebas Unitarias - demoStore (Modo Demostración Local - Spec 006)', 
       assert.equal(prod.nombre, 'Labial Matte Test');
       assert.equal(prod.totalProducto, 250000);
       assert.equal(prod.activo, true);
+      assert.equal(prod.tono, 'NO_APLICA');
+    });
+
+    it('debe registrar y actualizar tono de producto en demoStore (Spec 009)', () => {
+      const prod = demoStore.createProduct({
+        nombre: 'Base Líquida Tono 3',
+        precio: 35000,
+        cantidad: 8,
+        categoria: 'ROSTRO',
+        marca: { id: 1 },
+        tono: '3',
+      });
+      assert.equal(prod.tono, '3');
+
+      const actualizado = demoStore.updateProduct(prod.id, { tono: '5' });
+      assert.equal(actualizado.tono, '5');
     });
 
     it('debe rechazar crear producto si la marca está inactiva', () => {
