@@ -367,11 +367,14 @@ const QuickSaleModalContent: React.FC<QuickSaleModalContentProps> = ({
                         required
                         style={{ fontSize: '0.875rem' }}
                       >
-                        {availableProducts.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.nombre} {p.marca ? `(${p.marca.nombre})` : ''} — {formatCOP(p.precio)} ({p.cantidad} uds.)
-                          </option>
-                        ))}
+                        {availableProducts.map((p) => {
+                          const tonoLabel = p.tono && p.tono !== 'NO_APLICA' ? ` [Tono ${p.tono}]` : '';
+                          return (
+                            <option key={p.id} value={p.id}>
+                              {p.nombre}{tonoLabel} {p.marca ? `(${p.marca.nombre})` : ''} — {formatCOP(p.precio)} ({p.cantidad} uds.)
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
 

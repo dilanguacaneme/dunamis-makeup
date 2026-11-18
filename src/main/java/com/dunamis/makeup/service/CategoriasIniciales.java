@@ -41,5 +41,13 @@ public class CategoriasIniciales implements ApplicationRunner {
                         productoRepository.save(p);
                     });
         }
+
+        // Backfill brownfield: asegurar que productos históricos sin tono tengan "NO_APLICA" (Spec 009 - RF-010)
+        productoRepository.findAll().stream()
+                .filter(p -> p.getTono() == null || p.getTono().isBlank())
+                .forEach(p -> {
+                    p.setTono("NO_APLICA");
+                    productoRepository.save(p);
+                });
     }
 }

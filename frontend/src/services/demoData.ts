@@ -37,6 +37,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 170000,
     categoria: INITIAL_DEMO_CATEGORIES[0], // Rostro
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
+    tono: '3',
   },
   {
     id: 2,
@@ -46,6 +47,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 672000,
     categoria: INITIAL_DEMO_CATEGORIES[0], // Rostro
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
+    tono: '2',
   },
   {
     id: 3,
@@ -55,6 +57,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 372000,
     categoria: INITIAL_DEMO_CATEGORIES[0], // Rostro
     marca: INITIAL_DEMO_BRANDS[3], // Magna
+    tono: '1',
   },
   {
     id: 4,
@@ -64,6 +67,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 0,
     categoria: INITIAL_DEMO_CATEGORIES[3], // Cejas
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
+    tono: 'NO_APLICA',
   },
   {
     id: 5,
@@ -73,6 +77,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 272000,
     categoria: INITIAL_DEMO_CATEGORIES[3], // Cejas
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
+    tono: 'NO_APLICA',
   },
   {
     id: 6,
@@ -82,6 +87,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 64000,
     categoria: INITIAL_DEMO_CATEGORIES[3], // Cejas
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
+    tono: '4',
   },
   {
     id: 7,
@@ -91,6 +97,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 540000,
     categoria: INITIAL_DEMO_CATEGORIES[2], // Labios
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
+    tono: 'NO_APLICA',
   },
   {
     id: 8,
@@ -100,6 +107,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 38000,
     categoria: INITIAL_DEMO_CATEGORIES[2], // Labios
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
+    tono: 'NO_APLICA',
   },
   {
     id: 9,
@@ -109,6 +117,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 378000,
     categoria: INITIAL_DEMO_CATEGORIES[2], // Labios
     marca: INITIAL_DEMO_BRANDS[3], // Magna
+    tono: 'NO_APLICA',
   },
   {
     id: 10,
@@ -118,6 +127,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 550000,
     categoria: INITIAL_DEMO_CATEGORIES[1], // Ojos
     marca: INITIAL_DEMO_BRANDS[0], // Trendy
+    tono: 'NO_APLICA',
   },
   {
     id: 11,
@@ -127,6 +137,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 108000,
     categoria: INITIAL_DEMO_CATEGORIES[1], // Ojos
     marca: INITIAL_DEMO_BRANDS[1], // Purpure
+    tono: 'NO_APLICA',
   },
   {
     id: 12,
@@ -136,6 +147,7 @@ const INITIAL_DEMO_PRODUCTS: Producto[] = [
     totalProducto: 832000,
     categoria: INITIAL_DEMO_CATEGORIES[1], // Ojos
     marca: INITIAL_DEMO_BRANDS[2], // Milagros
+    tono: 'NO_APLICA',
   },
 ];
 
@@ -477,16 +489,18 @@ class DemoStore {
       if (stored) {
         const parsed: Producto[] = JSON.parse(stored);
         return parsed.map((p) => {
+          let cat = p.categoria;
           if (typeof p.categoria === 'string') {
             const matched = this.categories.find(
               (c) => c.nombre.toLowerCase() === (p.categoria as string).toLowerCase()
             );
-            return {
-              ...p,
-              categoria: matched || { id: 1, nombre: p.categoria, activa: true },
-            };
+            cat = matched || { id: 1, nombre: p.categoria, activa: true };
           }
-          return p;
+          return {
+            ...p,
+            categoria: cat,
+            tono: p.tono || 'NO_APLICA',
+          };
         });
       }
     } catch {
@@ -551,6 +565,7 @@ class DemoStore {
       totalProducto: Number(input.precio) * Math.max(0, Number(input.cantidad)),
       categoria,
       marca,
+      tono: input.tono || 'NO_APLICA',
       activo: true,
     };
     this.products.push(newProduct);
@@ -609,6 +624,7 @@ class DemoStore {
     }
 
     const updatedActivo = input.activo !== undefined ? input.activo : current.activo !== false;
+    const updatedTono = input.tono !== undefined ? input.tono : (current.tono || 'NO_APLICA');
 
     const updated: Producto = {
       ...current,
@@ -617,6 +633,7 @@ class DemoStore {
       cantidad: updatedCantidad,
       categoria: updatedCategoria,
       marca: updatedMarca,
+      tono: updatedTono,
       totalProducto: updatedPrecio * updatedCantidad,
       activo: updatedActivo,
     };

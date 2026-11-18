@@ -285,6 +285,10 @@ export const inventoryApi = {
       bodyPayload.marcaId = input.marca.id;
     }
 
+    if (input.tono !== undefined) {
+      bodyPayload.tono = input.tono;
+    }
+
     const res = await fetch(`${BASE_URL}/producto/crear`, {
       method: 'POST',
       credentials: 'include',
@@ -336,6 +340,7 @@ export const inventoryApi = {
       }
     }
     if (input.marca?.id !== undefined) bodyPayload.marcaId = input.marca.id;
+    if (input.tono !== undefined) bodyPayload.tono = input.tono;
     if (input.activo !== undefined) bodyPayload.activo = input.activo;
 
     const res = await fetch(`${BASE_URL}/producto/actualizar/${id}`, {

@@ -84,6 +84,7 @@ public class ProductoService {
         producto.setTotalProducto(request.precio() * request.cantidad());
         producto.setCategoria(categoria);
         producto.setMarca(marca);
+        producto.setTono(request.tono() != null && !request.tono().isBlank() ? request.tono().trim() : "NO_APLICA");
         producto.setActivo(true);
 
         return ProductoResponse.fromEntity(productoRepository.save(producto));
@@ -141,6 +142,10 @@ public class ProductoService {
 
         if (request.activo() != null) {
             producto.setActivo(request.activo());
+        }
+
+        if (request.tono() != null && !request.tono().isBlank()) {
+            producto.setTono(request.tono().trim());
         }
 
         if (producto.getPrecio() != null && producto.getCantidad() != null) {

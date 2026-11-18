@@ -12,8 +12,22 @@ public record ProductoResponse(
         Double totalProducto,
         CategoriaResponse categoria,
         MarcaResponse marca,
-        Boolean activo
+        Boolean activo,
+        String tono
 ) {
+    public ProductoResponse(
+            Long id,
+            String nombre,
+            Double precio,
+            Integer cantidad,
+            Double totalProducto,
+            CategoriaResponse categoria,
+            MarcaResponse marca,
+            Boolean activo
+    ) {
+        this(id, nombre, precio, cantidad, totalProducto, categoria, marca, activo, "NO_APLICA");
+    }
+
     public static ProductoResponse fromEntity(Producto producto) {
         if (producto == null) {
             return null;
@@ -35,6 +49,9 @@ public record ProductoResponse(
         }
 
         Boolean activo = producto.getActivo() != null ? producto.getActivo() : Boolean.TRUE;
+        String tono = producto.getTono() != null && !producto.getTono().isBlank()
+                ? producto.getTono()
+                : "NO_APLICA";
 
         return new ProductoResponse(
                 producto.getId(),
@@ -44,7 +61,8 @@ public record ProductoResponse(
                 total,
                 categoriaResponse,
                 marcaResponse,
-                activo
+                activo,
+                tono
         );
     }
 }

@@ -239,8 +239,82 @@ class ProductoIntegrationTest {
                 .andExpect(jsonPath("$.precio", is(28000.0)))
                 .andExpect(jsonPath("$.cantidad", is(12)))
                 .andExpect(jsonPath("$.totalProducto", is(336000.0)))
+                .andExpect(jsonPath("$.tono", is("NO_APLICA")))
                 .andExpect(jsonPath("$.activo", is(true)))
                 .andExpect(jsonPath("$.marca.nombre", is("Trendy Prod Test")));
+    }
+
+    @Test
+    @DisplayName("POST /producto/crear con tono válido persiste y retorna tono correcto (Spec 009 - RF-005)")
+    void testCrearProductoConTonoValido() throws Exception {
+        String payload = String.format("""
+                {
+                    "nombre": "Base Matte Cobertura Alta",
+                    "precio": 35000.0,
+                    "cantidad": 10,
+                    "categoria": "ROSTRO",
+                    "marcaId": %d,
+                    "tono": "3"
+                }
+                """, marcaTrendy.getId());
+
+        mockMvc.perform(post("/producto/crear")
+                        .session(adminSession)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nombre", is("Base Matte Cobertura Alta")))
+                .andExpect(jsonPath("$.tono", is("3")));
+    }
+
+    @Test
+    @DisplayName("POST /producto/crear con tono inválido retorna 400 Bad Request estructurado (Spec 009 - RF-003)")
+    void testCrearProductoConTonoInvalido() throws Exception {
+        String payload = String.format("""
+                {
+                    "nombre": "Base Tono Erróneo",
+                    "precio": 35000.0,
+                    "cantidad": 10,
+                    "categoria": "ROSTRO",
+                    "marcaId": %d,
+                    "tono": "12"
+                }
+                """, marcaTrendy.getId());
+
+        mockMvc.perform(post("/producto/crear")
+                        .session(adminSession)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("VALIDATION_FAILED")));
+    }
+
+    @Test
+    @DisplayName("POST /producto/crear con VENDEDOR retorna 403 Forbidden independientemente del tono (Spec 009 - RF-007)")
+    void testCrearProductoConVendedorRetorna403() throws Exception {
+        String payload = String.format("""
+                {
+                    "nombre": "Base Intento Vendedor",
+                    "precio": 35000.0,
+                    "cantidad": 10,
+                    "categoria": "ROSTRO",
+                    "marcaId": %d,
+                    "tono": "2"
+                }
+                """, marcaTrendy.getId());
+
+        mockMvc.perform(post("/producto/crear")
+                        .session(vendedorSession)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error", is("FORBIDDEN")));
     }
 
     @Test
@@ -295,6 +369,65 @@ class ProductoIntegrationTest {
                 .andExpect(jsonPath("$.precio", is(12000.0)))
                 .andExpect(jsonPath("$.cantidad", is(10)))
                 .andExpect(jsonPath("$.totalProducto", is(120000.0)));
+    }
+
+    @Test
+    @DisplayName("PATCH /producto/actualizar/{id} con tono actualiza solo el tono y sin tono lo preserva (Spec 009 - RF-008, RF-009)")
+    void testActualizarTonoYPreservar() throws Exception {
+        Producto p = new Producto();
+        p.setNombre("Base Para Modificar Tono");
+        p.setPrecio(25000.0);
+        p.setCantidad(4);
+        p.setCategoria(categoriaRostro);
+        p.setMarca(marcaTrendy);
+        p.setTono("1");
+        p.setActivo(true);
+        Producto guardado = productoRepository.save(p);
+
+        // 1. Actualizar solo tono a "5"
+        mockMvc.perform(patch("/producto/actualizar/" + guardado.getId())
+                        .session(adminSession)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tono\": \"5\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tono", is("5")))
+                .andExpect(jsonPath("$.precio", is(25000.0)));
+
+        // 2. Actualizar solo precio; el tono debe preservarse en "5"
+        mockMvc.perform(patch("/producto/actualizar/" + guardado.getId())
+                        .session(adminSession)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"precio\": 27000.0}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tono", is("5")))
+                .andExpect(jsonPath("$.precio", is(27000.0)));
+    }
+
+    @Test
+    @DisplayName("PATCH /producto/actualizar/{id} con tono fuera de rango retorna 400 Bad Request estructurado (Spec 009 - RF-003)")
+    void testActualizarTonoInvalido() throws Exception {
+        Producto p = new Producto();
+        p.setNombre("Base Tono Inv");
+        p.setPrecio(25000.0);
+        p.setCantidad(4);
+        p.setCategoria(categoriaRostro);
+        p.setMarca(marcaTrendy);
+        p.setTono("2");
+        p.setActivo(true);
+        Producto guardado = productoRepository.save(p);
+
+        mockMvc.perform(patch("/producto/actualizar/" + guardado.getId())
+                        .session(adminSession)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tono\": \"99\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("VALIDATION_FAILED")));
     }
 
     @Test
