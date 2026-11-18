@@ -97,6 +97,11 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
         ? activeBrands[0].id
         : ''
   );
+  const [tono, setTono] = useState<string>(
+    editingProduct?.tono && editingProduct.tono !== 'NO_APLICA'
+      ? editingProduct.tono
+      : 'NO_APLICA'
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -142,6 +147,7 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
           marca: {
             id: Number(marcaId),
           },
+          tono: tono || 'NO_APLICA',
         },
         editingProduct ? editingProduct.id : undefined
       );
@@ -373,6 +379,34 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
               Unidades actuales en almacén (no negativo).
             </span>
           </div>
+        </div>
+
+        {/* Tono cosmético (Spec 009 - RF-013, RF-014) */}
+        <div className="form-group">
+          <label className="form-label" htmlFor="product-tone">
+            Tono cosmético
+          </label>
+          <select
+            id="product-tone"
+            className="form-select"
+            value={tono}
+            onChange={(e) => setTono(e.target.value)}
+          >
+            <option value="NO_APLICA">No aplica (Sin tono)</option>
+            <option value="1">Tono 1</option>
+            <option value="2">Tono 2</option>
+            <option value="3">Tono 3</option>
+            <option value="4">Tono 4</option>
+            <option value="5">Tono 5</option>
+            <option value="6">Tono 6</option>
+            <option value="7">Tono 7</option>
+            <option value="8">Tono 8</option>
+            <option value="9">Tono 9</option>
+            <option value="10">Tono 10</option>
+          </select>
+          <span className="form-hint">
+            Selecciona el número de tono para bases, correctores o polvos.
+          </span>
         </div>
 
         {/* Total calculation indicator */}

@@ -111,6 +111,24 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                 }}
               >
                 {product.nombre}
+                {product.tono && product.tono !== 'NO_APLICA' && (
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      marginLeft: '0.4rem',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      color: 'var(--color-plum)',
+                      backgroundColor: 'var(--color-parchment)',
+                      border: '1px solid var(--color-border)',
+                      padding: '0.1rem 0.4rem',
+                      borderRadius: 'var(--radius-sm)',
+                      verticalAlign: 'middle',
+                    }}
+                  >
+                    Tono {product.tono}
+                  </span>
+                )}
               </h3>
               <div
                 className="tabular-numbers"

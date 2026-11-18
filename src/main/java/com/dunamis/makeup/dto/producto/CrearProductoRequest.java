@@ -6,6 +6,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record CrearProductoRequest(
@@ -26,14 +27,27 @@ public record CrearProductoRequest(
         CategoriaProducto categoria,
 
         @NotNull(message = "Seleccione una marca para el producto")
-        Long marcaId
+        Long marcaId,
+
+        @Pattern(regexp = "^(NO_APLICA|[1-9]|10)$", message = "El tono debe ser 'NO_APLICA' o un número del 1 al 10")
+        String tono
 ) {
+    public CrearProductoRequest {
+        if (tono == null || tono.isBlank()) {
+            tono = "NO_APLICA";
+        }
+    }
+
     @AssertTrue(message = "Seleccione una categoría para el producto")
     public boolean isCategoriaValida() {
         return categoriaId != null || categoria != null;
     }
 
     public CrearProductoRequest(String nombre, Double precio, Integer cantidad, CategoriaProducto categoria, Long marcaId) {
-        this(nombre, precio, cantidad, null, categoria, marcaId);
+        this(nombre, precio, cantidad, null, categoria, marcaId, "NO_APLICA");
+    }
+
+    public CrearProductoRequest(String nombre, Double precio, Integer cantidad, Long categoriaId, CategoriaProducto categoria, Long marcaId) {
+        this(nombre, precio, cantidad, categoriaId, categoria, marcaId, "NO_APLICA");
     }
 }

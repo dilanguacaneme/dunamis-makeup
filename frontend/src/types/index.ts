@@ -31,6 +31,7 @@ export interface Producto {
   categoria: Categoria | CategoriaProducto;
   categoriaId?: number;
   marca?: Marca | null;
+  tono?: string;
   activo?: boolean;
 }
 
@@ -43,6 +44,7 @@ export interface ProductoInput {
   marca?: {
     id: number;
   };
+  tono?: string;
   activo?: boolean;
 }
 
