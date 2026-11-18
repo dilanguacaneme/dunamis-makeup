@@ -5,10 +5,10 @@
   - [x] Actualizar `ensureDefaults()` en `Producto.java` para blindar `null` en registros históricos
   - [ ] Ejecutar migración SQL (`ALTER TABLE` + `UPDATE`) en base de datos antes del primer despliegue
 
-- [ ] **Fase 2: DTOs y Validación Backend**
-  - [ ] Agregar campo `tono` con `@Pattern` a `CrearProductoRequest`
-  - [ ] Agregar campo `tono` con `@Pattern` a `ActualizarProductoRequest`
-  - [ ] Agregar campo `tono: String` a `ProductoResponse`
+- [x] **Fase 2: DTOs y Validación Backend**
+  - [x] Agregar campo `tono` con `@Pattern` a `CrearProductoRequest`
+  - [x] Agregar campo `tono` con `@Pattern` a `ActualizarProductoRequest`
+  - [x] Agregar campo `tono: String` a `ProductoResponse`
 
 - [ ] **Fase 3: Servicio, Controlador y Pruebas Backend**
   - [ ] Actualizar `ProductoService.crearProducto()` para mapear `tono` con default `"NO_APLICA"`

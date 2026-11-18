@@ -4,6 +4,7 @@ import com.dunamis.makeup.entity.CategoriaProducto;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ActualizarProductoRequest(
@@ -22,7 +23,10 @@ public record ActualizarProductoRequest(
 
         Long marcaId,
 
-        Boolean activo
+        Boolean activo,
+
+        @Pattern(regexp = "^(NO_APLICA|[1-9]|10)$", message = "El tono debe ser 'NO_APLICA' o un número del 1 al 10")
+        String tono
 ) {
     @AssertTrue(message = "Debe especificar al menos un campo válido para actualizar")
     public boolean isAnyFieldPresent() {
@@ -32,10 +36,15 @@ public record ActualizarProductoRequest(
                 categoriaId != null ||
                 categoria != null ||
                 marcaId != null ||
-                activo != null;
+                activo != null ||
+                (tono != null && !tono.isBlank());
     }
 
     public ActualizarProductoRequest(String nombre, Double precio, Integer cantidad, CategoriaProducto categoria, Long marcaId, Boolean activo) {
-        this(nombre, precio, cantidad, null, categoria, marcaId, activo);
+        this(nombre, precio, cantidad, null, categoria, marcaId, activo, null);
+    }
+
+    public ActualizarProductoRequest(String nombre, Double precio, Integer cantidad, Long categoriaId, CategoriaProducto categoria, Long marcaId, Boolean activo) {
+        this(nombre, precio, cantidad, categoriaId, categoria, marcaId, activo, null);
     }
 }

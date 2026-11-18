@@ -171,6 +171,45 @@ class ProductoDtoTest {
             assertFalse(validator.validate(reqSinCategoria).isEmpty());
             assertFalse(validator.validate(reqSinMarca).isEmpty());
         }
+
+        @Test
+        @DisplayName("Debe aceptar tonos válidos ('1' al '10' y 'NO_APLICA') y asignar 'NO_APLICA' por defecto")
+        void testTonosValidosCreacion() {
+            CrearProductoRequest reqDefault = new CrearProductoRequest(
+                    "Base Líquida", 30000.0, 10, null, CategoriaProducto.ROSTRO, 1L, null
+            );
+            assertEquals("NO_APLICA", reqDefault.tono(), "Si tono es null, debe normalizarse a NO_APLICA");
+            assertTrue(validator.validate(reqDefault).isEmpty());
+
+            CrearProductoRequest reqTono1 = new CrearProductoRequest(
+                    "Base Líquida", 30000.0, 10, null, CategoriaProducto.ROSTRO, 1L, "1"
+            );
+            assertTrue(validator.validate(reqTono1).isEmpty());
+
+            CrearProductoRequest reqTono10 = new CrearProductoRequest(
+                    "Base Líquida", 30000.0, 10, null, CategoriaProducto.ROSTRO, 1L, "10"
+            );
+            assertTrue(validator.validate(reqTono10).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Debe rechazar tonos fuera de rango o texto arbitrario")
+        void testTonosInvalidosCreacion() {
+            CrearProductoRequest reqCero = new CrearProductoRequest(
+                    "Base Líquida", 30000.0, 10, null, CategoriaProducto.ROSTRO, 1L, "0"
+            );
+            assertFalse(validator.validate(reqCero).isEmpty());
+
+            CrearProductoRequest reqOnce = new CrearProductoRequest(
+                    "Base Líquida", 30000.0, 10, null, CategoriaProducto.ROSTRO, 1L, "11"
+            );
+            assertFalse(validator.validate(reqOnce).isEmpty());
+
+            CrearProductoRequest reqTexto = new CrearProductoRequest(
+                    "Base Líquida", 30000.0, 10, null, CategoriaProducto.ROSTRO, 1L, "claro"
+            );
+            assertFalse(validator.validate(reqTexto).isEmpty());
+        }
     }
 
     @Nested
@@ -223,6 +262,30 @@ class ProductoDtoTest {
 
             assertFalse(validator.validate(reqPrecioNeg).isEmpty());
             assertFalse(validator.validate(reqCantidadNeg).isEmpty());
+        }
+
+        @Test
+        @DisplayName("Debe aceptar payload con solo tono válido para actualización")
+        void testPayloadSoloTonoValido() {
+            ActualizarProductoRequest request = new ActualizarProductoRequest(
+                    null, null, null, null, null, null, null, "5"
+            );
+
+            Set<ConstraintViolation<ActualizarProductoRequest>> violations = validator.validate(request);
+            assertTrue(violations.isEmpty(), "Actualizar solo tono debe ser válido");
+            assertEquals("5", request.tono());
+        }
+
+        @Test
+        @DisplayName("Debe rechazar tono inválido en ActualizarProductoRequest")
+        void testTonoInvalidoActualizacion() {
+            ActualizarProductoRequest request = new ActualizarProductoRequest(
+                    null, null, null, null, null, null, null, "11"
+            );
+
+            Set<ConstraintViolation<ActualizarProductoRequest>> violations = validator.validate(request);
+            assertFalse(violations.isEmpty(), "Tono 11 debe ser rechazado");
+            assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("El tono debe ser")));
         }
     }
 }
