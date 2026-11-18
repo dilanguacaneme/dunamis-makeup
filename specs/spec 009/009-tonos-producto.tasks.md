@@ -1,8 +1,8 @@
 # Tareas de Implementación 009: Tonos de Producto
 
 - [ ] **Fase 1: Entidad y Migración Backend**
-  - [ ] Agregar campo `tono` (`String`, `nullable = false`, default `"NO_APLICA"`) a `Producto.java`
-  - [ ] Actualizar `ensureDefaults()` en `Producto.java` para blindar `null` en registros históricos
+  - [x] Agregar campo `tono` (`String`, `nullable = false`, default `"NO_APLICA"`) a `Producto.java`
+  - [x] Actualizar `ensureDefaults()` en `Producto.java` para blindar `null` en registros históricos
   - [ ] Ejecutar migración SQL (`ALTER TABLE` + `UPDATE`) en base de datos antes del primer despliegue
 
 - [ ] **Fase 2: DTOs y Validación Backend**

@@ -45,11 +45,17 @@ public class Producto {
     @Column(nullable = false)
     private Boolean activo = Boolean.TRUE;
 
+    @Column(nullable = false, length = 20)
+    private String tono = "NO_APLICA";
+
     @PrePersist
     @PostLoad
     public void ensureDefaults() {
         if (this.activo == null) {
             this.activo = Boolean.TRUE;
+        }
+        if (this.tono == null || this.tono.isBlank()) {
+            this.tono = "NO_APLICA";
         }
         if (this.totalProducto == null && this.precio != null && this.cantidad != null) {
             this.totalProducto = this.precio * this.cantidad;
