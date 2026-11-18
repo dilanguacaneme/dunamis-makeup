@@ -72,6 +72,21 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                     <span style={{ fontWeight: 600, color: product.activo === false ? 'var(--color-text-muted)' : 'var(--color-plum)' }}>
                       {product.nombre}
                     </span>
+                    {product.tono && product.tono !== 'NO_APLICA' && (
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          color: 'var(--color-plum)',
+                          backgroundColor: 'var(--color-parchment)',
+                          border: '1px solid var(--color-border)',
+                          padding: '0.1rem 0.45rem',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                      >
+                        Tono {product.tono}
+                      </span>
+                    )}
                     {product.activo === false && (
                       <span className="badge-status badge-inactive" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem' }}>
                         Inactivo

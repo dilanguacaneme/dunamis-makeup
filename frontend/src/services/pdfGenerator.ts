@@ -147,7 +147,8 @@ export const downloadInvoicePDF = (invoice: Factura): void => {
       }
 
       doc.setTextColor(58, 27, 40);
-      const prodName = det.producto?.nombre || 'Producto cosmético';
+      const prodTono = det.producto?.tono && det.producto.tono !== 'NO_APLICA' ? ` (Tono ${det.producto.tono})` : '';
+      const prodName = `${det.producto?.nombre || 'Producto cosmético'}${prodTono}`;
       const truncatedName = prodName.length > 45 ? `${prodName.substring(0, 43)}...` : prodName;
       doc.text(truncatedName, margin + 4, currentY + 4.5);
 

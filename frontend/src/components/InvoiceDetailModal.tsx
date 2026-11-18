@@ -496,6 +496,11 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                         <td style={{ padding: '0.65rem 0.25rem' }}>
                           <div style={{ fontWeight: 600, color: 'var(--color-rosewood-deep)', textDecoration: isAnulada ? 'line-through' : 'none' }}>
                             {detalle.producto?.nombre || 'Producto cosmético'}
+                            {detalle.producto?.tono && detalle.producto.tono !== 'NO_APLICA' && (
+                              <span style={{ fontSize: '0.8rem', color: 'var(--color-plum)', marginLeft: '0.35rem', fontWeight: 600 }}>
+                                (Tono {detalle.producto.tono})
+                              </span>
+                            )}
                           </div>
                           {detalle.producto?.marca && (
                             <div style={{ fontSize: '0.725rem', color: 'var(--color-text-subtle)' }}>

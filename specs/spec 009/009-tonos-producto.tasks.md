@@ -22,15 +22,15 @@
   - [x] Incluir campo `tono` en los payloads de creación y actualización en `api.ts`
   - [x] Inicializar `tono` con valores representativos en los productos de ejemplo de `demoStore.ts`
 
-- [ ] **Fase 5: Interfaz de Usuario Frontend**
-  - [ ] Agregar selector `<select>` de tono en `ProductModal.tsx` (11 opciones: No aplica + Tono 1 al 10)
-  - [ ] Preseleccionar valor actual del `tono` al abrir el modal en modo edición
-  - [ ] Mostrar badge `Tono {n}` condicionalmente en `ProductGrid.tsx` (ocultar si `NO_APLICA`)
-  - [ ] Mostrar badge `Tono {n}` condicionalmente en `ProductTable.tsx` (ocultar si `NO_APLICA`)
-  - [ ] Mostrar `"{nombre} (Tono {n})"` en el detalle de factura / POS si `tono !== "NO_APLICA"`
+- [x] **Fase 5: Interfaz de Usuario Frontend**
+  - [x] Agregar selector `<select>` de tono en `ProductModal.tsx` (11 opciones: No aplica + Tono 1 al 10)
+  - [x] Preseleccionar valor actual del `tono` al abrir el modal en modo edición
+  - [x] Mostrar badge `Tono {n}` condicionalmente en `ProductGrid.tsx` (ocultar si `NO_APLICA`)
+  - [x] Mostrar badge `Tono {n}` condicionalmente en `ProductTable.tsx` (ocultar si `NO_APLICA`)
+  - [x] Mostrar `"{nombre} (Tono {n})"` en el detalle de factura / POS si `tono !== "NO_APLICA"`
 
-- [ ] **Fase 6: Verificación Final**
-  - [ ] Ejecutar `npm --prefix frontend run lint` sin errores ni advertencias
-  - [ ] Ejecutar `npm --prefix frontend run build` sin errores de TypeScript
-  - [ ] Ejecutar `.\mvnw.cmd test-compile` limpiamente
-  - [ ] Ejecutar `.\mvnw.cmd test` con todos los tests en verde
+- [x] **Fase 6: Verificación Final**
+  - [x] Ejecutar `npm --prefix frontend run lint` sin errores ni advertencias
+  - [x] Ejecutar `npm --prefix frontend run build` sin errores de TypeScript
+  - [x] Ejecutar `.\mvnw.cmd test-compile` limpiamente
+  - [x] Ejecutar `.\mvnw.cmd test` con todos los tests en verde
