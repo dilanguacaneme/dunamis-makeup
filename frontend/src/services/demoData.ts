@@ -166,13 +166,17 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     detalles: [
       {
         id: 1,
-        producto: INITIAL_DEMO_PRODUCTS[0],
+        productoId: INITIAL_DEMO_PRODUCTS[0].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[0].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[0].precio,
         cantidad: 1,
         subtotal: 85000,
       },
       {
         id: 2,
-        producto: INITIAL_DEMO_PRODUCTS[1],
+        productoId: INITIAL_DEMO_PRODUCTS[1].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[1].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[1].precio,
         cantidad: 1,
         subtotal: 48000,
       },
@@ -192,7 +196,9 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     detalles: [
       {
         id: 3,
-        producto: INITIAL_DEMO_PRODUCTS[6],
+        productoId: INITIAL_DEMO_PRODUCTS[6].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[6].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[6].precio,
         cantidad: 2,
         subtotal: 90000,
       },
@@ -212,7 +218,9 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     detalles: [
       {
         id: 4,
-        producto: INITIAL_DEMO_PRODUCTS[9],
+        productoId: INITIAL_DEMO_PRODUCTS[9].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[9].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[9].precio,
         cantidad: 1,
         subtotal: 110000,
       },
@@ -232,13 +240,17 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     detalles: [
       {
         id: 5,
-        producto: INITIAL_DEMO_PRODUCTS[7],
+        productoId: INITIAL_DEMO_PRODUCTS[7].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[7].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[7].precio,
         cantidad: 1,
         subtotal: 38000,
       },
       {
         id: 6,
-        producto: INITIAL_DEMO_PRODUCTS[1],
+        productoId: INITIAL_DEMO_PRODUCTS[1].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[1].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[1].precio,
         cantidad: 1,
         subtotal: 48000,
       },
@@ -258,13 +270,17 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     detalles: [
       {
         id: 7,
-        producto: INITIAL_DEMO_PRODUCTS[2],
+        productoId: INITIAL_DEMO_PRODUCTS[2].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[2].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[2].precio,
         cantidad: 1,
         subtotal: 62000,
       },
       {
         id: 8,
-        producto: INITIAL_DEMO_PRODUCTS[0],
+        productoId: INITIAL_DEMO_PRODUCTS[0].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[0].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[0].precio,
         cantidad: 1,
         subtotal: 85000,
       },
@@ -284,13 +300,17 @@ const INITIAL_DEMO_INVOICES: Factura[] = [
     detalles: [
       {
         id: 9,
-        producto: INITIAL_DEMO_PRODUCTS[4],
+        productoId: INITIAL_DEMO_PRODUCTS[4].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[4].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[4].precio,
         cantidad: 1,
         subtotal: 34000,
       },
       {
         id: 10,
-        producto: INITIAL_DEMO_PRODUCTS[8],
+        productoId: INITIAL_DEMO_PRODUCTS[8].id,
+        productoNombre: INITIAL_DEMO_PRODUCTS[8].nombre,
+        precioUnitario: INITIAL_DEMO_PRODUCTS[8].precio,
         cantidad: 1,
         subtotal: 42000,
       },
@@ -650,7 +670,7 @@ class DemoStore {
     }
     const current = this.products[index];
     const tieneFacturas = this.invoices.some((inv) =>
-      inv.detalles?.some((d) => d.producto.id === id)
+      inv.detalles?.some((d) => (d.productoId ?? d.producto?.id) === id)
     );
 
     if (tieneFacturas) {
@@ -761,7 +781,9 @@ class DemoStore {
 
       detallesProcesados.push({
         id: Date.now() + Math.floor(Math.random() * 1000),
-        producto: { ...product },
+        productoId: product.id,
+        productoNombre: product.nombre,
+        precioUnitario: product.precio,
         cantidad: item.cantidad,
         subtotal,
       });
@@ -897,7 +919,8 @@ class DemoStore {
     // Restituir inventario de cada producto vendido
     if (invoice.detalles) {
       for (const d of invoice.detalles) {
-        const prod = this.products.find((p) => p.id === d.producto.id);
+        const prodId = d.productoId ?? d.producto?.id;
+        const prod = this.products.find((p) => p.id === prodId);
         if (prod) {
           prod.cantidad += d.cantidad;
           prod.totalProducto = prod.cantidad * prod.precio;
