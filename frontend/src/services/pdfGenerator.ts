@@ -148,12 +148,14 @@ export const downloadInvoicePDF = (invoice: Factura): void => {
 
       doc.setTextColor(58, 27, 40);
       const prodTono = det.producto?.tono && det.producto.tono !== 'NO_APLICA' ? ` (Tono ${det.producto.tono})` : '';
-      const prodName = `${det.producto?.nombre || 'Producto cosmético'}${prodTono}`;
+      const baseNombre = det.productoNombre || det.producto?.nombre || 'Producto cosmético';
+      const prodName = `${baseNombre}${prodTono}`;
       const truncatedName = prodName.length > 45 ? `${prodName.substring(0, 43)}...` : prodName;
       doc.text(truncatedName, margin + 4, currentY + 4.5);
 
       doc.text(String(det.cantidad), margin + 95, currentY + 4.5, { align: 'center' });
-      doc.text(formatCOP(det.producto?.precio || 0), margin + 130, currentY + 4.5, {
+      const precioUnit = det.precioUnitario ?? det.producto?.precio ?? 0;
+      doc.text(formatCOP(precioUnit), margin + 130, currentY + 4.5, {
         align: 'right',
       });
       doc.setFont('helvetica', 'bold');

@@ -495,7 +495,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                       <tr key={idx} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
                         <td style={{ padding: '0.65rem 0.25rem' }}>
                           <div style={{ fontWeight: 600, color: 'var(--color-rosewood-deep)', textDecoration: isAnulada ? 'line-through' : 'none' }}>
-                            {detalle.producto?.nombre || 'Producto cosmético'}
+                            {detalle.productoNombre || detalle.producto?.nombre || 'Producto cosmético'}
                             {detalle.producto?.tono && detalle.producto.tono !== 'NO_APLICA' && (
                               <span style={{ fontSize: '0.8rem', color: 'var(--color-plum)', marginLeft: '0.35rem', fontWeight: 600 }}>
                                 (Tono {detalle.producto.tono})
@@ -512,7 +512,7 @@ const InvoiceDetailModalContent: React.FC<InvoiceDetailModalContentProps> = ({
                           {detalle.cantidad}
                         </td>
                         <td style={{ padding: '0.65rem 0.25rem', textAlign: 'right' }} className="tabular-numbers">
-                          {formatCOP(detalle.producto?.precio || 0)}
+                          {formatCOP(detalle.precioUnitario ?? detalle.producto?.precio ?? 0)}
                         </td>
                         <td style={{ padding: '0.65rem 0.25rem', textAlign: 'right', fontWeight: 600 }} className="tabular-numbers">
                           {formatCOP(detalle.subtotal)}

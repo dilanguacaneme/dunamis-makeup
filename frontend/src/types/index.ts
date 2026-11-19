@@ -81,7 +81,10 @@ export interface FacturaInput {
 
 export interface DetalleFactura {
   id?: number;
-  producto: Producto;
+  productoId?: number;
+  productoNombre?: string;
+  precioUnitario?: number;
+  producto?: Producto;
   cantidad: number;
   subtotal: number;
 }
